@@ -1,0 +1,52 @@
+#+TITLE:     Monads in Erlang
+#+AUTHOR:    Rebecca Skinner
+#+EMAIL:     rebecca@rebeccaskinner.net
+#+DESCRIPTION: 
+#+KEYWORDS: 
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:t \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+INFOJS_OPT: view:nil toc:nil ltoc:t mouse:underline buttons:0 path:http://orgmode.org/org-info.js
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:   
+#+LINK_HOME:
+#+startup: beamer
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [bigger]
+#+BEAMER_FRAME_LEVEL: 2
+#+COLUMNS: %40ITEM %10BEAMER_env(Env) %9BEAMER_envargs(Env Args) %4BEAMER_col(Col) %10BEAMER_extra(Extra)
+
+* What are Monads?
+
+"All told, a monad in X is just a monoid in the category of endofunctors of X, with product × replaced by composition of endofunctors and unit set by the identity endofunctor."
+
+** Things Monads Have Been Compared To
+   - Birthday Presents
+   - Burritos
+   - Things haskellers stopped using because applicative functors sounded cooler
+
+** Separate Data from it's Context
+
+*** Operate on Data and Context Independently
+
+*** Explicitly add or remove context around data
+
+*** Use type specs to help understand the flow of data and context
+
+** Interfaces Providing A Powerful Toolset
+
+*** The Monad Laws
+
+    - Left Identity  :: `return a >>= f ≡ f a`
+    - Right Identity :: `m >>= return ≡ m`
+    - Associativity  :: `(m >>= f) >>= g ≡ m >>= (λ x → f x >>= g)`
+
+**** Left Identity
+`return a >>= f ≡ f a`
+
+**** Right Identity
+`m >>= return ≡ m`
+
+**** Associativity
+`(m >>= f) >>= g ≡ m >>= (λ x → f x >>= g)`

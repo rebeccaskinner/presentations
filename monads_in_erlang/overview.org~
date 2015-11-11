@@ -1,0 +1,19 @@
+#+TITLE: Monads in Erlang
+
+* What are Monads?
+
+** Separate Data from it's Context
+
+*** Operate on Data and Context Independently
+
+*** Explicitly add or remove context around data
+
+*** Use type specs to help understand the flow of data and context
+
+** Interfaces Providing A Powerful Toolset
+
+*** The Monad Laws
+
+    - Left Identity  :: `return a >>= f ≡ f a`
+    - Right Identity :: `m >>= return ≡ m`
+    - Associativity  :: `(m >>= f) >>= g ≡ m >>= (λ x → f x >>= g)`
