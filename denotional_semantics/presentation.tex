@@ -1,0 +1,236 @@
+\documentclass{beamer}
+
+\title{The Language of Languages}
+\subtitle{Or \\ \small{Understanding the language of the mathematics of programming}}
+\author{Rebecca Skinner}
+\institute{CenturyLink Cloud}
+\date{\today}
+\mode<presentation> {\usetheme{Madrid}}
+
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+
+% CenturyLink Green
+\usecolortheme[RGB={16,117,48}]{structure}
+
+\definecolor{comment}{rgb}{0,0.6,0}
+\definecolor{keyword}{rgb}{0,0,0.6}
+\definecolor{string}{rgb}{0.58,0,0.82}
+
+\lstset{
+  backgroundcolor=\color{white},
+  basicstyle=\tiny,
+  keywordstyle=\color{keyword},
+  commentstyle=\color{comment},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stringstyle=\color{string},
+  tabsize=4
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage{}
+\end{frame}
+
+\section{Algebra}
+\subsection{Understanding Algebras}
+\begin{frame}
+  \frametitle{\it{A} is for Algebra}
+  \textquote{Algebra is the manipulation of symbols without (necessarily)
+    regard for their meaning, especially in a way that can be
+    formalized in cartesian logic.} - $\eta$-Lab
+\end{frame}
+
+\begin{frame}
+  \frametitle{An Algebra is...}
+  An alegbra is, essentially
+  \begin{itemize}
+    \item A set of things you can operate on
+    \item A set of operations you can perform
+    \item A set of axioms that define how you can reason about things
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Examples of Algebras}
+  Many things that we've done in or heard about in mathematics can be
+  defined as algebras.
+  \begin{itemize}
+    \item Monoids
+    \item Boolean Algebra
+    \item Vector Spaces (Linear Algebra)
+    \item Arithmetic (Abelian Group)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{A Programming Language is an Algebra}
+  A programming language also defines an algebra. This algebra is what
+  defines all of the things that we can do with the language. Normal
+  arithmetic is part of the algebra, but other things may be as well.
+\end{frame}
+
+\begin{frame}
+  \frametitle{\dots In fact, many of them}
+  Although the set of fundametal operators that can act on any entity
+  defined within the language forms an algebra, there are are also
+  often other algebras that are more fully featured and exit for
+  individual things defined in the language.
+  \begin{itemize}
+    \item List Operations
+      \begin{itemize}
+        \item cons
+        \item map
+        \item sort
+      \end{itemize}
+    \item Numbers
+      \begin{itemize}
+        \item arithmetic
+      \end{itemize}
+    \item Objects
+      \begin{itemize}
+        \item send message
+        \item instantiate
+        \item delete
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{And you build your own}
+  Interfaces, class, and instance method are common ways of defining
+  algebras.  The class is the domain of your algebra, and instance
+  methods define your algebraic structure.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Talking about Algebras}
+
+  When talking about an algebra we define {\tt operators} and
+  {\tt variables}.  The dot operator ($\cdot$) is the canonical
+  operator defined for an algebra.  Sometimes other operators such as
+  ($+$), ($\rightarrow$), ($\cap$), or ($\sqsubseteq$) are also
+  defined.
+
+  Remember that when talking about an algebra with operators $\cdot$
+  and $+$, these aren't necessarily analagous to the arithmetic
+  multiplcation and addition operations!
+\end{frame}
+
+\begin{frame} [fragile]
+  \frametitle{Writing Expressions Algebraically}
+  In a language like ruby we may express the idea of our algebra like a function call:
+  \begin{verbatim}
+  c = [1,2,3].zip [:a, :b, :c]
+\end{verbatim}
+  which, in the context of an algebra over lists that defines an operator zip as $\cdot$ then we might write:
+  $c = { 1, 2, 3 } \cdot { a, b, c}$
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of Algebraic Structures Used in Software}
+
+  Although much formal programming language theory describe
+  applications in terms of \emph{Category Theory} and the languages'
+  \emph{Denotional Semantics}, it can be conceptually useful to think
+  of the semantics of an application in terms of Sets and Groups.
+\end{frame}
+
+\subsection{Properties of Algebraic Structures}
+
+\begin{frame}
+  \frametitle{Associativity}
+  An associative algebra is one that ensures that the order of
+  operations in sequential applications of an operator is
+  inconsequential as long as the order of the operands remains
+  unchanges.
+  $ a \cdot ( b \cdot c) = ( a \cdot b ) \cdot c $
+\end{frame}
+
+\begin{frame}
+  \frametitle{Communitivity}
+  A Communitive algebra is one where the order of the operands doesn't matter.
+  $ a \cdot b = b \cdot a$
+\end{frame}
+
+\begin{frame}
+  \frametitle{Closure}
+  An algebraic structure is \emph{closed} over an operation, $\cdot$ if: \\
+  $\forall a, b \epsilon A$ \\then \\$(a \cdot b) \epsilon A$
+\end{frame}
+
+\begin{frame} [fragile]
+  \frametitle{Identity}
+  An algebraic structure may be considered to cotain an \emph{identity
+    element} if for each binary operation, there exists some element
+  which, when applied with some other element, returns at element.
+  \begin{center}
+  $\forall a \epsilon A$\\
+  $id \cdot a = a $
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Initial Algebras}
+  An initial algebra is an algebra in the category of algebras.  It
+  defines an entry point into a recursive structure.  An initial
+  algebra formalizes the concept of things like an empty list.
+\end{frame}
+
+\subsection{Why Formalize Algebras?}
+
+\begin{frame}
+  \frametitle{Communication}
+  Leverage common, concise, and precise notation for describing your application behavior.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Equational Reasoning}
+  Think about extensions to your problem space, and your solutions,
+  abstractly by leverging analogous tools for different problem
+  domains that represent the same algebra.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Testing}
+  Defining an algebra can be the natrual evolution of testing as your
+  tests are essentially defining your axioms and operators.
+\end{frame}
+
+\end{document}
