@@ -236,6 +236,45 @@
 
 \section{The Algebra of Types}
 
+\subsection{A Question}
+
+\begin{frame}[fragile]
+  \frametitle{Example 1}
+  Looking at a very simple typed program we can see how types can help
+  us understand what a program is doing.  Look at the example below
+  and let's talk about what it's doing.
+  \begin{exampleblock}{A Very Simple Program}
+    \begin{lstlisting}[language=haskell]
+addNumbers :: Int -> Int -> Int
+addNumbers x y = x + y
+
+doubleNumber :: Int -> Int
+doubleNumber x = addNumbers x x
+
+doubleFive :: Int
+doubleFive =
+  let x = 5 :: Int in
+    doubleNumber x
+    \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Example 2}
+  In this example we lack type annotations for our functions.  Can we
+  figure out what it's doing?
+  \begin{exampleblock}{A More Obscure One}
+    \begin{lstlisting}[language=haskell]
+obscureFunction x y = x !! y
+
+obscureerFunction =
+  let x = [1,2,3,4,5] in
+    let y = 2 :: Int in
+      obscureFunction x y
+    \end{lstlisting}
+  \end{exampleblock}
+\end{frame}
+
 \subsection{A Glossary of Type Algebra}
 
 \begin{frame}
@@ -314,8 +353,10 @@
 
 \begin{frame}
   \frametitle{Application}
-  Application encapsulates the idea of function application
-
+  Application encapsulates the idea of function application. It
+  formalizes the notion that a function from a variable of one type to
+  a result of another type a type allows us to make a type judgement
+  about the result of applying that function.
   \begin{exampleblock}{App}
     \[
       \frac{\Gamma \vdash e_0 : \tau \rightarrow \tau' \quad \Gamma \vdash e_1 : \tau}
@@ -352,6 +393,5 @@
     \]
   \end{exampleblock}
 \end{frame}
-
 
 \end{document}
