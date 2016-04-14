@@ -1,4 +1,5 @@
 \documentclass{beamer}
+\usefonttheme[onlymath]{serif}
 
 \title{The Language of Languages}
 \subtitle{Or \\ \small{Understanding the language of the mathematics of programming}}
@@ -232,5 +233,125 @@
   Defining an algebra can be the natrual evolution of testing as your
   tests are essentially defining your axioms and operators.
 \end{frame}
+
+\section{The Algebra of Types}
+
+\subsection{A Glossary of Type Algebra}
+
+\begin{frame}
+  \frametitle{:}
+  Type assignment is an assertion that a given variable has a given
+  type.  We write $x : \tau$ to say that $x$ has type $\tau$.
+  \begin{exampleblock}{Type Assignment}
+    \[
+      x : \text{Integer}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\Gamma$}
+  $\Gamma$ represents a \emph{type context}, the context for which
+  types exist, and what variables are bound to them.  We can add
+  additional context to a type context by additing additional comma
+  separated clauses.
+  \begin{exampleblock}{A Type Context}
+    \[
+      \Gamma' = x : \sigma, \Gamma
+    \]
+  \end{exampleblock}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\vdash$}
+  The $\vdash$ operator provides a \emph{type judgement}.  A type
+  judgement is a judgement that given a context, $\Gamma$, that a type
+  assignment, $x : \sigma$ holds.
+  \begin{exampleblock}{Type Judgements}
+    \[
+      \Gamma \vdash x : \sigma
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{\---}
+  \begin{exampleblock}{Propositions}
+    \[
+      \frac{\Gamma, x : \tau}{\Gamma \vdash x : \tau}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{$\sqsubseteq$}
+  The $\sqsubseteq$ operator specifies \emph{specialization}.  To say
+  that $\tau \sqsubseteq \sigma$ is to that that the type $\tau$ is a
+  specialization of the general type $\sigma$
+  \begin{exampleblock}{Specialization}
+    \[
+      \frac{\Gamma' = \Gamma, x : \text{Int} \quad \text{Int} \sqsubseteq \text{Number}}
+      {\Gamma' \vdash x : \text{Number} }
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\subsection{An Example: Hindley Milner}
+
+\begin{frame}
+  \frametitle{Variable Definition}
+  Variable definition as defined by let encapsulates the idea of
+  assigning a type, $\sigma$, to a variable, $x$, in a given context
+  $\Gamma$.
+
+  \begin{exampleblock}{Var}
+    \[
+      \frac{x:\sigma \in \Gamma \quad \tau \sqsubseteq \sigma}{\Gamma \vdash x : \tau}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Application}
+  Application encapsulates the idea of function application
+
+  \begin{exampleblock}{App}
+    \[
+      \frac{\Gamma \vdash e_0 : \tau \rightarrow \tau' \quad \Gamma \vdash e_1 : \tau}
+      {\Gamma \vdash e_0\, e_1 : \tau'}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Abstraction}
+  \begin{exampleblock}{Abs}
+    \[
+      \frac{\Gamma, x : \tau \vdash e : \tau'}
+      {\Gamma \vdash \lambda x\, .\, e : \tau \rightarrow \tau'}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Let Bindings}
+  \begin{exampleblock}{Let}
+    \[
+      \frac{\Gamma \vdash e_0 : \tau \quad \Gamma, x : \bar{\Gamma(\tau) \vdash e_1 : \tau'}}
+      {\Gamma \vdash \text{let}\, x\; =\; e_0\; \text{in}\; e_1 : \tau'}
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Generalization}
+  \begin{exampleblock}{Gen}
+    \[
+      \bar{\Gamma}(\tau) = \forall \hat{\alpha} . \tau \quad \hat{\alpha} = \text{free}(\tau) - \text{free}(\Gamma)
+    \]
+  \end{exampleblock}
+\end{frame}
+
 
 \end{document}
