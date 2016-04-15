@@ -367,6 +367,11 @@ obscureerFunction =
 
 \begin{frame}
   \frametitle{Abstraction}
+  Abstraction generalizes the concept of abstracting a type over a
+  function.  For any type, $\tau'$, we can create a function that
+  generalizes $\tau'$ over $\tau$ by creating a function from
+  $\tau \rightarrow \tau'$
+
   \begin{exampleblock}{Abs}
     \[
       \frac{\Gamma, x : \tau \vdash e : \tau'}
@@ -376,10 +381,11 @@ obscureerFunction =
 \end{frame}
 
 \begin{frame}
+  \tt{let} defines the concept of binding a type judgement to a type context
   \frametitle{Let Bindings}
   \begin{exampleblock}{Let}
     \[
-      \frac{\Gamma \vdash e_0 : \tau \quad \Gamma, x : \bar{\Gamma(\tau) \vdash e_1 : \tau'}}
+      \frac{\Gamma \vdash e_0 : \tau \quad \Gamma, x : \bar{\Gamma}(\tau) \vdash e_1 : \tau'}
       {\Gamma \vdash \text{let}\, x\; =\; e_0\; \text{in}\; e_1 : \tau'}
     \]
   \end{exampleblock}
