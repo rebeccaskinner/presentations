@@ -17,6 +17,7 @@
 \usepackage{color}
 \usepackage{amsmath}
 \usepackage{csquotes}
+\usepackage{verbatim}
 
 % CenturyLink Green
 \usecolortheme[RGB={16,117,48}]{structure}
@@ -278,6 +279,19 @@ obscureerFunction =
 \subsection{A Glossary of Type Algebra}
 
 \begin{frame}
+  \frametitle{Free Variables}
+
+  We say that $x$ is \emph{free} when it is not bound to a value or
+  set of values (a type).  When we use $x$ in an expression, $x$
+  becomes bound by the judgement we have made about that expression.
+  For example if we say $f : \tau \rightarrow \tau'$, then in the
+  expression $\lambda x. f x$ x becomes bound by the restriction that
+  $x : \tau$ and the expression $(\lambda x . f x) x : \tau'$
+
+\end{frame}
+
+
+\begin{frame}
   \frametitle{:}
   Type assignment is an assertion that a given variable has a given
   type.  We write $x : \tau$ to say that $x$ has type $\tau$.
@@ -381,7 +395,28 @@ obscureerFunction =
 \end{frame}
 
 \begin{frame}
-  \tt{let} defines the concept of binding a type judgement to a type context
+  \frametitle{Generalization}
+  We define the function $\bar{\Gamma}(\tau)$ as the set of mono-typed
+  variables that are not bound in $\tau$ but are in the type context
+  $\Gamma$. When we say $\Gamma, x : \bar{\Gamma}(\tau)$ we are
+  asserting that in the context $\Gamma$ that $x$ is free with respect
+  to $\tau$
+  \begin{exampleblock}{Gen}
+    \[
+      \bar{\Gamma}(\tau) = \forall \hat{\alpha} . \tau \quad \hat{\alpha} = \text{free}(\tau) - \text{free}(\Gamma)
+    \]
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}
+
+  {\tt let} uses $\bar{\Gamma}(\tau)$ to define the concept of
+  substitution in an expression.  When we know that $e_0 : \tau$ and
+  $e_1 : \tau$ in $\Gamma, x:\bar{\Gamma}(\tau)$ then we can infer
+  that by substituting $e_0$ in $\lambda x . e_1$ where $x$ was not
+  bound to $\tau$, we have $\tau \rightarrow \tau'$.  This allows us
+  to define \emph{let-polymorphism}.
+
   \frametitle{Let Bindings}
   \begin{exampleblock}{Let}
     \[
@@ -391,13 +426,88 @@ obscureerFunction =
   \end{exampleblock}
 \end{frame}
 
-\begin{frame}
-  \frametitle{Generalization}
-  \begin{exampleblock}{Gen}
-    \[
-      \bar{\Gamma}(\tau) = \forall \hat{\alpha} . \tau \quad \hat{\alpha} = \text{free}(\tau) - \text{free}(\Gamma)
-    \]
+\subsection {A bit more on let-polymorphism}
+
+\begin{frame}[fragile]
+  \frametitle{Let Polymorphism Explained}
+  Consider the following sample code
+  \begin{exampleblock}{Sample Code}
+    \begin{lstlisting}[language=Haskell]
+thingInt y = let x = 5 :: Int in x + y
+main = let value = 7 in print (thingInt value)
+    \end{lstlisting}
   \end{exampleblock}
+
+  \begin{exampleblock}{Sample Output}
+    \begin{verbatim}
+    [rebecca@localhost:~] runhaskell sample.hs
+    12
+\end{verbatim}
+  \end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Let Polymorphism Explained (2)}
+  Consider the following sample code
+  \begin{exampleblock}{Sample Code}
+    \begin{lstlisting}[language=Haskell]
+thingFloat y = let x = 5 :: Float in x + y
+main = let value = 7 in print (thingInt value)
+    \end{lstlisting}
+  \end{exampleblock}
+
+  \begin{exampleblock}{Sample Output}
+    \begin{verbatim}
+    [rebecca@localhost:~] runhaskell sample.hs
+    12.0
+\end{verbatim}
+  \end{exampleblock}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Let Polymorphism Explained (3)}
+  Consider the following sample code
+  \begin{exampleblock}{Sample Code}
+    \begin{lstlisting}[language=Haskell]
+thingInt y = let x = 5 :: Int in x + y
+thingFloat y = let x = 5 :: Float in x + y
+main = let value = 7 in print (thingInt value) >> print (thingFloat value)
+    \end{lstlisting}
+  \end{exampleblock}
+
+\begin{exampleblock}{Sample Output}
+  \begin{tiny}
+    \begin{verbatim}
+    [rebecca@localhost:~] runhaskell sample.hs
+
+    sample.hs:3:69:
+        Couldn't match expected type 'Float' with actual type 'Int'
+        In the first argument of 'thingFloat', namely 'value'
+        In the first argument of 'print', namely '(thingFloat value)'
+\end{verbatim}
+\end{tiny}
+  \end{exampleblock}
+
+\begin{exampleblock}{Sample Output}
+  \begin{tiny}
+    \begin{verbatim}
+    [rebecca@localhost:~] runhaskell -XNoMonomorphismRestriction sample.hs
+    12
+    12.0
+\end{verbatim}
+\end{tiny}
+\end{exampleblock}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{No Monomorphism Restriction}
+  The {\tt -XNoMonomorphismRestriction} flag allows let-polymorphism
+  at the expression level, by removing the restriction that $x$ must
+  remain bound within the context of {\tt main}.  With the restriction
+  lifted $x$ becomes \emph{free} within the second expression
+  {\tt print (thingFloat)} and is no longer bound by the restriction
+  $x : \text{Int}$
 \end{frame}
 
 \end{document}
