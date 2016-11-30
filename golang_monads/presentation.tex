@@ -1,0 +1,421 @@
+\documentclass{beamer}
+\usefonttheme[onlymath]{serif}
+
+\title{Let's Write Better Code}
+\subtitle{Some Handy Patterns for Better Go Code}
+\author{Rebecca Skinner}
+\institute{Asteris, LLC}
+\date{\today}
+\mode<presentation> {\usetheme{Madrid}}
+
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+
+% \usecolortheme[RGB={221,211,255}]{structure}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{
+  backgroundcolor=\color{white},
+  basicstyle=\tiny,
+  keywordstyle=\color{keyword},
+  commentstyle=\color{comment},
+  showspaces=false,
+  showstringspaces=false,
+  showtabs=false,
+  stringstyle=\color{string},
+  tabsize=4
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage{}
+\end{frame}
+
+\section{Introduction}
+\begin{frame}
+  \frametitle{Let's Write Better Code!}
+  Go introduces some novel language features.  The community have
+  standardized on some idioms that work, but can we do better?
+\end{frame}
+
+\begin{frame}
+  \frametitle{Error Handling}
+  {\it ``Better Code''} is hard to define in the general case, so let's
+  narrow our scope down to error handling and try to define
+  {\it better}.
+\end{frame}
+
+\subsection{Some Definitions of Better}
+\begin{frame}
+  \frametitle{Terseness}
+  {\bf Terseness}: Using fewer statements.
+  \vfill
+  Terseness is valuable (up to a point) because every statement is a
+  potential error.  As we reduce the number of LOC we reduce the
+  expected number of bugs in the application.
+  \vfill
+  \begin{itemize}
+  \item Irrespective of projects defect density, more KLOC == more bugs
+  \item Code on the screen is a mental cache
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Expressiveness}
+  {\bf Expressiveness}: The amount of meaning in a single statement.
+  \vfill
+  The more meaning we pack into a statement, the fewer statements we
+  have, giving us more terse code.  Expressive code is also easier to
+  read because it allows a user to work at a higher level of
+  abstraction and be less bogged down in the details.
+  \vfill
+  \begin{itemize}
+    \item More meaning per statement improves terseness
+    \item Higher expressiveness makes code easier to understand
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Robustness}
+  {\bf Robustness}: Resiliance against mistakes, errors, and changes to the code.
+  \vfill
+  Robustness in our code means that the structure of our code
+  automatically guards against errors.  When we have patterns and
+  idioms that help us guard against bugs without having to think about
+  it, we're less likely to miss things.
+  \vfill
+  \begin{itemize}
+    \item Prohibiting errors makes code safer
+    \item Guaranteed safety makes tests simpler
+  \end{itemize}
+\end{frame}
+
+\section{Error Handling Idioms}
+
+\begin{frame}[fragile]
+  \frametitle{Mutli-Returns}
+  One of the most ubiquitious conventions in go programs us using
+  multi-return to indicate an error or missing value.  It offers an
+  alternative approach to idioms used in other procedural and object
+  oriented languages such as:
+  \vfill
+  \begin{itemize}
+  \item Exceptions
+  \item Out-Parameters
+  \item Error constants (e.g. \verb!errno!)
+  \item Returning structs or tuples
+  \item Crashing
+  \end{itemize}
+\end{frame}
+
+\subsection{Examples}
+\begin{frame}[fragile]
+  \frametitle{Error Handling with Multi-Return}
+  \begin{columns}[T]
+    \begin{column}{.48\textwidth}
+\begin{lstlisting}
+value, err = FunctionCall()
+if err != nil {
+  return 0, err
+}
+\end{lstlisting}
+    \end{column}
+    \hfill%
+    \begin{column}{.48\textwidth}
+\begin{lstlisting}
+if result, err := FunctionCall(); err != nil {
+  DoTheThing(result)
+}
+\end{lstlisting}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Mutli-Return with Bool}
+  \begin{columns}[T]
+    \begin{column}{.48\textwidth}
+\begin{lstlisting}
+value, ok := dataMap["key1"]
+if !ok {
+        value = defaultValue
+}
+\end{lstlisting}
+    \end{column}
+    \hfill
+    \begin{column}{.48\textwidth}
+\begin{lstlisting}
+if value, ok := dataMap["key2"]; ok {
+  doSomething(value)
+}
+\end{lstlisting}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What's the problem?}
+  Using multi-return in this way makes it difficult to achieve
+  terseness because it's not expressive.  It's also less robust,
+  because we could forget to check an error at any step.
+
+  \vfill
+
+  Every logical operation we want to perform expands to several
+  statements.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A Traditional Approach}
+\begin{lstlisting}
+func Pipeline(g *graph.Graph, id string, factory *render.Factory) (*Result, error) {
+        gen := &pipelineGen{Graph: g, RenderingPlant: factory, ID: id}
+        node, ok := g.Get(id)
+        if !ok {
+                return nil, errors.New(id + " no such node in graph")
+        }
+        task, err := gen.GetTask(node)
+        if err != nil {
+                return nil, errors.Wrap(err, "unable to plan")
+        }
+        errorResult, err := gen.DependencyCheck(task)
+        if err != nil {
+                return nil, errors.Wrap(err, "unable to plan")
+        }
+        if errorResult != nil {
+                return errorResult, nil
+        }
+        return gen.PlanNode(task)
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{What's The Problem?}
+  \begin{itemize}
+    \item each call becomes 4 lines of code
+    \item it's difficult to visually separate out the functions from the error handling logic
+    \item reordering calls can be tricky
+    \item testing is hard (we have to add mocks)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{What if it could look like this?}
+\begin{lstlisting}
+func Pipeline(g *graph.Graph, id string, factory *render.Factory) (*Result, error) {
+        gen := &pipelineGen{Graph: g, RenderingPlant: factory, ID: id}
+        gen.GetTask()
+        gen.DependencyCheck()
+        gen.PlanNode()
+}
+\end{lstlisting}
+
+  \begin{itemize}
+  \item Clearly defined steps
+  \item easy to modify
+  \item easy to test
+  \end{itemize}
+\end{frame}
+
+\section{Content vs Structure}
+
+\begin{frame}
+  \frametitle{Content and Structure}
+  {\bf Structure:} The shape of the code; the way units of functionality are assembled.
+
+  \vfill
+
+  The key difference between our examples is in how we handle
+  structure.  In the first case the structure is verbose, and in the
+  second it's completely absent.
+
+  \vfill
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Encoding Structure}
+\begin{lstlisting}
+type ExampleFunc func(interface{}) (interface{}, error)
+
+func ExampleStructure(input interface{},
+        func1 ExampleFunc,
+        func2 ExampleFunc) (interface{}, error) {
+        result1, err := func1(input)
+        if err != nil {
+                return err
+        }
+        return func2(result1)
+}
+\end{lstlisting}
+  \vfill
+  We could encode our structure in a function that checks the result for us
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Using the Example}
+\begin{lstlisting}
+func ShowExample(input interface{}) (interface{}, error) {
+        result, err := ExampleStructure(input, operation1, operation2)
+        if err != nil {
+                return err
+        }
+        return operation3(result)
+}
+\end{lstlisting}
+  \vfill
+  But we still have the same problem...
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{If we return the same type that we input...}
+\begin{lstlisting}
+type ExampleFunc func(interface{}) (interface{}, error)
+
+func BetterExample(f1, f2 ExampleFunc) ExampleFunc {
+        return func(input interface{}) (interface{}, error) {
+                result1, err := f1(input)
+                if err != nil {
+                        return nil, err
+                }
+                return f2(result1)
+        }
+}
+
+func UseExample(input interface{}) (interface{}, error) {
+        f := BetterExample(BetterExmaple(operation1, operation2), operation3)
+        return f(input)
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{But now we're tied to {\tt (interface{}, error)}}
+
+  We can create a custom structure for each place in our code, but
+  it's better when we have a common language.
+
+  \begin{itemize}
+  \item Things that represent structure
+  \item A way to chain operations together
+  \item Decoupled from the underlying shape of our data
+  \end{itemize}
+\end{frame}
+
+\section{Monads}
+
+\begin{frame}
+  \frametitle{Monads Formalize Structure}
+
+  Monads formalize structure, and let us program with structure
+  separate from the code that the structure is controlling.
+\end{frame}
+
+\subsection{Monads in Practice}
+
+\begin{frame}[fragile]
+  \frametitle{Monad Interface}
+\begin{lstlisting}
+type Monad interface {
+        AndThen(func(interface{}) Monad) Monad
+        Return(i interface{}) Monad
+}
+
+func (m Either) AndThen(f func(interface{}) monad.Monad) monad.Monad {
+        if m.IsLeft() {
+                return m
+        }
+        inner, ok := m.inner.(RightType)
+        if !ok {
+                return Left(errors.New("invalid either type"))
+        }
+        return f(inner.Val)
+}
+
+func (m Maybe) AndThen(f func(interface{}) monad.Monad) monad.Monad {
+        if asJust, ok := m.internal.(just); ok {
+                return f(asJust.Val)
+        }
+        return m
+}
+\end{lstlisting}
+\end{frame}
+
+
+
+\section{Why?}
+\begin{frame}
+  \frametitle{Precedent}
+  Techniques that originated in functional languages are being used to
+  great effect in many languages across the spectrum of paradigms
+
+  \begin{itemize}
+  \item C$\sharp$
+  \item Java
+  \item C++
+  \item ruby
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Go Is Already Multi-Paradigm}
+  Go already supports multiple development paradigms; adding
+  functional idioms is not straying from the spirit of the language
+\end{frame}
+
+\begin{frame}
+  \frametitle{Go Isn't Safe}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Go Has Language Features We Need}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{It's Helpful}
+
+\end{frame}
+
+
+\end{document}
