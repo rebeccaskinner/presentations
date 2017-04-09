@@ -1,38 +1,45 @@
 \documentclass{beamer}
-\usefonttheme[onlymath]{serif}
+
+\usefonttheme{professionalfonts} % using non standard fonts for beamer
 
 \title{Monadic Error Handling in Go}
 \subtitle{Breaking Beyond Common Go Idioms}
 \author{Rebecca Skinner}
 \institute{Asteris, LLC}
 \date{\today}
-\mode<presentation> {\usetheme{Madrid}}
+
+
+\mode<presentation> {\usetheme{bjeldbak}}
 
 \usepackage[english]{babel}
-\usepackage[latin1]{inputenc}
 \usepackage{times}
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
 \usepackage{listings}
+\usepackage{listings-golang}
 \usepackage{color}
 \usepackage{amsmath}
 \usepackage{csquotes}
 \usepackage{verbatim}
+\usepackage{fontspec}
+
+\setmainfont{Liberation Sans}
 
 \definecolor{comment}{rgb}{145,175,188}
 \definecolor{keyword}{rgb}{157,163,199}
 \definecolor{string}{rgb}{155,204,174}
 
-\lstset{
-  backgroundcolor=\color{white},
+\lstset{ % add your own preferences
   basicstyle=\tiny,
-  keywordstyle=\color{keyword},
-  commentstyle=\color{comment},
-  showspaces=false,
-  showstringspaces=false,
+  keywordstyle=\color{blue}
+  showspaces=false
   showtabs=false,
-  stringstyle=\color{string},
-  tabsize=4
+  numbers=left,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0}
+  tabsize=2,
+  language=Golang % this is it !
 }
 
 \newcommand{\chref}[3] {
@@ -67,7 +74,43 @@
   \titlepage{}
 \end{frame}
 
+\begin{frame}
+  \begin{itemize}
+    \item twitter: \underline{\color{blue} \href{https://twitter.com/cercerilla}{@cercerilla}}
+    \item sample code: \underline{\color{blue} \url{https://github.com/rebeccaskinner/agile17-sample}}
+    \item reference library: \underline{\color {blue} \url{https://github.com/asteris-llc/gofpher}}
+    \item slides: <TBD>
+  \end{itemize}
+\end{frame}
+
 \section{Introduction}
+
+\begin{frame}
+  \frametitle{What Are We Going To Cover?}
+  We want to understand how to improve the quality and readability of
+  our code by borrowing idioms from languagues like Elm, Haskell, and
+  F$\sharp$.  Here's how we'll get there
+  \\\vfill
+  \begin{itemize}
+  \item Go Today: What Works and Why I Was Motivated to Do Better
+  \item Defining Better: How A New Approach Can Improve Quality
+  \item Abstracting Program Structure: An Introduction to Monadic Error Handling
+  \item Generalization: Applying Today's Lessons Tomorrow
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A Lens Into Our Problem}
+  Let's define a characteristic sample problem, to give ourselves
+  something to point to as we discuss the topic.
+  \vfill
+  \chref{blue}{https://github.com/rebeccaskinner/agile17-sample}{Source}
+  \vfill
+
+\end{frame}
+
+\section{The State of Go in 2017}
+
 \begin{frame}
   \frametitle{Let's Write Better Code!}
   Go introduces some novel language features.  The community have

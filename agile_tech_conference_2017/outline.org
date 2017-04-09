@@ -1,3 +1,9 @@
+* Monadic Error Handling in Go
+** Wut?
+*** Monads are an interface
+** Why?
+*** I Hate Writing Tests
+*** But I like Working Code
 * I love Go... I Hate Go!
 ** Error Handling Sucks!
 *** Verbose
@@ -13,9 +19,12 @@
 *** The idioms are broken
 *** WET
 * Idioms
+** What Are Idioms
+*** Shorthand for communication
+*** Patterns that let us think more quickly
+*** We have to be careful not to overfit
 ** Go Allows us to be Expressive
 *** High Order Functions
 *** Runtime Type Introspection
 *** Automatic Interface Fullfilment
 ** Go's Idioms Discourage These Patterns
-***

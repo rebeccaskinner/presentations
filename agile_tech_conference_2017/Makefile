@@ -1,8 +1,10 @@
 all: presentation.pdf
 
-%.pdf: %.tex
-	pdflatex $(<)
-	pdflatex $(<)
+.PHONY: presentation.pdf
+
+presentation.pdf:
+	xelatex presentation.tex
+	xelatex presentation.tex
 
 clean:
 	-rm -fr *.aux
