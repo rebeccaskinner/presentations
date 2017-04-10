@@ -1,3 +1,10 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
 \documentclass{beamer}
 
 \usefonttheme{professionalfonts} % using non standard fonts for beamer
@@ -7,7 +14,6 @@
 \author{Rebecca Skinner\\ \small{@cercerilla}}
 \institute{Asteris, LLC}
 \date{\today}
-
 
 \mode<presentation> {\usetheme{bjeldbak}}
 
@@ -22,6 +28,7 @@
 \usepackage{csquotes}
 \usepackage{verbatim}
 \usepackage{fontspec}
+\usepackage{pbox}
 
 \setmainfont{Liberation Sans}
 
@@ -48,23 +55,23 @@
 
 \AtBeginSection[]{
   \begin{frame}
-  \vfill
-  \centering
-  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
-    \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
-  \end{beamercolorbox}
-  \vfill
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
   \end{frame}
 }
 
 \AtBeginSubsection[]{
   \begin{frame}
-  \vfill
-  \centering
-  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
-    \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
-  \end{beamercolorbox}
-  \vfill
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
   \end{frame}
 }
 
@@ -72,6 +79,9 @@
 
 \begin{frame}
   \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
 \end{frame}
 
 \begin{frame}
@@ -81,16 +91,16 @@
   library.
   \\\vfill
   \begin{itemize}
-    \item sample code: \chref{blue}{https://github.com/rebeccaskinner/agile17-sample}{agile17-sample}
-    \item reference library: \chref{blue}{https://github.com/rebeccaskinner/gofpher}{gofpher}
-    \item slides: \chref{blue}{https://github.com/rebeccaskinner/presentations/tree/agile-tech-2017/agile_tech_conference_2017}{source code}
+  \item sample code: \chref{blue}{https://github.com/rebeccaskinner/agile17-sample}{agile17-sample}
+  \item reference library: \chref{blue}{https://github.com/rebeccaskinner/gofpher}{gofpher}
+  \item slides: \chref{blue}{https://github.com/rebeccaskinner/presentations/tree/agile-tech-2017/agile_tech_conference_2017}{source code}
   \end{itemize}
 \end{frame}
 
 \section{Introduction}
 
 \begin{frame}
-  \frametitle{What Are We Going To Cover?}
+  \frametitle{What Are We \emph{Go}-ing To Cover?}
   We want to understand how to improve the quality and readability of
   our code by borrowing idioms from languagues like Elm, Haskell, and
   F$\sharp$.  Here's how we'll get there
@@ -105,12 +115,20 @@
 
 \begin{frame}[fragile]
   \frametitle{A Lens Into Our Problem}
-  Let's define a characteristic sample problem, to give ourselves
-  something to point to as we discuss the topic.
+  At the Dunce Co. Widget Factory we realized that our employee data
+  model was broken.  We've defined a new employee data model but we
+  need help performing the translation. We've created a service that
+  provides two endpoints:\\
   \vfill
-  \chref{blue}{https://github.com/rebeccaskinner/agile17-sample}{Source}
+  \begin{itemize}
+  \item {\tt GET /fetch/<id>} returns a JSON document with an old-schema user
+  \item {\tt POST /post/<id>} accepts a JSON document with a new-schema user
+  \end{itemize}
   \vfill
-
+  Users will be provided with a list of user id's, they will call your
+  application with the user id and it should fetch the old schema for
+  that user, translate it to the new schema, and post that back to our
+  endpoint.
 \end{frame}
 
 \section{The State of Go in 2017}
@@ -153,8 +171,8 @@
   abstraction and be less bogged down in the details.
   \vfill
   \begin{itemize}
-    \item More meaning per statement improves terseness
-    \item Higher expressiveness makes code easier to understand
+  \item More meaning per statement improves terseness
+  \item Higher expressiveness makes code easier to understand
   \end{itemize}
 \end{frame}
 
@@ -168,8 +186,8 @@
   it, we're less likely to miss things.
   \vfill
   \begin{itemize}
-    \item Prohibiting errors makes code safer
-    \item Guaranteed safety makes tests simpler
+  \item Prohibiting errors makes code safer
+  \item Guaranteed safety makes tests simpler
   \end{itemize}
 \end{frame}
 
@@ -276,10 +294,10 @@ func Pipeline(g *graph.Graph, id string, factory *render.Factory) (*Result, erro
 \begin{frame}
   \frametitle{What's The Problem?}
   \begin{itemize}
-    \item each call becomes 4 lines of code
-    \item it's difficult to visually separate out the functions from the error handling logic
-    \item reordering calls can be tricky
-    \item testing is hard (we have to add mocks)
+  \item each call becomes 4 lines of code
+  \item it's difficult to visually separate out the functions from the error handling logic
+  \item reordering calls can be tricky
+  \item testing is hard (we have to add mocks)
   \end{itemize}
 \end{frame}
 
