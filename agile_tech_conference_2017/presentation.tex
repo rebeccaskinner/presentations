@@ -7,15 +7,13 @@
 % 94042, USA.
 \documentclass{beamer}
 
-\usefonttheme{professionalfonts} % using non standard fonts for beamer
-
 \title{Monadic Error Handling in Go}
 \subtitle{Breaking Beyond Common Go Idioms}
 \author{Rebecca Skinner\\ \small{@cercerilla}}
 \institute{Asteris, LLC}
 \date{\today}
 
-\mode<presentation> {\usetheme{bjeldbak}}
+\mode<presentation> {\usetheme{metropolis}}
 
 \usepackage[english]{babel}
 \usepackage{times}
@@ -29,8 +27,6 @@
 \usepackage{verbatim}
 \usepackage{fontspec}
 \usepackage{pbox}
-
-\setmainfont{Liberation Sans}
 
 \definecolor{comment}{rgb}{145,175,188}
 \definecolor{keyword}{rgb}{157,163,199}
@@ -130,19 +126,11 @@
 \end{frame}
 
 \section{The State of Go in 2017}
-\begin{frame}
-  \frametitle{Let's Write Better Code!}
-  Go introduces some novel language features.  The community have
-  standardized on some idioms that work, but can we do better?
-\end{frame}
-
-\begin{frame}
-  \frametitle{Error Handling}
-  {\it ``Better Code''} is hard to define in the general case, so let's
-  narrow our scope down to error handling and try to define
-  {\it better}.
-\end{frame}
-
+\subsection{Generics, Interfaces, and \tt{interface\{\}}}
+\subsection{First Class Functions}
+\subsection{Multi-Return}
+\subsection{Error Handling}
+\section{Defining \emph{Better}}
 \subsection{Some Definitions of Better}
 \begin{frame}
   \frametitle{Terseness}
@@ -187,137 +175,8 @@
   \item Guaranteed safety makes tests simpler
   \end{itemize}
 \end{frame}
-
-\section{Error Handling Idioms}
-
-\begin{frame}[fragile]
-  \frametitle{Mutli-Returns}
-  One of the most ubiquitious conventions in go programs us using
-  multi-return to indicate an error or missing value.  It offers an
-  alternative approach to idioms used in other procedural and object
-  oriented languages such as:
-  \vfill
-  \begin{itemize}
-  \item Exceptions
-  \item Out-Parameters
-  \item Error constants (e.g. \verb!errno!)
-  \item Returning structs or tuples
-  \item Crashing
-  \end{itemize}
-\end{frame}
-
-\subsection{Examples}
-\begin{frame}[fragile]
-  \frametitle{Error Handling with Multi-Return}
-  \begin{columns}[T]
-    \begin{column}{.48\textwidth}
-\begin{lstlisting}
-value, err = FunctionCall()
-if err != nil {
-  return 0, err
-}
-\end{lstlisting}
-    \end{column}
-    \hfill%
-    \begin{column}{.48\textwidth}
-\begin{lstlisting}
-if result, err := FunctionCall(); err != nil {
-  DoTheThing(result)
-}
-\end{lstlisting}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{Mutli-Return with Bool}
-  \begin{columns}[T]
-    \begin{column}{.48\textwidth}
-\begin{lstlisting}
-value, ok := dataMap["key1"]
-if !ok {
-        value = defaultValue
-}
-\end{lstlisting}
-    \end{column}
-    \hfill
-    \begin{column}{.48\textwidth}
-\begin{lstlisting}
-if value, ok := dataMap["key2"]; ok {
-  doSomething(value)
-}
-\end{lstlisting}
-    \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}
-  \frametitle{What's the problem?}
-  Using multi-return in this way makes it difficult to achieve
-  terseness because it's not expressive.  It's also less robust,
-  because we could forget to check an error at any step.
-
-  \vfill
-
-  Every logical operation we want to perform expands to several
-  statements.
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{A Traditional Approach}
-\begin{lstlisting}
-func Pipeline(g *graph.Graph, id string, factory *render.Factory) (*Result, error) {
-        gen := &pipelineGen{Graph: g, RenderingPlant: factory, ID: id}
-        node, ok := g.Get(id)
-        if !ok {
-                return nil, errors.New(id + " no such node in graph")
-        }
-        task, err := gen.GetTask(node)
-        if err != nil {
-                return nil, errors.Wrap(err, "unable to plan")
-        }
-        errorResult, err := gen.DependencyCheck(task)
-        if err != nil {
-                return nil, errors.Wrap(err, "unable to plan")
-        }
-        if errorResult != nil {
-                return errorResult, nil
-        }
-        return gen.PlanNode(task)
-}
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}
-  \frametitle{What's The Problem?}
-  \begin{itemize}
-  \item each call becomes 4 lines of code
-  \item it's difficult to visually separate out the functions from the error handling logic
-  \item reordering calls can be tricky
-  \item testing is hard (we have to add mocks)
-  \end{itemize}
-\end{frame}
-
-
-\begin{frame}[fragile]
-  \frametitle{What if it could look like this?}
-\begin{lstlisting}
-func Pipeline(g *graph.Graph, id string, factory *render.Factory) (*Result, error) {
-        gen := &pipelineGen{Graph: g, RenderingPlant: factory, ID: id}
-        gen.GetTask()
-        gen.DependencyCheck()
-        gen.PlanNode()
-}
-\end{lstlisting}
-
-  \begin{itemize}
-  \item Clearly defined steps
-  \item easy to modify
-  \item easy to test
-  \end{itemize}
-\end{frame}
-
-\section{Content vs Structure}
+\section{Abstracting Structure}
+\subsection{Content vs Structure}
 
 \begin{frame}
   \frametitle{Content and Structure}
@@ -400,8 +259,7 @@ func UseExample(input interface{}) (interface{}, error) {
   \item Decoupled from the underlying shape of our data
   \end{itemize}
 \end{frame}
-
-\section{Monads}
+\subsection{Monads}
 
 \begin{frame}
   \frametitle{Monads Formalize Structure}
@@ -439,43 +297,19 @@ func (m Maybe) AndThen(f func(interface{}) monad.Monad) monad.Monad {
 }
 \end{lstlisting}
 \end{frame}
+\section{Generalizing Idioms}
+\section{Questions?}
 
-
-
-\section{Why?}
 \begin{frame}
-  \frametitle{Precedent}
-  Techniques that originated in functional languages are being used to
-  great effect in many languages across the spectrum of paradigms
-
-  \begin{itemize}
-  \item C$\sharp$
-  \item Java
-  \item C++
-  \item ruby
-  \end{itemize}
+  \frametitle{Let's Write Better Code!}
+  Go introduces some novel language features.  The community have
+  standardized on some idioms that work, but can we do better?
 \end{frame}
 
 \begin{frame}
-  \frametitle{Go Is Already Multi-Paradigm}
-  Go already supports multiple development paradigms; adding
-  functional idioms is not straying from the spirit of the language
+  \frametitle{Error Handling}
+  {\it ``Better Code''} is hard to define in the general case, so let's
+  narrow our scope down to error handling and try to define
+  {\it better}.
 \end{frame}
-
-\begin{frame}
-  \frametitle{Go Isn't Safe}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{Go Has Language Features We Need}
-
-\end{frame}
-
-\begin{frame}
-  \frametitle{It's Helpful}
-
-\end{frame}
-
-
 \end{document}
