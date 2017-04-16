@@ -34,15 +34,13 @@
 
 \lstset{ % add your own preferences
   basicstyle=\tiny,
-  keywordstyle=\color{blue}
-  showspaces=false
+  showspaces=false,
   showtabs=false,
-  numbers=left,
+  numbers=none,
   numbersep=5pt,
   showstringspaces=false,
-  stringstyle=\color[rgb]{0.16, .47, 0}
-  tabsize=2,
-  language=Golang % this is it !
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=2
 }
 
 \newcommand{\chref}[3] {
@@ -115,8 +113,8 @@
   provides two endpoints:\\
   \vfill
   \begin{itemize}
-  \item {\tt GET /fetch/<id>} returns a JSON document with an old-schema user
-  \item {\tt POST /post/<id>} accepts a JSON document with a new-schema user
+  \item {\tt GET /oldusers/<id>} returns a JSON document with an old-schema user
+  \item {\tt POST /newusers/<id>} accepts a JSON document with a new-schema user
   \end{itemize}
   \vfill
   Users will be provided with a list of user id's, they will call your
@@ -126,6 +124,84 @@
 \end{frame}
 
 \section{The State of Go in 2017}
+\begin{frame}
+  \frametitle{Go's History}
+
+  Go was created at Google by a team including Rob Pike and Ken
+  Thompson.  It was designed to help make the development of
+  microservices easier, and to address common criticisms of C++ and
+  Java.  It's often called ``better C''.
+\end{frame}
+
+\begin{frame} [fragile]
+  \frametitle{Simple Syntax}
+
+  Go was designed to have syntax that is very similar to languages in
+  the C family.
+\\\vfill
+\begin{lstlisting}[language=Golang]
+package main
+import "fmt"
+func main() {
+        fmt.Println("Hello, World")
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Static Types}
+  Go is a statically typed language.  The empty interface type {\tt
+    interface$\{\}$} allows us to escape the type system and work
+  with untyped data.
+\end{frame}
+
+\begin{frame} [fragile]
+  \frametitle{Reflection}
+  Go supports runtime type introspection with reflect.  Using
+  reflection we can look up the original type of an untyped variable:
+\\\vfill
+\begin{lstlisting}[language=Golang]
+func wasInt(i interface{}) bool {
+        return reflect.TypeOf(i) == reflect.TypeOf(int(0))
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{OOP}
+
+  Go supports, but does not enforce, object oriented programming.
+  {\tt struct}'s may act as objects by having methods attached to
+  them, or they can act as plain structured data.
+
+  Interfaces are descriptive.  When an interface is defined, any type
+  that implements the required methods will fullfill the interface
+  automatically.  This allows interfaces to be created on top of
+  existing types without changing the underlying implementation.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{First-Class Functions}
+
+  Go supports first-class functions, which are closed over the
+  variables that are in scope when they are defined.  Defining
+  functions in-line to pass to other functions is idiomatic and common
+  in go.  The example below shows how first-class functions are
+  commonly used during unit testing.
+\\\vfill
+\begin{lstlisting}[language=Golang]
+t.Run("params-and-lookups", func(t *testing.T) {
+        assert.True(t, graphutils.DependsOn(g, "parent-1", "child-1"))
+        assert.True(t, graphutils.DependsOn(g, "parent-1", "child-2"))
+})
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Multi-Returns}
+
+\end{frame}
+
 \subsection{Generics, Interfaces, and \tt{interface\{\}}}
 \subsection{First Class Functions}
 \subsection{Multi-Return}
