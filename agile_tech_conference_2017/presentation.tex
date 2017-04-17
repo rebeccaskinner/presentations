@@ -101,27 +101,19 @@
 
 \begin{frame}
   \frametitle{What We'll Cover}
-  We want to understand how to improve the quality and readability of
-  our code by borrowing idioms from languagues like Elm, Haskell, and
-  F$\sharp$.  Here's
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{A Lens Into Our Problem}
-  At the Dunce Co. Widget Factory we realized that our employee data
-  model was broken.  We've defined a new employee data model but we
-  need help performing the translation. We've created a service that
-  provides two endpoints:\\
-  \vfill
   \begin{itemize}
-  \item {\tt GET /oldusers/<id>} returns a JSON document with an old-schema user
-  \item {\tt POST /newusers/<id>} accepts a JSON document with a new-schema user
+  \item An overview of Go's philosophy and idioms
+    \pause
+  \item How idiomatic error handling in go works
+    \pause
+  \item The problems with error handling in go
+    \pause
+  \item An introduction to monads and the Gofpher library
+    \pause
+  \item Using Gofpher in real-world code
+    \pause
+  \item Idioms and the lessons we've learned
   \end{itemize}
-  \vfill
-  Users will be provided with a list of user id's, they will call your
-  application with the user id and it should fetch the old schema for
-  that user, translate it to the new schema, and post that back to our
-  endpoint.
 \end{frame}
 
 \section{What Makes Go Go?}
@@ -402,7 +394,7 @@ func main() {
   \end{center}
 \end{frame}
 
-\begin{frame}[fragile]
+\begin{frame}
   \frametitle{What Are Monads?}
   A monad is a kind of very general interface that arises very
   naturally from a lot of code.  At their heart, monads give us a way
@@ -424,6 +416,175 @@ func main() {
   \begin{center}
     \includegraphics[height=.85\paperheight]{images/small/monads_visualized}
   \end{center}
+\end{frame}
+
+\subsection{How Can Monads Help Us Write Better Code?}
+\begin{frame}
+  \frametitle{Errors are Context}
+  The question of whether or not an error occured is part of the
+  context of a value.  In other words, when a function can fail, it's
+  result is \emph{Either} and error occured, or we have an output
+  value.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Either Monad}
+\begin{lstlisting}[language=Golang]
+package either
+
+type Either struct {
+        Value interface{}
+        Err   error
+}
+
+func Return(i interface{}) Either {
+        return Either{Value: i}
+}
+
+func (e Either) Bind(f func(i interface{}) Either) Either {
+        if e.Err != nil {
+                return e
+        }
+        return f(e.Value)
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Monadic Pipelines for Readability and Correctness}
+  A \emph{monadic pipeline} is a series of function calls connected in order
+  with calls to {\tt Bind}.
+
+  \par\pause
+  Monadic pipelining allows us to construct a chain of function calls
+  without having to worry about explicitly addressing failures.  Since
+  each call to {\tt Bind} returns a new {\tt Either} monad, we can
+  focus on our business logic and let the error context be handled
+  implicitly.
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \includegraphics[height=.95\paperheight]{images/small/rails_graph}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile,t]
+  \frametitle{Comparing Traditional and Monadic Code}
+  \begin{columns}
+    \begin{column}{.45\paperwidth}
+      \begin{figure}
+        \includegraphics[keepaspectratio,height=\paperheight,width=.4\paperwidth]{images/small/current_errors_highlighted}
+        \caption{Traditional Code}
+      \end{figure}
+    \end{column}
+    \begin{column}{.45\paperwidth}
+      \begin{figure}
+        \includegraphics[keepaspectratio,height=\paperheight,width=.4\paperwidth]{images/small/monadic_highlighted}
+        \caption{Monadic Code}
+      \end{figure}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\section{Making Code Monadic with Gofpher}
+
+\begin{frame}
+  \frametitle{Gofpher}
+  {\tt Gofpher} is an open source library for Go that illustrates the
+  ideas from this presentation.  Let's take a look at a few practical
+  examples of how we can use it to explore ways of applying these
+  lessons to some real world code.
+\end{frame}
+
+\subsection{Problem 1: Dealing with Multi-Return Functions}
+
+\begin{frame}[fragile]
+  \frametitle{Using {\tt Either} for Error Context}
+  One of the biggest benefits to using monadic pipelines is
+  eliminating the error checking implicit in functions that return a
+  value and an error.  As we've seen, the {\tt Either} monad allows us
+  to capture the error context into a single value.
+  \par\pause
+  The first thing we need to do is convert a function like this on
+  from the {\tt ioutil} package in go's standard library:
+\begin{lstlisting}[language=Golang]
+func ReadAll(r io.Reader) ([]byte, error) { /* ... */ }
+\end{lstlisting}
+  \par\pause
+  Into one like this:
+\begin{lstlisting}[language=Golang]
+func MonadicReadAll(r io.Reader) either.EitherM { /* ... */ }
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The {\tt WrapEither} Function}
+  The {\tt WrapEither} function provides a generic way to convert any
+  function that returns a value and an error into one that returns an
+  {\tt EitherM} monad.
+  \\\vfill
+  \par\pause
+\begin{lstlisting}[language=Golang]
+func WrapEither(f interface{}) func(interface{}) monad.Monad {
+        errF := func(s string) func(interface{}) monad.Monad {
+                return func(interface{}) monad.Monad {
+                        return LeftM(errors.New(s))
+                }
+        }
+        t := reflect.TypeOf(f)
+        /* Error Handling Omitted for Brevity */
+        if !t.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+                return errF(fmt.Sprintf("function's second return value should be an error"))
+        }
+        return func(i interface{}) monad.Monad {
+                res := reflect.ValueOf(f).Call([]reflect.Value{reflect.ValueOf(i)})
+                if res[1].IsNil() {
+                        return RightM(res[0].Interface())
+                }
+                return LeftM(res[1].Interface().(error))
+        }
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Using {\tt WrapEither}}
+
+\end{frame}
+
+
+\subsection{Problem 2: Dealing with Functions that Can't Fail}
+
+\begin{frame}[fragile]
+  \frametitle{Operating Inside of a Context}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Generic {\tt LiftM} function}
+  One of the most powerful aspects of Monads is the way that we can
+  write general purpose functions to deal with different types of
+  computations, and have them work for everything that implements our
+  very simple interface.
+\begin{lstlisting}[language=Golang]
+func FMap(f interface{}, m Monad) Monad {
+        return m.AndThen(func(i interface{}) Monad {
+                var input reflect.Value
+                if _, ok := i.(reflect.Value); ok {
+                        input = i.(reflect.Value)
+                } else {
+                        input = reflect.ValueOf(i)
+                }
+                v := reflect.ValueOf(f).Call([]reflect.Value{input})
+                return m.Return(v[0].Interface())
+        })
+}
+\end{lstlisting}
+
+\begin{lstlisting}[language=Golang]
+func (e EitherM) LiftM(f interface{}) monad.Monad {return monad.FMap(f, e)}
+\end{lstlisting}
 \end{frame}
 
 \section{Questions?}
