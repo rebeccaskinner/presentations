@@ -92,17 +92,18 @@
 
 \section{Introduction}
 \begin{frame}
-  \frametitle{What Are We \emph{Go}-ing To Cover?}
+  \frametitle{Background}
+  Over the last two years that I've been working with Go I've come to
+  believe that some of it's idioms are a detriment to quality. In this
+  presentation we'll focus on error handling, and how a decidedly
+  non-idiomatic approach might make our lives simpler.
+\end{frame}
+
+\begin{frame}
+  \frametitle{What We'll Cover}
   We want to understand how to improve the quality and readability of
   our code by borrowing idioms from languagues like Elm, Haskell, and
-  F$\sharp$.  Here's how we'll get there
-  \\\vfill
-  \begin{itemize}
-  \item Go Today: What Works and Why I Was Motivated to Do Better
-  \item Defining Better: How A New Approach Can Improve Quality
-  \item Abstracting Program Structure: An Introduction to Monadic Error Handling
-  \item Generalization: Applying Today's Lessons Tomorrow
-  \end{itemize}
+  F$\sharp$.  Here's
 \end{frame}
 
 \begin{frame}[fragile]
@@ -123,95 +124,236 @@
   endpoint.
 \end{frame}
 
-\section{The State of Go in 2017}
+\section{What Makes Go Go?}
 \begin{frame}
   \frametitle{Go's History}
-
   Go was created at Google by a team including Rob Pike and Ken
   Thompson.  It was designed to help make the development of
   microservices easier, and to address common criticisms of C++ and
-  Java.  It's often called ``better C''.
-\end{frame}
-
-\begin{frame} [fragile]
-  \frametitle{Simple Syntax}
-
-  Go was designed to have syntax that is very similar to languages in
-  the C family.
-\\\vfill
-\begin{lstlisting}[language=Golang]
-package main
-import "fmt"
-func main() {
-        fmt.Println("Hello, World")
-}
-\end{lstlisting}
+  Java.  It's often called ``a better C''.
 \end{frame}
 
 \begin{frame}
-  \frametitle{Static Types}
-  Go is a statically typed language.  The empty interface type {\tt
-    interface$\{\}$} allows us to escape the type system and work
-  with untyped data.
-\end{frame}
+  \frametitle{Easy}
+  Go is a language that strives to be easy.  In most cases the
+  language appears to prefer accessbility and immediate producivity,
+  especially for developing small network services, over any other
+  concern.
 
-\begin{frame} [fragile]
-  \frametitle{Reflection}
-  Go supports runtime type introspection with reflect.  Using
-  reflection we can look up the original type of an untyped variable:
-\\\vfill
-\begin{lstlisting}[language=Golang]
-func wasInt(i interface{}) bool {
-        return reflect.TypeOf(i) == reflect.TypeOf(int(0))
-}
-\end{lstlisting}
+  Some key factors that keep go easy:
+  \begin{itemize}
+  \item Statically compiled language
+  \item Rudimentary static type system, with type inference
+  \item Garbage Collected
+  \item {\tt go get} for libraries and tools
+  \item Procedural, with C-Like syntax
+  \item {\tt gofmt} and {\tt goimports} to keep code consistent
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
-  \frametitle{OOP}
+  \frametitle{Unambigious}
+  Go's syntax was designed to be unambigious, and easily parsable by
+  both humans and machines.  To this end, Go has focused on syntacic
+  constructs that are specific and universal.
 
-  Go supports, but does not enforce, object oriented programming.
-  {\tt struct}'s may act as objects by having methods attached to
-  them, or they can act as plain structured data.
+  Key decisions:
+  \begin{itemize}
+    \item Interface-only polymorphism
+    \item Static type system
+    \item User-defined types limited to Structs and Interfaces
+  \end{itemize}
+\end{frame}
+\begin{frame}
+  \frametitle{Obvious}
+  Go is designed to be obvious, both to the writer who should not have
+  to think about how to use an API, and to a reader who should be able
+  to clearly understand what any piece of code is doing with minimal
+  understanding of the surrounding context.
+\end{frame}
+\begin{frame}
+  \frametitle{Idiomatic}
+  Go is an opinionated language.  While many idioms are not enforced
+  by the compiler, may tools exist to ensure that go code conforms to
+  designed and community established idioms.
+\end{frame}
+%%%
+\section{Error Handling in Go}
+\begin{frame}
+  \frametitle{A Visualization of Error Handling}
+    \begin{center}
+    \includegraphics[height=.85\paperheight]{images/small/curr_err_graph}
+  \end{center}
+\end{frame}
 
-  Interfaces are descriptive.  When an interface is defined, any type
-  that implements the required methods will fullfill the interface
-  automatically.  This allows interfaces to be created on top of
-  existing types without changing the underlying implementation.
+\subsection{Error Handling by Convention}
+\begin{frame}
+  \frametitle{How Do We Handle Errors?}
+  Idiomatic error handling in go favors a manual and straightfoward
+  approach. Each function that can fail returns an error, and each
+  error is checked with, or immediately following, the call.  When an
+  error occurs it is handled or propegated up the call chain until it
+  can be addressed.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Error is an Interface}
+  Errors in go typically implement the {\tt error} interface.  The
+  common patterns we see with errors are:
+
+  \begin{itemize}
+  \item {\tt nil} indicates the absense of an error
+  \item Specific errors are defined as constants, and compared by value
+  \item Errors may be nested, to provide context for a failure
+  \end{itemize}
+
+  This approach isn't problematic per-se, but as we'll see having
+  errors as their own kind of stand-alone value can cause some
+  problems.
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{First-Class Functions}
-
-  Go supports first-class functions, which are closed over the
-  variables that are in scope when they are defined.  Defining
-  functions in-line to pass to other functions is idiomatic and common
-  in go.  The example below shows how first-class functions are
-  commonly used during unit testing.
-\\\vfill
+  \frametitle{Multi-Returns}
+  Go supports functions that return more than one value.  This is the
+  most prominent feature of how go deals with errors. Most functions
+  that can fail return a tuple of a value and an error.
+  \par\pause
 \begin{lstlisting}[language=Golang]
-t.Run("params-and-lookups", func(t *testing.T) {
-        assert.True(t, graphutils.DependsOn(g, "parent-1", "child-1"))
-        assert.True(t, graphutils.DependsOn(g, "parent-1", "child-2"))
-})
+// NewFromJSON returns a new user from the deserialized json, or an error
+func NewFromJSON(s []byte) (*User, error) {
+        u := &User{}
+        err := json.Unmarshal(s, u)
+        return u, err
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{In-Line Checking}
+  Go's errors are handled in line, explicitly.  By convention, each
+  time a function is called that may return an error, we check the
+  error immediately and
+  \par\pause
+\begin{lstlisting}[language=Golang]
+newUserJSON, err := json.Marshal(newUser)
+if err != nil {
+        fmt.Println("failed to marshal new user: ", err)
+        os.Exit(1)
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Error Propagation}
+  When a function encounters an error in a go application, the
+  conventional approach is to return it up the call chain.  Errors may
+  be returned unmodified or, as in our example below, wrapped with
+  context.
+  \par\pause
+\begin{lstlisting}[language=Golang]
+func NewFromJSON(s []byte) (*User, error) {
+        u := &User{}
+        if err := json.Unmarshal(s, u); err != nil {
+                return nil, errors.Wrap(err, "failed to deserialize JSON data")
+        }
+        return u, nil
+}
+\end{lstlisting}
+\end{frame}
+
+\subsection{The Problem with the Convention}
+\begin{frame}
+  \frametitle{Why Error Handling Doesn't Scale}
+  Idiomatic approaches to error handling can become problematic when
+  we start dealing with larger functions that have many potential
+  points of failure.
+  \\\vfill
+  \begin{itemize}
+    \item There is no enforcement mechnanism to ensure we check errors
+    \item Errors are often checked several times, with potentially inconsistent handling
+    \item Business logic is obscured by verbose error checking
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Error Handling Is Error Prone}
+  When we are calling functions with multiple return values, go
+  enforces that we capture, or explicitly ignore, each return
+  value. Unfortunately, there is no way for the language to ensure
+  that we are actually handling the error values.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Write Everything Twice}
+  Because it's idiomatic to pass errors up the chain, it's very common
+  to find our code handling ever error two or more times.
+
+  In the example below there is a single error condition: the user did
+  not supply enough command line arguments. We end up checking for the
+  error twice:
+  \par\pause
+\begin{lstlisting}[language=Golang]
+func getArgs() (*config, error) {
+        args := os.Args
+        if len(args) < 3 {
+                return nil, errors.New("insufficient number of arguments")
+        }
+        return &config{endpoint: args[1], username: args[2]}, nil
+}
+
+func main() {
+        config, err := getArgs()
+        if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+        }
+}
 \end{lstlisting}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Multi-Returns}
-
+  \frametitle{Verbosity}
+  Function calls in go are frequently accompanied by 3+ lines of error
+  handling. This can cause several problems when we want to write
+  maintainable code:
+  \par\pause
+  \begin{itemize}
+  \item Business logic is obscured by error handling
+    \pause
+  \item Refactoring becomes error prone
+    \pause
+  \item Every additional code path adds more tests
+    \pause
+  \item We need more mocking ensure we're fully exercising our code paths
+  \end{itemize}
 \end{frame}
 
-\subsection{Generics, Interfaces, and \tt{interface\{\}}}
-\subsection{First Class Functions}
-\subsection{Multi-Return}
-\subsection{Error Handling}
-\section{Defining \emph{Better}}
-\subsection{Some Definitions of Better}
+\begin{frame}
+  \frametitle{The Density of Error Handing vs. Business Logic}
+  \begin{center}
+    \includegraphics[height=.85\paperheight]{images/small/current_errors_highlighted}
+  \end{center}
+\end{frame}
+
+\section{How Can We Do Better?}
+\begin{frame}
+  \frametitle{Error Handling}
+  {\it ``Better Code''} is hard to define in the general case, so let's
+  narrow our scope down to error handling and try to define
+  {\it better}.
+\end{frame}
+
+\begin{frame}
+  \frametitle{What if Code Looked Like This}
+  \begin{center}
+    \includegraphics[width=.85\paperwidth]{images/small/monadic_highlighted}
+  \end{center}
+\end{frame}
+
 \begin{frame}
   \frametitle{Terseness}
   {\bf Terseness}: Using fewer statements.
-  \vfill
+  \par\pause
   Terseness is valuable (up to a point) because every statement is a
   potential error.  As we reduce the number of LOC we reduce the
   expected number of bugs in the application.
@@ -219,13 +361,14 @@ t.Run("params-and-lookups", func(t *testing.T) {
   \begin{itemize}
   \item Irrespective of projects defect density, more KLOC == more bugs
   \item Code on the screen is a mental cache
+  \item Each branch is an opportunity for a mistake
   \end{itemize}
 \end{frame}
 
 \begin{frame}
   \frametitle{Expressiveness}
   {\bf Expressiveness}: The amount of meaning in a single statement.
-  \vfill
+  \par\pause
   The more meaning we pack into a statement, the fewer statements we
   have, giving us more terse code.  Expressive code is also easier to
   read because it allows a user to work at a higher level of
@@ -240,7 +383,7 @@ t.Run("params-and-lookups", func(t *testing.T) {
 \begin{frame}
   \frametitle{Robustness}
   {\bf Robustness}: Resiliance against mistakes, errors, and changes to the code.
-  \vfill
+  \par\pause
   Robustness in our code means that the structure of our code
   automatically guards against errors.  When we have patterns and
   idioms that help us guard against bugs without having to think about
@@ -251,141 +394,37 @@ t.Run("params-and-lookups", func(t *testing.T) {
   \item Guaranteed safety makes tests simpler
   \end{itemize}
 \end{frame}
-\section{Abstracting Structure}
-\subsection{Content vs Structure}
 
+\section{Monads: A Real Life Approach}
 \begin{frame}
-  \frametitle{Content and Structure}
-  {\bf Structure:} The shape of the code; the way units of functionality are assembled.
-
-  \vfill
-
-  The key difference between our examples is in how we handle
-  structure.  In the first case the structure is verbose, and in the
-  second it's completely absent.
-
-  \vfill
+  \begin{center}
+    \includegraphics[height=.85\paperheight]{images/small/burrito}
+  \end{center}
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Encoding Structure}
-\begin{lstlisting}
-type ExampleFunc func(interface{}) (interface{}, error)
+  \frametitle{What Are Monads?}
+  A monad is a kind of very general interface that arises very
+  naturally from a lot of code.  At their heart, monads give us a way
+  of keeping track of context as a side effect of operating on some
+  data.
 
-func ExampleStructure(input interface{},
-        func1 ExampleFunc,
-        func2 ExampleFunc) (interface{}, error) {
-        result1, err := func1(input)
-        if err != nil {
-                return err
-        }
-        return func2(result1)
-}
-\end{lstlisting}
-  \vfill
-  We could encode our structure in a function that checks the result for us
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{Using the Example}
-\begin{lstlisting}
-func ShowExample(input interface{}) (interface{}, error) {
-        result, err := ExampleStructure(input, operation1, operation2)
-        if err != nil {
-                return err
-        }
-        return operation3(result)
-}
-\end{lstlisting}
-  \vfill
-  But we still have the same problem...
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{If we return the same type that we input...}
-\begin{lstlisting}
-type ExampleFunc func(interface{}) (interface{}, error)
-
-func BetterExample(f1, f2 ExampleFunc) ExampleFunc {
-        return func(input interface{}) (interface{}, error) {
-                result1, err := f1(input)
-                if err != nil {
-                        return nil, err
-                }
-                return f2(result1)
-        }
-}
-
-func UseExample(input interface{}) (interface{}, error) {
-        f := BetterExample(BetterExmaple(operation1, operation2), operation3)
-        return f(input)
-}
-\end{lstlisting}
-\end{frame}
-
-\begin{frame}[fragile]
-  \frametitle{But now we're tied to {\tt (interface{}, error)}}
-
-  We can create a custom structure for each place in our code, but
-  it's better when we have a common language.
-
+  \par\pause
+  An implementation of {\tt Monad} needs to be able to hold some
+  data. In addition it needs to be able to support just two functions:
   \begin{itemize}
-  \item Things that represent structure
-  \item A way to chain operations together
-  \item Decoupled from the underlying shape of our data
+  \item {\tt Return} Creates a new container with a value in it.
+  \item {\tt Bind} Takes a value in a container, and a function that
+    returns a value in a container, calls the function with the value,
+    and joins the two containers.
   \end{itemize}
 \end{frame}
-\subsection{Monads}
 
 \begin{frame}
-  \frametitle{Monads Formalize Structure}
-
-  Monads formalize structure, and let us program with structure
-  separate from the code that the structure is controlling.
+  \begin{center}
+    \includegraphics[height=.85\paperheight]{images/small/monads_visualized}
+  \end{center}
 \end{frame}
 
-\subsection{Monads in Practice}
-
-\begin{frame}[fragile]
-  \frametitle{Monad Interface}
-\begin{lstlisting}
-type Monad interface {
-        AndThen(func(interface{}) Monad) Monad
-        Return(i interface{}) Monad
-}
-
-func (m Either) AndThen(f func(interface{}) monad.Monad) monad.Monad {
-        if m.IsLeft() {
-                return m
-        }
-        inner, ok := m.inner.(RightType)
-        if !ok {
-                return Left(errors.New("invalid either type"))
-        }
-        return f(inner.Val)
-}
-
-func (m Maybe) AndThen(f func(interface{}) monad.Monad) monad.Monad {
-        if asJust, ok := m.internal.(just); ok {
-                return f(asJust.Val)
-        }
-        return m
-}
-\end{lstlisting}
-\end{frame}
-\section{Generalizing Idioms}
 \section{Questions?}
-
-\begin{frame}
-  \frametitle{Let's Write Better Code!}
-  Go introduces some novel language features.  The community have
-  standardized on some idioms that work, but can we do better?
-\end{frame}
-
-\begin{frame}
-  \frametitle{Error Handling}
-  {\it ``Better Code''} is hard to define in the general case, so let's
-  narrow our scope down to error handling and try to define
-  {\it better}.
-\end{frame}
 \end{document}
