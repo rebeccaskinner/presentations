@@ -40,7 +40,7 @@
   numbersep=5pt,
   showstringspaces=false,
   stringstyle=\color[rgb]{0.16, .47, 0},
-  tabsize=2
+  tabsize=1
 }
 
 \newcommand{\chref}[3] {
@@ -174,7 +174,7 @@
 \begin{frame}
   \frametitle{A Visualization of Error Handling}
     \begin{center}
-    \includegraphics[height=.85\paperheight]{images/small/curr_err_graph}
+    \includegraphics[height=.85\paperheight]{images/curr_err_graph}
   \end{center}
 \end{frame}
 
@@ -323,7 +323,7 @@ func main() {
 \begin{frame}
   \frametitle{The Density of Error Handing vs. Business Logic}
   \begin{center}
-    \includegraphics[height=.85\paperheight]{images/small/current_errors_highlighted}
+    \includegraphics[height=.85\paperheight]{images/current_errors_highlighted}
   \end{center}
 \end{frame}
 
@@ -338,7 +338,7 @@ func main() {
 \begin{frame}
   \frametitle{What if Code Looked Like This}
   \begin{center}
-    \includegraphics[width=.85\paperwidth]{images/small/monadic_highlighted}
+    \includegraphics[width=.85\paperwidth]{images/monadic_highlighted}
   \end{center}
 \end{frame}
 
@@ -390,8 +390,21 @@ func main() {
 \section{Monads: A Real Life Approach}
 \begin{frame}
   \begin{center}
-    \includegraphics[height=.85\paperheight]{images/small/burrito}
+    \includegraphics[height=.85\paperheight]{images/burrito}
   \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Where Did Monads Come From?}
+  The use of monads for handling computational pipelines was initially
+  developed in the haskell community.  It has since become popular in
+  other ML-family languages like Elm, Typescript, and Idris.
+
+  Languages outside of the ML family, including scala and ATS, also
+  have support for monadic computations.
+
+  Borrowing idioms from other languages can provide insights into how
+  to improve code in a language we are using.
 \end{frame}
 
 \begin{frame}
@@ -414,7 +427,7 @@ func main() {
 
 \begin{frame}
   \begin{center}
-    \includegraphics[height=.85\paperheight]{images/small/monads_visualized}
+    \includegraphics[height=.85\paperheight]{images/monads_visualized}
   \end{center}
 \end{frame}
 
@@ -450,6 +463,36 @@ func (e Either) Bind(f func(i interface{}) Either) Either {
 \end{lstlisting}
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{A Contrived Example}
+  Here's a contrived example of using {\tt EitherM} to catch errors in a pipeline.
+\begin{lstlisting}[language=Golang]
+func increment(i int) (int, error) {
+    if i >= 10 {return i, fmt.Errorf("can't increment: %d is >= 10", i)}
+    return i + 1, nil
+}
+func double(i int) (int, error) {
+    if i%2 == 0 {return i, fmt.Errorf("can't double: %d is even", i)}
+    return i + i, nil
+}
+func main() {
+    succ := either.WrapEither(increment)
+    dbl := either.WrapEither(double)
+    fmt.Println(succ(12).AndThen(dbl))
+    fmt.Println(dbl(3).AndThen(succ))
+    fmt.Println(dbl(3).AndThen(succ).AndThen(dbl))
+    fmt.Println(dbl(3).AndThen(succ).AndThen(succ).AndThen(dbl))
+}
+\end{lstlisting}
+Output:
+\begin{lstlisting}
+Left (can't increment: 12 is >= 10)
+Right (7)
+Right (14)
+Left (can't double: 8 is even)
+\end{lstlisting}
+\end{frame}
+
 \begin{frame}
   \frametitle{Monadic Pipelines for Readability and Correctness}
   A \emph{monadic pipeline} is a series of function calls connected in order
@@ -465,7 +508,7 @@ func (e Either) Bind(f func(i interface{}) Either) Either {
 
 \begin{frame}
   \begin{center}
-    \includegraphics[height=.95\paperheight]{images/small/rails_graph}
+    \includegraphics[height=.95\paperheight]{images/rails_graph}
   \end{center}
 \end{frame}
 
@@ -474,13 +517,13 @@ func (e Either) Bind(f func(i interface{}) Either) Either {
   \begin{columns}
     \begin{column}{.45\paperwidth}
       \begin{figure}
-        \includegraphics[keepaspectratio,height=\paperheight,width=.4\paperwidth]{images/small/current_errors_highlighted}
+        \includegraphics[keepaspectratio,height=\paperheight,width=.4\paperwidth]{images/current_errors_highlighted}
         \caption{Traditional Code}
       \end{figure}
     \end{column}
     \begin{column}{.45\paperwidth}
       \begin{figure}
-        \includegraphics[keepaspectratio,height=\paperheight,width=.4\paperwidth]{images/small/monadic_highlighted}
+        \includegraphics[keepaspectratio,height=\paperheight,width=.4\paperwidth]{images/monadic_highlighted}
         \caption{Monadic Code}
       \end{figure}
     \end{column}
@@ -497,8 +540,7 @@ func (e Either) Bind(f func(i interface{}) Either) Either {
   lessons to some real world code.
 \end{frame}
 
-\subsection{Problem 1: Dealing with Multi-Return Functions}
-
+\subsection{Problem 1: Adapting Multi-Return Functions}
 \begin{frame}[fragile]
   \frametitle{Using {\tt Either} for Error Context}
   One of the biggest benefits to using monadic pipelines is
@@ -550,15 +592,35 @@ func WrapEither(f interface{}) func(interface{}) monad.Monad {
 
 \begin{frame}[fragile]
   \frametitle{Using {\tt WrapEither}}
-
+  {\tt WrapEither} can be used to wrap both your own internal
+  functions as well as functions provided by other packages.  Since
+  functions are first class values in go, a convenient way to manage
+  building your pipelines is to use a {\tt var} block to convert your
+  functions into monadic functions.
+  \par\pause
+\begin{lstlisting}[language=Golang]
+var (
+  either1 = either.WrapEither(f1)
+  either2 = either.WrapEither(f2)
+  either3 = either.WrapEither(f3)
+)
+return f1(input).AndThen(f2).AndThen(f3)
+\end{lstlisting}
 \end{frame}
 
-
-\subsection{Problem 2: Dealing with Functions that Can't Fail}
+\subsection{Problem 2: Functions that Can't Fail}
 
 \begin{frame}[fragile]
   \frametitle{Operating Inside of a Context}
+  Functions that always succeed, like the standard library function
+  {\tt strings.ToUpper}, can often be useful inside of a monadic
+  pipeline.  Because these functions don't provide any context to
+  their return value we can't use {\tt WrapEither}.
 
+  Because the {\tt Return} function takes any value and puts it inside
+  of an empty context we can easily create a function that wraps makes
+  any single-return function monadic. In fact, the {\tt monad} package
+  has already implemented on for us called {\tt FMap}
 \end{frame}
 
 \begin{frame}[fragile]
@@ -582,9 +644,93 @@ func FMap(f interface{}, m Monad) Monad {
 }
 \end{lstlisting}
 
+  {\tt EitherM} also provides {\tt LiftM} as a convenience for pipelining.
 \begin{lstlisting}[language=Golang]
 func (e EitherM) LiftM(f interface{}) monad.Monad {return monad.FMap(f, e)}
 \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Using {\tt LiftM}}
+\begin{lstlisting}[language=Golang]
+var (
+        r io.Reader
+        eitherReadAll = either.WrapEither(ioutil.ReadAll)
+        toString = func(b []byte) string { return string(b) }
+)
+return eitherReadAll(r).FMap(toString).FMap(strings.ToUpper)
+\end{lstlisting}
+\end{frame}
+
+\subsection{A Working Example}
+\begin{frame}[fragile]
+\begin{lstlisting}[language=Golang]
+func main() {
+    config, err := getArgs()
+    if err != nil {os.Exit(1)}
+    var (
+        getEndpoint  = fmt.Sprintf("%s/oldusers/%s", config.endpoint, config.username)
+        postEndpoint = fmt.Sprintf("%s/newusers/%s", config.endpoint, config.username)
+        get          = either.WrapEither(http.Get)
+        body         = func(r *http.Response) io.Reader { return r.Body }
+        read         = either.WrapEither(ioutil.ReadAll)
+        fromjson     = either.WrapEither(user.NewFromJSON)
+        mkUser       = either.WrapEither(user.NewUserFromUser)
+        toJSON       = either.WrapEither(json.Marshal)
+        updateUser   = either.WrapEither(func(b *bytes.Buffer) (*http.Response, error) {
+            return http.Post(postEndpoint, "application/json", b)
+        })
+    )
+    result := get(getEndpoint).
+              LiftM(body).
+              AndThen(read).
+              AndThen(fromjson).
+              AndThen(mkUser).
+              AndThen(toJSON).
+              LiftM(bytes.NewBuffer).
+              AndThen(updateUser)
+    fmt.Println(result)
+}
+\end{lstlisting}
+\end{frame}
+
+\section{Conclusion}
+
+\begin{frame}
+  \frametitle{Monadic Error Handling is Absurd}
+  The examples that we've talked about here fail in several important ways:
+  \begin{itemize}
+  \item Reflection introduces substantial runtime overhead
+  \item We lose all compile-time type safety within our monadic functions
+  \item Nobody can read the code without a lesson on monads
+  \item Exported APIs will put a heafty onus on users to adopt gofpher
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Absurdity Solved Real Problems}
+  In spite of the absurdness of the approach, we've seen that there
+  are practical benefits to using monads for error handling:
+  \begin{itemize}
+  \item Improved correctness via implicit error handling
+  \item More straightforward code through elimination of boilerplate
+  \item Safer refactors through terseness
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{We Can Steal Idioms From Other Languages}
+  By identifying a problem that we had in Go, and looking at how the
+  problem was solved in other languages, we were able to get concrete
+  ideas for how to address our own problems.
+
+  Creating a full implementation of a monadic pipeline in Go provided
+  us with key insights as to where we can find value, and what the
+  costs are, when adopting this idiom.
+
+  After we've pushed beyond the edges of sensibility it's easy to step
+  back and think about how we might adopt the patterns we've built for
+  production code in the future.
 \end{frame}
 
 \section{Questions?}
