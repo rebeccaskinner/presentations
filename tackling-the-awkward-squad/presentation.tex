@@ -1,0 +1,346 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Tackling ``Tackling the Awkward Squad''}
+\subtitle{}
+\author{Rebecca Skinner\\ \small{@cercerilla}}
+\institute{Papers We Love St. Louis}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+  basicstyle=\tiny,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Paper}
+  \begin{center}
+    \emph{Tackling the Awkward Squad: monadic input/output, concurrency, exceptions, and foreign-language calls in Haskell}
+    \vfill
+    Simon Peyton Jones\\
+    \emph{Microsoft Research, Cambridge}\\
+    April 7, 2010
+    \vfill
+\chref{blue}{https://www.microsoft.com/en-us/research/wp-content/uploads/2016/07/mark.pdf}{link}
+\end{center}
+\end{frame}
+
+\section{Introduction}
+\begin{frame}
+  \frametitle{About the Paper}
+  Tackling The Awkward Squad looks at the real problems and solutions
+  for writing applications in haskell.  It examines how monads, in
+  particular, arose as a practical solution to real problems faced by
+  language designers.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Understanding the Awkward Squad}
+  The awkward squad is the name given to a few concepts that had
+  proven difficult to implement with pure lazy semantics of languages
+  like haskell.  In particular the awkward squad consists of:
+  \begin{itemize}
+    \item Input and Output
+    \item Concurrency
+    \item Exception Handling
+    \item Interfacing with Other Languages
+  \end{itemize}
+\end{frame}
+\begin{frame}
+  \frametitle{What We'll Cover}
+  The paper discusses both the language level constructs to tackle the
+  awkward squad, as well as the denotional and operational semantics
+  used to formalize the features for compiler implementers.  In this
+  presentation we'll focus on the lingustic constructs and eschew the
+  denotional and operational semantics of interest to compiler
+  implementers.
+
+  Futhermore, some specific areas of the paper will be omitted where
+  there has been futher research that has advanced the state of the
+  art beyond what was known at the time that this paper was written.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Why This is Cool- Even If You Don't Like Haskell}
+  The awkward squad is not only a set of problems faced by the
+  implementers of lazy functional languages- these are areas where
+  practical work can be accomplished in all languages to simplify
+  program design and reduce errors.  Understanding the approaches
+  taken by language designers can have a material impact on how we
+  address these concerns in other languages as well.
+\end{frame}
+
+\section{Input and Output}
+\begin{frame}[fragile]
+\begin{center}
+\begin{lstlisting}
+primes :: [Integer]
+primes = sieve [2..]
+  where
+sieve (p:xs) = p : sieve [x | x <- xs, x `mod` p > 0 ]
+\end{lstlisting}
+\end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solipsism}
+  \emph{Solipsism} is the position in Metaphysics and Epistemology
+  that the mind is the only thing that can be known to exist and that
+  knowledge of anything outside the mind is unjustified.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Solipsistic Applications}
+  A solipsistic application is a rather useless thing, unless we are
+  trying to heat a cold room.  Without the ability to interact with
+  the outside world a program cannot be of actual use.  This
+  interaction requires receiving \emph{input} from the outside world,
+  and providing \emph{output} to the world about the state or result
+  of the program.
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Problem of IO}
+  Input and Output (IO) can the the cause of some consternation for a
+  pure lazy language.  In the next few slides we'll take a look at
+  some specific issues that the paper raises regarding IO in languages
+  like haskell.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Lazy Evaluation?}
+  Lazy evaluation complicates the notion of input and output because
+  there is no concept of strict ordering for when input and output
+  should occur.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{The Problem of Sequencing}
+  Much of the problem of lazy evaluation is also one of sequencing.  Consider the program snippet below:
+\begin{lstlisting}
+results = [ print "hello", print "world", print "!" ]
+\end{lstlisting}
+  In this example, there is no clear way for us to understand which
+  order the print statements should be evaluated in a lazy language.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{A Change in the World}
+  Input and output are problematic not just from a lazy evaluation and
+  sequencing standpoint- input and output also make functions impure
+  because they rely on external effects.  Imagine the following
+  pseudocode application below which appends a number of 0's to a file
+  each call equivalent to half the remaining disk space:
+
+\begin{lstlisting}
+fn effectfulFunction: Integer
+  let fileSize <- availableDiskSpace / 2
+  let fileData <- repeat '0' for fileSize
+  appendFile "/tmp/log" fileData
+  return fileSize
+\end{lstlisting}
+
+  Each call to this subroutine will affect the external state of the
+  machine in a way that means that we cannot treat this as a pure
+  function.
+\end{frame}
+\begin{frame}
+  \frametitle{What we Need}
+  Solving the problem of input and output requires two notions:
+  \begin{itemize}
+  \item A way of keeping track of the state of the world, so that we
+    can capture changes to the state of the world, representing side
+    effects in a pure way
+  \item A way of forcing a specific sequence of evaluation, in order
+    to ensure that we are able to represent the dependencies between
+    effects.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Monads}
+  Monads provided a convenient mathematical notion for how to manage
+  both carrying additional context around a value, and a way to
+  enforce sequencing on operations in a lazy language.
+
+\begin{lstlisting}
+class Monad m where
+  return :: a -> m a
+  (>>=)  :: m a -> (a -> m b) -> m b
+  (>>)   :: m a -> m b -> m b
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Other Things That Are Secretly IO}
+  As we start to pick apart the things that involve a persisent world
+  state there are several other patterns that we can observe fall
+  under the same umbrellas a basic text input and output:
+  \begin{itemize}
+  \item looping
+  \item mutable variables
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Do Notation}
+  As we start to look at implementations and use of various features
+  that are implemented using the monadic io-actions, we start to
+  observe how syntactic sugar will allow us to make the language more
+  familiar and easier to update.  Consider:
+\begin{lstlisting}
+readTwoWriteFour :: IO ()
+readTwoWriteFour =
+  getChar >>= \fstChr ->
+    getChar >>= \sndChar ->
+      putChar fstChr >>
+        putChar sndChr >>
+          putChar fstChr >>
+            putChar sncChr
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  By introduction the do notation wich adds implicit bind operations
+  and lambda creation, we can simplify monadic code into something
+  that more intituitvely resembles it's semantics:
+\begin{lstlisting}
+readTwoWriteFour :: IO
+readTwoWriteFour = do
+  fstChr <- getChar
+  sndChr <- getChar
+  putChar fstChar; putChar sndCar
+  putChar fstChar; putChar sndCar
+\end{lstlisting}
+\end{frame}
+
+\section{Concurrency}
+\begin{frame}
+  \frametitle{Concurrency and Parallelism}
+  Before we begin looking at managing concurrency and parallelism
+  let's take a brief look at the difference between the two:
+  \begin{itemize}
+  \item \emph{Parallelism} uses multiple threads of execution (across
+    logical or physical cores, processors, or computers) in order to
+    increase performance of an algorithm.  Parallelism is an
+    implementation detail that does not affect the semantics of the
+    application.
+  \item \emph{Concurrency} is when multiple independent threads of
+    execution are simultaneously executed.  The program may or may not
+    be distributed across many individual threads, but the execution
+    is non-deterministic and semantically impacts program execution.
+  \end{itemize}
+\end{frame}
+\begin{frame}
+  \frametitle{Fork}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Channels}
+
+\end{frame}
+\section{Exception Handling}
+\begin{frame}
+  \frametitle{Throw and Catch}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Pure Exceptions}
+
+\end{frame}
+\begin{frame}
+  \frametitle{IOError}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Async Exceptions}
+
+\end{frame}
+\section{Foreign-Language Calls}
+\begin{frame}
+  \frametitle{Calling To and From C}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Dynamic Calls}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Marshalling}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Memory Management}
+
+\end{frame}
+\begin{frame}
+  \frametitle{Foreign Objects}
+
+\end{frame}
+\section{Questions?}
+\end{document}
