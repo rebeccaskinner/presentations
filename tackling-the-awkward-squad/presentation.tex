@@ -137,7 +137,7 @@
 \section{Input and Output}
 \begin{frame}[fragile]
 \begin{center}
-\begin{lstlisting}
+\begin{lstlisting}[language=haskell]
 primes :: [Integer]
 primes = sieve [2..]
   where
@@ -181,7 +181,7 @@ sieve (p:xs) = p : sieve [x | x <- xs, x `mod` p > 0 ]
 \begin{frame}[fragile]
   \frametitle{The Problem of Sequencing}
   Much of the problem of lazy evaluation is also one of sequencing.  Consider the program snippet below:
-\begin{lstlisting}
+\begin{lstlisting}[language=haskell]
 results = [ print "hello", print "world", print "!" ]
 \end{lstlisting}
   In this example, there is no clear way for us to understand which
@@ -227,7 +227,7 @@ fn effectfulFunction: Integer
   both carrying additional context around a value, and a way to
   enforce sequencing on operations in a lazy language.
 
-\begin{lstlisting}
+\begin{lstlisting}[language=haskell]
 class Monad m where
   return :: a -> m a
   (>>=)  :: m a -> (a -> m b) -> m b
@@ -252,7 +252,7 @@ class Monad m where
   that are implemented using the monadic io-actions, we start to
   observe how syntactic sugar will allow us to make the language more
   familiar and easier to update.  Consider:
-\begin{lstlisting}
+\begin{lstlisting}[language=haskell]
 readTwoWriteFour :: IO ()
 readTwoWriteFour =
   getChar >>= \fstChr ->
@@ -268,7 +268,7 @@ readTwoWriteFour =
   By introduction the do notation wich adds implicit bind operations
   and lambda creation, we can simplify monadic code into something
   that more intituitvely resembles it's semantics:
-\begin{lstlisting}
+\begin{lstlisting}[language=haskell]
 readTwoWriteFour :: IO
 readTwoWriteFour = do
   fstChr <- getChar
@@ -276,6 +276,10 @@ readTwoWriteFour = do
   putChar fstChar; putChar sndCar
   putChar fstChar; putChar sndCar
 \end{lstlisting}
+\end{frame}
+\begin{frame}
+  \frametitle{Questions?}
+  Questions about Input and Output?
 \end{frame}
 
 \section{Concurrency}
@@ -295,52 +299,215 @@ readTwoWriteFour = do
     is non-deterministic and semantically impacts program execution.
   \end{itemize}
 \end{frame}
-\begin{frame}
+
+\begin{frame}[fragile]
   \frametitle{Fork}
+\begin{lstlisting}[language=haskell]
+forkIO :: IO a -> IO ThreadId
+\end{lstlisting}
+  forkIO is a function that takes an IO action and returns a
+  worldstate with a thread ID, representing the IO action's concurrent
+  execution state that runs alongside the parent state.  IO actions
+  may be interleaved and the use of monadic sequencing does not
+  obviate race conditions or other concurrency related bugs.
+\end{frame}
 
+\begin{frame}
+  \frametitle{MVars and STM}
+  The idea of MVars is introduced as a mechanism to allow safe
+  coordination between concurrent threads of execution.  By leverating
+  monadic sequencing across concurrent execution threads to introduce
+  blocking reads and writes at the IO action level, we can allow
+  dependent values to enforce sequencing across different threads of
+  execution.
+
+  In addition to the MVars discussed in the paper, substantial
+  research has been done on software transactional memory.  STM is a
+  monadic construct that offers more semantic correctness guarantees
+  at a substantial performance cost.  See: \chref{blue}{https://simonmar.github.io/bib/papers/stm.pdf}{Composable Memory Transactions}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Channels}
+  It is often helpful to consider having a directional method of
+  communication between threads or processes in order to manage
+  communication.  Channels allow just this.  By providing MVars (or
+  STMs) for input and output we are able to create channels and
+  streams of data for managing unidirectional data stream:
+\begin{lstlisting}[language=haskell]
+type Channel a = (MVar (Stream a), MVar (Stream a))
+type Stream a = MVar (Item a)
+type Item a = MkItem a (Stream a)
+\end{lstlisting}
 \end{frame}
 \begin{frame}
-  \frametitle{Channels}
-
+  \frametitle{Questions?}
+  Questions about Concurrency?
 \end{frame}
+
 \section{Exception Handling}
 \begin{frame}
   \frametitle{Throw and Catch}
-
+  Many operations dealing with input and output can fail, and may fail
+  nondeterministically.  Additionally, many failure conditions, such
+  as timeouts and non-terminating states may not be representable as a
+  return value from a pure function.  Since IO actions represent a
+  context around effectful functions, we can encapsulate the notion of
+  exceptional failure in this context, allowing us to create throw and
+  catch exception handling that operates at the monadic action level:
 \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Throw and Catch}
+\begin{lstlisting}[language=haskell]
+ioError :: IOError -> IO a
+catch :: IO a -> (IOError -> IO a) -> IO a
+\end{lstlisting}
+  We use \emph{ioError} as our mechanism to throw an exception.  Catch
+  takes an IO action, and a function that is called when an IO
+  Exception is encountered.  It either returns the IO action, or else
+  the result of the handler when given the encountered IO action.
+\end{frame}
+
 \begin{frame}
   \frametitle{Pure Exceptions}
-
+  Pure code may not throw exceptions due to the limitations caused by
+  lazy evaluation.  Because of this, pure functions that may fail (for
+  example, partial functions) may be lifted into IO to handle
+  exceptions.  It is also possible to use other monadic
+  representations of exception handling.
 \end{frame}
-\begin{frame}
-  \frametitle{IOError}
 
-\end{frame}
-\begin{frame}
+\begin{frame}[fragile]
   \frametitle{Async Exceptions}
-
+\begin{lstlisting}[language=haskell]
+throwTo :: ThreadId -> Exception -> IO ()
+\end{lstlisting}
+  In many cases, it is useful to be able to handle exxceptions
+  asynchronously, or across different execution threads.  By allowing
+  us to throw exceptions across thread boundries we can manage
+  resource allocation, multiple execution threads, and managing
+  timeouts:
 \end{frame}
+\begin{frame}[fragile]
+  \frametitle{Timeouts}
+\begin{lstlisting}[language=haskell]
+-- parIO takes two IO actions and run them in parallel, returning the result
+-- that finishes first, then terminates both
+parIO :: IO a -> IO a -> IO a
+parIO a1 a2 = do
+  m <- newEmptyMVar
+  c1 <- forkIO (child m a1)
+  c2 <- forkIO (child m a2)
+  r <- takeMVar m
+  throwTo c1 Kill; throwTo c2 Kill
+  return r
+  where
+    child m a = do {r <- a; putMVar m r}
+
+timeout :: Int -> IO a -> IO (Maybe a)
+timeout n a = parIO (do {r <- a; return (Just r) })
+                    (do { threadDelay n; return Nothing})
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Questions?}
+  Questions about Exception Handling?
+\end{frame}
+
 \section{Foreign-Language Calls}
+
+\begin{frame}
+  \frametitle{Phantom Types}
+  The paper makes several references, both explicit and implicitly, to
+  the concent of phantom types.  Before we delve into the details of
+  FFI calls in haskell let's take a moment to understand what phantom
+  types are and how they can best be used:
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Phantom Types: Example}
+\begin{lstlisting}[language=haskell]
+data Connected = Connected        -- unexported
+data Disconnected = Disconnected  -- unexported
+data DatabaseConnection a = DatabaseConnection ... implementation ...
+
+connect :: DatabaseConnection Disconnected -> DatabaseConnection Connected
+connect = ...
+
+disconnect :: DatabaseConnection Connected -> DatabaseConnection Disconnected
+disconnect = ...
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Phantom Types: Cont}
+  Phantom types allow us to associated specific information at the
+  type level with a value, even when a value of that type isn't
+  represented in the internal representation of the type.  In the
+  example above, while the database connection type has no values of
+  type Connected or Disconnected, we can use those as type parameters
+  to ensure that we are only working with a database connection that
+  has been actively connected, or hasn't, as the function requires.
+\end{frame}
+
 \begin{frame}
   \frametitle{Calling To and From C}
-
+  It is desirable to be able to interoperate with code written in
+  other languages.  In the specific case, we wish to be able to both
+  use code written in C as well as to provide code that can be called
+  by C.  The choice of C as a lanaguage is not elaborated on in the
+  paper, but we may assume that this is due to the C ABI as a widely
+  accepted language of interoperability across many different
+  operating systems and hardware architectures.
 \end{frame}
-\begin{frame}
-  \frametitle{Dynamic Calls}
 
+\begin{frame}[fragile]
+  \frametitle{ccall}
+  The ccall directive provides a mechanism for us to explicitly
+  annotate functions that are imported or exported for
+  interoperatbility with external applications.
+\begin{lstlisting}[language=haskell]
+foreign import ccall fizzbuzz :: Int -> IO ()
+foreign export ccall foobar :: Float -> IO Float
+\end{lstlisting}
+
+  Explicit annotation of these functions allows the compiler to emit
+  code that allows the code to be represented in a way necessary for
+  linking with other codebases.  By using the IO monad to explicity
+  differentiate between pure and effectful code we can manage to
+  bridge the gap between pure lazy code and impure strict code.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Dynamic Calls}
+  Dynamic functions are implemented by creating an explict type to
+  manage function pointers.  This allows us to interoperate with
+  functions that expect callbacks by treating them as data that
+  represents an underlying first-class function from within the
+  context of haskell's semantics.
+\begin{lstlisting}[language=haskell]
+foreign import ccall "dynamic" foo :: FunPtr (Int -> IO Int) -> Int -> IO Int
+\end{lstlisting}
 \end{frame}
 
 \begin{frame}
   \frametitle{Marshalling}
-
+  Marshalling is the process of converting haskell datatypes into a
+  format where they can be explicitly shared to code in other
+  languages.  By leveraging the IO monad to manage effects and strict
+  sequencing we are able to create an \emph{Storable} typeclass that
+  allows us to directly manipulate bytes in the system state.
 \end{frame}
+
 \begin{frame}
   \frametitle{Memory Management}
-
-\end{frame}
-\begin{frame}
-  \frametitle{Foreign Objects}
-
+  By using IO actions to encapsulate the context of allocated and
+  freed memory in the system, we can create safe garbage collected
+  memory management that allows us to create type safe pointers to
+  both stable haskell-owned memory locations as well as
+  foreign-managed objects.
 \end{frame}
 \section{Questions?}
 \end{document}
