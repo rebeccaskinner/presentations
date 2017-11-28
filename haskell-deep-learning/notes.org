@@ -1,0 +1,42 @@
+#+title: Haskell Deep Learning: Presentation Notes
+
+* Introduction
+What we'll cover (this isn't a highly technical presentation)
+
+  - Why Haskell is a Good Fit for ML
+  - The State of Deep Learning in Haskell
+    - Lots of companies doing it:
+      - Target
+      - Takt
+      - FinTech
+    - Some library support
+      - TensorFlow
+      - Grenade
+      - Caffe
+  - Other Types of ML in Haskell
+
+* Why Haskell?
+
+Why is haskell a good fit for machine learning?
+
+  - Strong type system
+  - Composability
+  - Expressive
+  - Fast
+    - FFI
+  - Concurrency models
+  - DSLs
+
+* State of Machine Learning in Haskell
+
+What's the current state of the art for machine learning in haskell?
+
+  - Deep Learning
+    - Proprietary
+    - Deprecated
+  - Beyond Deep Learning
+    -
+
+* Why Not Haskell?
+
+Haskell's
