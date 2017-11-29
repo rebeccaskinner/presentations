@@ -200,6 +200,13 @@
 \end{frame}
 
 \begin{frame}
+  \frametitle{Missing Libraries}
+  The lack of public open source work in data analysis and machine
+  learning may mean that there are fewer libraries available for these
+  tasks compared to other languages.
+\end{frame}
+
+\begin{frame}
   \frametitle{Proprietary Work}
   Many companies are doing ML in haskell, and actively hiring, but
   much of the code being developed is proprietary.  This means that it
@@ -214,6 +221,13 @@
   runtimes and much higher than expected memory utilization.
   Integrating with code running on GPUs, FPGAs, and ASICs can be
   difficult if you're not already familiar with the GHC internals.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \begin{center}
+    \includegraphics[width=.85\paperwidth]{images/typesig.png}
+  \end{center}
 \end{frame}
 
 \begin{frame}
@@ -238,6 +252,12 @@
 
 \subsection{Expressiveness}
 
+\begin{frame}[fragile]
+  \begin{center}
+    \includegraphics[height=.85\paperheight]{images/scream.png}
+  \end{center}
+\end{frame}
+
 \begin{frame}
   \frametitle{What Is Expressiveness?}
   Expressiveness speaks to the ability of a user to clearly and
@@ -250,60 +270,188 @@
 
 \begin{frame}
   \frametitle{Composability}
-
+  Composability is really about how easy it is to build complex things
+  from smaller pieces.  By convention, haskell libraries, including
+  the machine learning libraries we've discussed, focus on
+  composability.
 \end{frame}
 
 \begin{frame}
   \frametitle{DSLs}
+  Domain Specific Languages (DSLs) are a way of creating a small
+  language, or language-like API for a library, that help you express
+  your problem.  The Grenade and HLearn libraries both focus heavily
+  on implementing DSLs for machine learning problems, and haskell
+  lends itself very well to this approach.
 
+  By providing an easy way to implement DSLs, you can wrap ML and data
+  analysis capabilities of your application in an easy-to-use frontend
+  to guard against misuse.
 \end{frame}
 
 \subsection{Performance}
 
-\begin{frame}
-  \frametitle{Performance}
+\begin{frame}[fragile]
+  \begin{center}
+    \includegraphics[width=.85\paperwidth]{images/santa.jpg}
+  \end{center}
+\end{frame}
 
+\begin{frame}
+  \frametitle{Performance vs Python and Scala}
+  Haskell is a compiled language with a long history of work on
+  performance optimizations that help make code performant.  In
+  typical scenarios, haskell runs about as fast as C++ or Java, with a
+  somewhat higher memory footprint, and much faster than pure python
+  code with a somewhat smaller memory footprint.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Performance vs NumPy}
+  For libraries like NumPy that use highly optimized native code, pure
+  haskell code will tend to be slightly slower.  Use of the FFI can
+  mitigate this at the cost of some additional code and optimization
+  complexity.
 \end{frame}
 
 \begin{frame}
   \frametitle{Parallelism}
-
+  Haskell has a wide range of primatives and library suppor for
+  parallel processing.  This can allow haskell applications to easily
+  leverage available hardware.
 \end{frame}
 
 \begin{frame}
   \frametitle{Concurrency}
-
+  Haskell has native support for several different concurrency models.
+  Of particular utility is the Haxl library, which greatly simplifies
+  the developemnt of applications that rely on asynchronous data
+  sources.  Combined with lazy evaluation and composibility as a first
+  class citizen, this can lead to efficiency gains when dealing with
+  expensive computations.
 \end{frame}
 
 \begin{frame}
   \frametitle{Profiling}
-
+  Tools like ThreadScope can help provide a visual way to debug
+  performance and concurrency bugs in performance critical
+  applications.
 \end{frame}
 
 \subsection{Correctness: The Benefits of Purity Type Safety}
 
-\begin{frame}
+\begin{frame}[fragile]
   \begin{center}
     \includegraphics[height=.85\paperheight]{images/ml.png}
   \end{center}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Algebraic Reasoning}
+  \frametitle{Referential Transparency}
+  Haskell is a pure language, meaning that haskell functions are
+  functions in mathematical sense.  Thanks to this, we can make
+  assumptions about the behavior of code that we're reading that we
+  might not be able to make about code written in other languages.
 
+  Knowing that our functions are pure allows us to better create
+  mental models of how our software is executing, removing uncertainty
+  about the behaivor of critical parts of the application.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Algebraic Reasoning}
+  Strongly related to the notion of purity is algebraic reasoning.
+  Haskell idiomatically provides algebraic laws for entitites defined
+  in the language.  When using built-in algebraic structures like
+  monoids, monads, functors, semigroups, and rings we can reason about
+  the structure of the code using the same tools that we would use to
+  reason about them as mathematical structures.
+
+  This is highly beneficial when developing novel or critical tools
+  for analysis and machine learning, since the code that implements
+  the transformations and models more closely aligns to the
+  theoretical work we've done.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Monad Laws}
+    \begin{center}
+    \includegraphics[width=.90\paperwidth]{images/monad-laws.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Phantom Types}
+  Phantom types allow you to track the provenance of the data as part
+  of it's value.  By keeping track of the source of the data, you can
+  make good decisions about how to treat it later in your application.
+  For machine learning applications this can be particularly useful as
+  you can know how reliable a given set of data may be based on where
+  it originated.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Phantom Types}
+    \begin{center}
+    \includegraphics[width=.85\paperwidth]{images/casper.jpg}
+  \end{center}
 \end{frame}
 
 \begin{frame}
   \frametitle{Defining Data}
-
+  Haskell's type system does more than allowing algebraic reasoning.
+  By allowing us to give specific names to differnt kinds of data, we
+  can ensure that we remember, and communicate to others, what the
+  data should be.
 \end{frame}
 
 \begin{frame}
   \frametitle{Dependent Types}
+  Dependent types allow the type of a variable to depend on it's
+  value.  This means that we can write expressions that will, for
+  example, a vector has a certain size, or that the dimensions of two
+  matrices are correct when multiplying them.
+\end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Dependent on Data}
+    \begin{center}
+    \includegraphics[width=.85\paperwidth]{images/dependent-data.jpg}
+  \end{center}
 \end{frame}
 
 \section{Conclusion}
 
+\begin{frame}
+  \frametitle{Clear Advantages: Sometimes}
+  Haskell offers some clear advantages in some circumstances, but the
+  overhead of realizing them means that it might not be a good choice
+  for exploratory projects, prototypes, or as a language for someone
+  trying to learn more about ML
+\end{frame}
+
+\begin{frame}
+  \frametitle{Great for Advanced Users}
+  While haskell doesn't have a lot of batteries included, it's
+  advantages as an expressive and performant language make it an ideal
+  choice for users who are already pushing the boundries of what can
+  be done with off-the-shelf libraries and need to implement their own
+  custom solutions.
+\end{frame}
+
+\begin{frame}
+  \frametitle{A Bad Way To Learn}
+  While there are a few batteries included libraries available, they
+  are written with an audience who is already deeply familiar with
+  machine learning and data science.  These libraries make no attempt
+  to be an easy introduction into the fundamental concepts.  Because
+  of this, haskell would make a poor choice of language for someone
+  wanting to start learning more about data science or machine
+  learning.
+\end{frame}
+
 \section{Questions?}
+
+
 \end{document}
