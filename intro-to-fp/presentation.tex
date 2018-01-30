@@ -30,7 +30,7 @@
 \definecolor{string}{rgb}{155,204,174}
 
 \lstset{ % add your own preferences
-  basicstyle=\tiny,
+%  basicstyle=\tiny,
   showspaces=false,
   showtabs=false,
   numbers=none,
@@ -88,7 +88,6 @@
   \item The history of functional programming
   \item The difference between functional programming and functional languages
   \item Introduce the Haskell programming language
-  \item Discuss the benefits and drawbacks to using functional languages in production
   \end{itemize}
 \end{frame}
 
@@ -274,12 +273,112 @@
 
 \begin{frame}
   \frametitle{FP + Cloud}
-
+  Cloud native applications share many of the same concerns as
+  traditional functional programs.  Whether it's understanding how to
+  scale and orchestrate processes like Erlang and Exliser, or
+  threading state through a series of stateless data transformations,
+  the techniques pioneered by functional programming can be of great
+  benefit when building cloud applications.
 \end{frame}
-
 
 \section{Introducing Haskell}
 
+\begin{frame}
+  \frametitle{A Joke About Burritos}
+  \begin{center}
+    \includegraphics[width=.80\paperwidth]{images/haskell.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{A Bit About Haskell}
+  Haskell is a pure functional programming language.  It's one of the
+  more well known members of the ML family, and is perhaps the most
+  widely used pure functional language in industry.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Some Facts About Haskell}
+  \begin{itemize}
+  \item Used at: Rackspace, Facebook, Microsoft, Target, Starbucks, and many others.
+  \item Over 10,000 packages available on Hackage
+  \item Runtime speed and memory footprint are on the order of efficient languages such as C, C++, and Java.
+  \item Typically compiled to native code or LLVM bytecode.
+  \item Easy interoperability with C and C++
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Some Other Facts About Haskell}
+  \begin{itemize}
+    \item Of the 10,000 packages on Hackage, some 8,000 of them are probably remnants of someone's PhD Thesis
+    \item For every 5 haskell programs written, 6 monad tutorials are posted on someone's blog
+    \item Readability is often considered somewhere between ``obfuscated perl'' and ``c'thulu''
+    \item {\tt return} in haskell is the most poorly chosen function name in the history of programming languages
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \begin{center}
+    \begin{figure}
+      \includegraphics[height=.70\paperheight]{images/gamma.png}
+      \caption{Haskell's Learning Curve, Visualized}
+    \end{figure}
+  \end{center}
+\end{frame}
+
+\subsection{Some Examples of Haskell}
+
+\begin{frame}[fragile]
+  \frametitle{Hello World}
+\begin{lstlisting}[language=haskell]
+module Main where
+main = print "hello, world"
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{quicksort}
+\begin{lstlisting}[language=haskell]
+module Quicksort where
+quicksort [] = []
+quicksort (p:xs) =
+  (quicksort lesser) ++ [p] ++ (quicksort greater)
+  where
+    lesser = filter (< p) xs
+    greater = filter (>= p) xs
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+\begin{lstlisting}[language=haskell]
+module Echo where
+import System.IO
+import Control.Monad
+echo = do
+  toEcho <- getLine
+  unless (null toEcho) $ do
+    putStrLn toEcho
+    echo
+main = do
+  putStrLn "Echo some words! (empty line to quit)"
+  echo
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Getting Started with Haskell}
+  Here are some handy pointers to get you started learning more abut
+  haskell:
+  \begin{itemize}
+    \item \href{http://haskellbook.com}{Haskell from First Principals}
+    \item \href{https://en.wikibooks.org/wiki/Haskell}{Haskell Wikibook}
+    \item \href{http://haskellstack.org}{The Stack Tool}
+    \item \href{https://atom.io/packages/ide-haskell}{Haskell IDE (atom)}
+    \item \href{https://commercialhaskell.github.io/intero/}{Haskell IDE (emacs)}
+  \item \href{http://dev.stephendiehl.com/hask/}{What I Wish I Knew When Learning Haskell}
+  \end{itemize}
+\end{frame}
 \section{Questions?}
 
 \end{document}
