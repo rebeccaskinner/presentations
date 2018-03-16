@@ -1,0 +1,49 @@
+#+Title: An Introduction to Go
+
+* What is Go?
+
+* The Basics
+
+** Syntax
+
+** Packages and Imports
+
+** Type Inference
+
+** Pointers
+
+** Multi-Return
+
+* Structures and Interfaces
+
+** Structs
+
+** Attaching Functions to Structs
+
+** Embedding Structs
+
+** Interfaces
+
+** Automatic Interface Fulfillment
+
+* Concurrency
+
+** Go Routines
+
+** Channels
+
+** Defer
+
+* Cross Compiling
+
+* Tooling
+
+** Go
+
+** Imports
+
+** Formatting
+
+** Linting
+
+* Questions?
