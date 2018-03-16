@@ -343,9 +343,34 @@ func CanFail(in int) (int, error) {
 
 \begin{frame}
   \frametitle{First Class Functions}
-
+  Functions are first-class types in Go.  You can assign a function to
+  a variable, use it as an argument to a function, or return one from
+  a function.
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Function Example}
+\begin{lstlisting}[language=Golang]
+func getFunc(s string) (func(int) bool, error) {
+        even := func(i int) bool { return 0 == i%2 }
+        odd := func(i int) bool { return !even(i) }
+        if s == "even" {
+                return even, nil
+        } else if s == "odd" {
+                return odd, nil
+        }
+        return nil, errors.New("invalid function name")
+}
+func main() {
+        if f, err := getFunc("even"); err == nil {
+                fmt.Println(f(3))
+        }
+        if f, err := getFunc("steven"); err == nil {
+                fmt.Println(f(3))
+        }
+}
+\end{lstlisting}
+\end{frame}
 
 \subsection{Packages}
 
