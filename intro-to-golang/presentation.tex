@@ -1,0 +1,362 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Introducing Go}
+\subtitle{A Brief Survey of The Go Programming Language}
+\author{Rebecca Skinner}
+\institute{Rackspace Hosting}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{listings-golang}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+  basicstyle=\small,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
+\end{frame}
+
+\section{What is Go}
+
+\begin{frame}
+  \frametitle{History of Go}
+  Go was announced in 2009 by google.  It is a compiled, statically
+  typed, garbage collected language in the C family.  Go was designed
+  to provide modern memory management, concurrency models, and
+  networking in a lightweight, readable, and performant language.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Go Today}
+  Go has been steadily gaining a foothold.  Although originally
+  designed to be a useful systems language, it has not gained large
+  scale adoption there compared to languages like Rust or people
+  opting to continue using C and C++.  Go's largest inroads have been
+  in devops tooling, such as Kubernetes, Terraform, and Telegraf,
+  well as in web application backends and middleware.
+\end{frame}
+
+\section{The Basics}
+
+\begin{frame}
+  \frametitle{10,000 Foot Overview}
+  At a very high level Go, as a language, can be described with the
+  following features and design choices:
+  \begin{itemize}
+  \item Compiled
+  \item Type-Inferred
+  \item Garbage Collected
+  \item Statically Typed
+  \item Concurrent
+  \item Opinionated
+  \item Single-Dispatch Object Oriented
+  \end{itemize}
+\end{frame}
+
+\subsection{Variables}
+
+\begin{frame}
+  \frametitle{Variables in Go}
+  Variables in go work much like they do in other procedural and
+  object oriented languages.  Variables are mutable unless defined as
+  constant.  Go differentiates between creating and assigning
+  variables.  Creating a variable that already exists, or assigning
+  one that doesn't, are both errors.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Scope}
+  Variables in go are block-scoped and closed over the enclosed
+  contexts.  A variable in an inner context may shadow a variable in
+  the outer context.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Exporting Variables}
+  Go uses the concept of \emph{exported} and \emph{unexported}
+  variables.  Variables are exported or unexported at the package
+  level.  Variable names start with a capital letter are exported, and
+  accessible outside of the current package.
+
+\begin{lstlisting}[language=Golang]
+package foo
+
+var Exported = 12
+var unexported = "foo"
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Creating Variables}
+  Go provides two methods for creating variables.  The {\tt var}
+  keyword allows you to define one or more variables in a function or
+  package.  The {\tt :=} operator allows to define and initialize a
+  new variable inside of a function.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Default Values}
+  Go variables have a default ``zero'' value.  Any newly created
+  variables not explicitly given a value default to the zero value.
+  The default value of a struct is a struct where each field is set to
+  it's default value.  The default value of a pointer is {\tt nil}.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Creating Variables with {\tt var}}
+  The var keyword can be used inside or outside of a function to
+  create one or more variables.
+\begin{lstlisting}[language=Golang]
+var x int
+var (
+  foo  = 10
+  bar  = 90.7
+  baz  = "threeve!"
+  buzz string
+)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Creating Variables with {\tt :=}}
+  {\tt:=} is a shortcut for creating one or more new type-inferred
+  variables in a function.  When setting multiple variables with
+  {\tt:=} at least one of the variables on the left-hand side of the
+  expression must be new.  When using {\tt :=} inside of a block, it
+  will prefer to create shadow variables rather than re-assign
+  variables inherited from the enclosing context.
+\begin{lstlisting}[language=Golang]
+x, y := 1, 2
+{
+  x, z := 3, 3
+  fmt.Println(x, y, z) // 3 2 3
+}
+fmt.Println(x, y) // 1 2
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Assignment}
+  A variable can be assigned any number of times during execution.
+  Rules of assignment are:
+  \begin{itemize}
+  \item You can only assign a variable that exists
+  \item You can only assign a value of a compatible type
+  \end{itemize}
+\end{frame}
+
+\subsection{Pointers}
+\begin{frame}
+  \frametitle{About Pointers}
+  A pointer represents the machine address of a variable.  A pointer
+  represents that address in the processes virtual memory space that
+  contains the start of the data stored in the area of memory.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Pointer Types}
+  A \emph{pointer type} is a type that represents a pointer to a value
+  of the underlying type.  Pointer types in Go are represented with
+  {\bf *}.  A pointer can be \emph{nil}, or it can be assigned the
+  value of the address of another variable.  The {\bf \&} operator
+  allows you to get the memory address of a variable.  You cannot take
+  the address of a constant.  You can create a new pointer \emph{new}.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Creating Pointers}
+  \begin{tabular}{| l | l | p{2in} |}
+    \hline
+    {\bf type} & {\bf pointer type} & {\bf example} \\
+    \hline
+    {\tt string} & {\tt *string} &
+\begin{verbatim}y := "foo"; x := &y\end{verbatim}
+    \\
+    \hline
+    {\tt int} & {\tt *int} &
+\begin{verbatim}x := new(int); *x = 6\end{verbatim}
+    \\
+    \hline
+    {\tt Foo} & {\tt *Foo} &
+\begin{verbatim}type Foo struct {
+  A int
+  B int
+}
+x := &Foo{B: 7}\end{verbatim}
+    \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\subsection{Arrays and Slices}
+
+\begin{frame}
+  \frametitle{Arrays and Slices}
+  An array in go is a fixed-size set of values stored in a contiguous
+  area of memory.  A slice is a variable-sized collection of elements
+  that uses arrays internally to manage the data.  Arrays and slices
+  in Go are 0-indexed and both share similar syntax.
+
+  Unlike C and C++, an array in Go is a value type, if you want to
+  pass an array by reference, you need to explicitly use a pointer
+  type.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Arrays and Slices Example}
+\begin{lstlisting}[language=Golang]
+x := [2]int{1, 2}   // x is an array
+y := []int{}        // y is an empty slice
+z := make([]int, 3) // z is {0,0,0}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Iterating Over Slices}
+  It's common to iterate over elements in an array or slice.  Go
+  offers a special type of for-loop that will allow you to loop over
+  the elements of a slice or array.  The {\tt range} keyword will
+  return one or two values during each iteration of the loop.  The
+  first value will be the current index.  The second returned value,
+  if specified, will be the value of the array or slice at that
+  location.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Iteration Example}
+\begin{lstlisting}[language=Golang]
+x := []int{0, 1, 2, 3, 4}
+for idx, val := range x {
+  fmt.Printf("x[%d] = %d; ", idx, val)
+}
+\end{lstlisting}
+\begin{verbatim}
+x[0] = 0; x[1] = 1; x[2] = 2; x[3] = 3; x[4] = 4;
+\end{verbatim}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Common Slice Operations}
+  \begin{tabular}{| l | p{3in} |}
+    \hline
+    Function  & Example \\
+    \hline
+    \emph{append} &
+\begin{verbatim}x := []int{}; x = append(x, 1};\end{verbatim}
+    \\
+    \hline
+    \emph{len} &
+\begin{verbatim} x := []int{1,2,3}; y := len(x)\end{verbatim}
+    \\
+    \hline
+    {\bf :} &
+\begin{verbatim} x := []int{1,2,3,4}; y := x[1:3]\end{verbatim}
+    \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\subsection{Functions}
+
+\begin{frame}
+  \frametitle{Functions}
+  Functions in Go start with the keyword \emph{func}.  A function make
+  take as input zero or more values, and may return zero \emph{or
+    more} values.  Functions in golang may return multiple values.
+
+  It is common in go for functions that may fail to return both a
+  value and an error.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Function Example}
+\begin{lstlisting}[language=Golang]
+func CanFail(in int) (int, error) {
+  if in < 10 {
+    return 0, errors.New("out of range")
+  }
+  return (in + 1), nil
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{First Class Functions}
+
+\end{frame}
+
+
+\subsection{Packages}
+
+\section{Structs and Interfaces}
+
+\section{Concurrency}
+
+\section{Cross Compiling}
+
+\section{Tooling}
+
+\section{Questions?}
+
+\end{document}
