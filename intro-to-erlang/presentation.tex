@@ -1,0 +1,600 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Introducing Erlang}
+\subtitle{A Brief Survey of The Erlang Programming Language}
+\author{Rebecca Skinner}
+\institute{Rackspace Hosting}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+  basicstyle=\small,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
+\end{frame}
+
+\section{What is Erlang?}
+
+\begin{frame}
+  \frametitle{Erlang is Weird}
+  \begin{itemize}
+  \item strong, dynamic typing
+  \item Pure functional
+  \item Syntax influenced by prolog, lisp, and smalltalk
+  \item Compiled to BEAM
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Beam}
+  Beam is name for erlang's virtual machine.  Erlang code compiles to
+  beam bytecode.  The beam provides process and thread management, as
+  well as networking and IPC across distributed processes.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Beam Languages}
+  \begin{itemize}
+  \item Elixer: a beam language with syntax superficially resembling ruby, because ruby
+  \item LFE: A lisp for the beam, because {\small \verb!(((even (lisp is) 'better) than) (erlang syntax))!}
+  \item Idris: a dependently typed ML written in haskell
+  \item Purescript: more-or-less haskell, but for javascript (and the beam too, I guess)
+  \item Elm (eventually?): megablock training wheels version of purescript.  They keep talking about eventually targetting beam in addition to javascript.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{OTP}
+  The Open Telecom Platform (OTP) is a set of libraries and middleware
+  to facilitate writing distributed stateful appliations.  OTP
+  facilitates the development of highly scalable, fault tolerant
+  applications.
+\end{frame}
+
+\section{Introducing Erlang}
+
+\begin{frame}[fragile]
+  \frametitle{Hello, Erlang}
+\begin{lstlisting}[language=erlang]
+-module(hello).
+-export([hello_name/1]).
+hello_name(Name) ->
+    io:format("hello, ~p\n", [Name]).
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Modules}
+  There is a 1:1 relationship between erlang files and modules.  Each
+  module defines it's name using the \verb!-module! preprocessor
+  directive, and declares all exported functions with the
+  \verb!-export! directive.
+
+  Erlang modules act as namespaces.  When calling a function from
+  another module, or a REPL, the module name should be prefixed to the
+  function name.
+
+\begin{lstlisting}[language=erlang]
+hello:hello_name("World").
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Variables}
+  Erlang variables are immutable and statically typed.  All erlang
+  variables start with a capital letter.  Erlang variables can have
+  any of the following types, which are assigned at runtime:
+  \begin{columns}
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+      \item integers
+      \item floats
+      \item atoms
+      \item binary strings
+      \item references
+      \item functions
+      \item ports
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+      \item processes
+      \item tuples
+      \item maps
+      \item lists
+      \item strings
+      \item records
+      \item booleans
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Terms}
+  The fundamental type in erlang is the \emph{term}.  A term is the
+  fundamental representation of a value in erlang.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Atoms}
+  An erlang atom is similar to a symol in lisp or ruby.  Atoms can be
+  used just like you might use an enum or named constant in another
+  language.  Erlang uses atoms to name records, and they can also be
+  used to identify processes or messages.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Lists}
+  Lists in erlang are 1-indexed heterogenous collections of terms.
+  Erlang lists are constructed of cons cells.  As a matter of
+  convenience, an erlang list may be constructed as a sequence of
+  terms without specifying the cons cells.  A list shown with explicit
+  cons cells is known as it's \emph{canonical representation}.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{List Examples}
+\begin{lstlisting}[language=erlang]
+> %% integer, string, atom
+> List1 = [1,"two", three].
+[1,"two",three]
+> %% get the first element from the list
+> lists:nth(List1,1).
+1.
+> List1 == [1 | "two" | [three | []]].
+true
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Strings and Characters}
+  Erlang does not differentiate between integer values and characters.
+  All characters are stored as integers representing the UTF8
+  codepoint of the character.  A string is an integer list of
+  codepoints.
+
+  Character literals can be written by prefixing the characteer with
+  the \textdollar{} symbol.
+\begin{lstlisting}[language=erlang]
+[$h,$e,$l,$l,$o].
+"hello"
+$a.
+97
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Bit Strings}
+  Erlang has special syntax for dealing with packed binary data.  This
+  feature makes it particularly suited for dealing with low level
+  network protocols.  A bit string is a packed binary representation
+  of a list of binary values.  Lists of integers can be passed into a
+  bit string to be packed into their binary representation.  Like with
+  lists, the \textdollar{} symbol can be used to insert the numeric
+  value of a character literal.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Bit Strings Cont.}
+  When creating a bit string, there are several options that can be
+  provided to specify in detail how the binary value will be packed.
+  The general format for a field in a bit string is:
+
+  \verb!Value:Size/Type-Specifier-List!
+
+  Where \emph{Size} is the number of bits used the represent the
+  value, and \emph{Type-Specifier-List} is a hyphen separated list of
+  options.
+\end{frame}
+
+\begin{frame}[fragile]
+  \begin{tabular}{|l|p{3in}|}
+    \hline
+    Type Specifier & Description \\
+    \hline
+    \emph{type} & The type of the term.  Must be one of: \emph{integer, float, binary, bytes, bitstring, bits, utf8, utf16, utf32} \\
+    \hline
+    \emph{endianness} & The endianness of the value: Must be one of \emph{big, little, native} \\
+    \hline
+    \emph{unit} & The unit size of a binary value.  Fields will be stored in $size * unit$ bit sets, and unsized fields will be aligned to \emph{Unit} bits. \\
+    \hline
+    \emph{Signedness} & Whether or not the value should be considered signed (for pattern matching).  Must be one of \emph{signed, unsigned}\\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Bit String Examples}
+\begin{lstlisting}[language=erlang]
+IPHeader = <<Version:4,5/integer-unit:4,DSCP:6,
+             ECN:2,Len:16/big,
+             Ident:16,0/integer-unit:1,
+             DF/integer-unit:1,MF/integer-unit:1,
+             FO:24, TTL,Proto,Checksum:16,
+             SourceIP:32/big,
+             DestIP:32/big>>
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching}
+  Erlang supports pattern matching of variables.  Record and tuple
+  fields, list elements, and fields from bit strings can all be
+  pattern matched.
+\begin{lstlisting}[language=erlang]
+[A, B, 3] = [1, 2, 3].
+{foo, Bar} = {foo, bar}.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Functions}
+  Functions in erlang are pure.  They may accept any number of
+  arguments, and always return exactly one value.  The return value of
+  an erlang function is the value of the last statement in it's
+  expression.
+
+  Statements within a function are separated by commas, and a function
+  is terminated with a period.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Basic Function Example}
+\begin{lstlisting}[language=erlang]
+show_addition(A, B) ->
+    Sum = A + B,
+    {A, B, Sum}.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Function Arity}
+  The arity of the function is the number of arguments the function
+  accepts as input.  In Erlang, the arity of a function is part of the
+  fully qualified name of that function.  The arity of a function may
+  be omitted when calling the function, otherwise arity of a function
+  is specified by a forward slash and the arity.
+
+  Erlang functions are not polymorphic over the number of arguments
+  per-se, but due to the fact that the arity of the function is part
+  of the functions canonical name, functions of different arities may
+  share a name.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Function Arity Example}
+\begin{lstlisting}[language=erlang]
+add(A,B) ->
+    A + B.
+add(A,B,C) ->
+    A + B + C.
+get_add_function(Count) ->
+    case Count of
+        Count = 2 -> fun add/2;
+        Count = 3 -> fun add/3;
+        _ -> {error, "invalid count"}
+    end.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{First Class Functions}
+  Erlang functions can be passed around as regular values.  They can
+  be stored in lists, maps, and records, passed in and returned from
+  functions, and sent as messages to other processes.  The \emph{fun}
+  keyword is used to refer to a function value.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Another Function Example}
+\begin{lstlisting}[language=erlang]
+foldFunc(Elem, Carry) ->
+  BindFunction = monad:bind(maybe_m:maybe_monad()),
+  BindFunction(Carry,
+    fun(BareCarry) ->
+        BindFunction(Elem,
+          fun(BareElem) ->
+              maybe_sum(BareCarry, BareElem)
+          end
+        )
+    end
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Guards and Pattern Matches.}
+  A function can specify limits to the input values it operates on.
+
+  Pattern matching may be used to limit the input values of a function
+  at a structural level.  Erlang supports unification of pattern
+  matched values, allowing for equality comparisions along with
+  destructuring.
+
+  In addition to pattern matching \emph{where} statement creates a
+  guard that allows a developer to specify a set of contraints on the
+  values of function parameters, including the values of variables
+  assigned to destructured elements of an input value.
+
+  Piecewise functions differentiated by pattern matching and guards
+  should be separated by semicolons.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching Example}
+\begin{lstlisting}[language=erlang]
+lists_eq([],[]) ->
+    true;
+lists_eq([X|XS],[X|YS]) ->
+    lists_eq(XS,YS);
+lists_eq(_, _) ->
+    false.
+\end{lstlisting}
+
+  Note how, in this example, the same variable, \emph{X} is used to
+  represent the head of both lists.  Thanks to unification this
+  pattern match allows us to assert equivalence over the values at the
+  head of each list, leading to a very terse method for comparing
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Guard Examples}
+\begin{lstlisting}[language=erlang]
+fib(X) when (X =< 1) ->
+    1;
+fib(X) ->
+    fib(X - 1) + fib(X - 2).
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Tuples}
+  Erlang suports heterogenous tuples of arbitrary size.  Erlang uses
+  braces to reprsent tuples.  Elements of a tuple may be accessed
+  through destructuring.
+
+  \verb!{tuple1, tuple2, tuple3}!
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Maps}
+  Erlang maps are sets of key/value associations.  The \verb!#! symbol
+  is used to define a map.  Keys in an erlang map may be any term,
+  including functions, processes, maps, or, most commonly, atoms.
+
+\begin{lstlisting}[language=erlang]
+mapTest() ->
+    F = fun () -> 1 end,
+    {F, #{F => foo, foo => bar}}.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Destructuring Maps}
+  Maps may be destructured using the \verb!:=! operator.  A
+  destructured map over a pattern must contain at least the specified
+  elements, but the pattern need not include every element of the map.
+
+\begin{lstlisting}[language=erlang]
+mapTest(#{foo := Value, const := const}) -> Value.
+
+% okay, has keys foo and const
+demo:mapTest(#{bar => bar, foo => foo, const => const}).
+
+% not okay, no key 'const'
+demo:mapTest(#{bar => bar, foo => foo, c => const}).
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Updating Maps}
+  Like all values in erlang, maps are immutable.  Erlang provides some
+  syntactic sugar to make it easier to add and update values in maps.
+\begin{lstlisting}[language=erlang]
+mapTest() ->
+    M = #{foo => foo},
+    WithBar = M#{bar => bar},
+    Updated = WithBar#{foo := foo1},
+    Updated#{baz => baz}.
+
+mapTest(). % #{bar => bar,baz => baz,foo => foo1}
+\end{lstlisting}
+\end{frame}
+
+\section{OTP}
+
+\begin{frame}
+  \frametitle{What is OTP?}
+  The Open Telecom Platform (OTP) is a set of libraries, middleware,
+  and tools designed to assist in building distributed fault tolerant
+  applications.  OTP is part of the erlang distribution and runtime,
+  but can be used with other Beam languages such as Elixer.
+\end{frame}
+
+\begin{frame}
+  \frametitle{OTP Architecture}
+  OTP prescribes an architecture that lends itself particularly well
+  to fault tolerant distributed applications, and plays to the
+  particular strengths of ther Beam and erlang as a language.  OTP is
+  built around the concept of message passing, actors, and
+  \emph{supervision trees}.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Behaviors}
+  Erlang behaviors are, essentially, a module level interface.  A
+  behavior defines a set of required functions and their arity.  OTP
+  defines several behaviors that are important for the OTP
+  Architecture.
+\end{frame}
+
+\begin{frame}
+  \frametitle{OTP Behaviors}
+  \begin{tabular}{|l|r|}
+    \hline
+    \emph{Behavior} & \emph{Description} \\
+    \hline
+    {\tt supervisor} & Monitors workers and other supervisors \\
+    \hline
+    {\tt supervisor\_bridge} & Supervises non-OTP applications \\
+    \hline
+    {\tt gen\_server} & A generic server \\
+    \hline
+    {\tt gen\_fsm} & A generic finite state machine \\
+    \hline
+    {\tt gen\_event} & A generic event handler \\
+    \hline
+    {\tt gen\_statem} & A generic state machine \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Supervisors}
+  A supervisor is one of the most common types of OTP application
+  processes.  Supervisors are simple applications whose job is manage
+  the lifecycle of
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Sample Supervisor}
+\begin{lstlisting}[language=erlang]
+start_link() ->
+    supervisor:start_link({local, ?SERVER}, ?MODULE, []).
+init([]) ->
+    SupFlags = #{strategy => one_for_one,
+                 intensity => 1,
+                 period => 5},
+    AChild = #{id => 'AName',
+               start => {'AModule', start_link, []},
+               restart => permanent,
+               shutdown => 5000,
+               type => worker,
+               modules => ['AModule']},
+    {ok, {SupFlags, [AChild]}}.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Supervisor Restart Strategies}
+    \begin{tabular}{|l|p{2.5in}|}
+      \hline
+      strategy & description \\
+      \hline
+      {\tt one\_for\_one} & if a child process terminates, restart it \\
+      \hline
+      {\tt one\_for\_all} & if a child process terminates, terminate all other children then restart them all \\
+      \hline
+      {\tt rest\_for\_one} & if a child process terminates, all processes started after the child are also terminated, then all terminated processes are restarted \\
+      \hline
+      {\tt simple\_one\_for\_one} & a variant of {\tt one\_for\_one} where all child processes are dynamically created instances of a single process \\
+      \hline
+    \end{tabular}
+\end{frame}
+
+\section{Tooling}
+
+\begin{frame}
+  \frametitle{Kerl}
+  \href{https://github.com/kerl/kerl}{kerl} is a utility that allows
+  you to manage installations of erlang. Kerl will compile and install
+  local versions of erlang, and provides bash scripts to allow you to
+  activate and deactivate environments to use each version.  Kerl also
+  allows you to install a per-project OTP distribution.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Rebar3}
+  \href{https://github.com/erlang/rebar3}{rebar3} is a tool to allow
+  you to manage packages and build erlang applications.  Rebar3
+  expects conventional OTP structured applications, and provides tools
+  to build and package erlang applications with their runtime.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Dialyzer}
+  \href{http://erlang.org/doc/man/dialyzer.html}{dialyzer} is an
+  optional success typing system that allows you to perform
+  rudimentary static analysis of erlang applications.  Dialyzer is
+  based on
+  \href{http://user.it.uu.se/~kostis/Papers/war_story.pdf}{published
+    research} that investigated concrete real world applications for
+  gradual success typing to improve the reliability of applications
+  written in dynamically typed languages.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Observer}
+  Observer provides debugging and observability to erlang
+  applications.  Observer allows you to connect to remote beam
+  instances, view individual process mailboxes, send messages, delete
+  messages, visualize the supervisor tree, and to kill and restart
+  supervisors and worker processes.
+\end{frame}
+
+\section{Questions?}
+
+\end{document}
