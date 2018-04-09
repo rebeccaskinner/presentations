@@ -464,6 +464,80 @@ mapTest(). % #{bar => bar,baz => baz,foo => foo1}
 \end{lstlisting}
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Records}
+  In addition to maps, erlang supports record types.  Records behave
+  in many ways like a map, but specify a fixed set of key values that
+  are associated with a name.  Records are defined with the
+  preprocessor directive \verb!-record!.
+
+\begin{lstlisting}[language=erlang]
+-record(state, {offset,list}).
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Defining a Record}
+  A record is defined with a name and a set of field names with
+  optional default values.  When a new record is created, any keys
+  without a default value that are not set will be {\tt undefined}.
+
+  Records cannot be exported from a module.  Due to this limitation,
+  it is common to define records in header files with the {\tt .hrl}
+  extension.  These records are then imported to provide record
+  definitions across modules.
+
+\begin{figure}
+\begin{lstlisting}[language=erlang]
+-include("myrecords.hrl").
+\end{lstlisting}
+  \caption{module.erl}
+\end{figure}
+
+\begin{figure}
+\begin{lstlisting}[language=erlang]
+-record(foo, {a,b,c=3}).
+\end{lstlisting}
+  \caption{myrecords.hrl}
+\end{figure}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Creating and Updating Records}
+  To create a record value you must supply the name of the record, and
+  values for any of the keys you want to set.  Like with maps, you can
+  update a record by specifying the record, followed by the name and
+  any new or changed key/value pairs.
+\begin{lstlisting}[language=erlang]
+Foo = #foo{a = "a", b = "b"}.
+% #foo{"a","b",3}.
+Foo1 = Foo#foo{c = 0}.
+% #foo{"a","b",0}.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Accessing Record Elements}
+\begin{lstlisting}[language=erlang]
+Foo = #foo{a = "a", b = "b"}.
+Foo#foo.a. % get field a from the record
+% "a"
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Pattern Matching Records}
+  Records can be pattern matched in the same way as maps, with the
+  addition of the record name.  As with maps, not all record fields
+  are required for a pattern match, and unification allows pattern
+  matches to assert equality of separate record fields.
+\begin{lstlisting}[language=erlang]
+recTest(#foo{b = B, c = B}) -> same;
+recTest(#foo{b = B, c = C}) -> {B, C}.
+\end{lstlisting}
+\end{frame}
+
 \section{OTP}
 
 \begin{frame}
@@ -540,19 +614,106 @@ init([]) ->
 
 \begin{frame}
   \frametitle{Supervisor Restart Strategies}
-    \begin{tabular}{|l|p{2.5in}|}
-      \hline
-      strategy & description \\
-      \hline
-      {\tt one\_for\_one} & if a child process terminates, restart it \\
-      \hline
-      {\tt one\_for\_all} & if a child process terminates, terminate all other children then restart them all \\
-      \hline
-      {\tt rest\_for\_one} & if a child process terminates, all processes started after the child are also terminated, then all terminated processes are restarted \\
-      \hline
-      {\tt simple\_one\_for\_one} & a variant of {\tt one\_for\_one} where all child processes are dynamically created instances of a single process \\
-      \hline
-    \end{tabular}
+  \begin{tabular}{|l|p{2.5in}|}
+    \hline
+    strategy & description \\
+    \hline
+    {\tt one\_for\_one} & if a child process terminates, restart it \\
+    \hline
+    {\tt one\_for\_all} & if a child process terminates, terminate all other children then restart them all \\
+    \hline
+    {\tt rest\_for\_one} & if a child process terminates, all processes started after the child are also terminated, then all terminated processes are restarted \\
+    \hline
+    {\tt simple\_one\_for\_one} & a variant of {\tt one\_for\_one} where all child processes are dynamically created instances of a single process \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Supervision Trees}
+  Supervisors may supervisor worker processes and other supervisors.
+  The architecture of an OTP application will begin resembling a tree,
+  where interior nodes are supervisors, and leaf nodes are sets of
+  related processes.  Understanding the supervision tree of an
+  application is often the first step to being able to understand,
+  modify, or debug the application as a whole.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Generic Servers}
+\begin{lstlisting}[language=erlang]
+start_link() ->
+    gen_server:start_link({local, ?SERVER},
+                          ?MODULE, [], []).
+init([]) ->
+    process_flag(trap_exit, true),
+    {ok, #state{}}.
+handle_call(_Request, _From, State) ->
+    Reply = ok,
+    {reply, Reply, State}.
+handle_cast(_Request, State) -> {noreply, State}.
+handle_info(_Info, State) -> {noreply, State}.
+terminate(_Reason, _State) -> ok.
+code_change(_OldVsn, State, _Extra) -> {ok, State}.
+format_status(_Opt, Status) -> Status.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Generic Servers}
+  OTP Generic Servers ({\tt gen\_server}s, or \emph{genserver}s) are
+  where most computations take place in an OTP application. A
+  genserver is a process that manages discrete state changes and
+  answers various types of requests.  Several functions are defined by
+  the genserver behavior, but we'll look briefly at the most important
+  functions.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Genserver Functions}
+  \begin{tabular}{|l|p{2.5in}|}
+    \hline
+    Function & Description \\
+    \hline
+    {\tt init} & Creates the initial state of the application, like a constructor \\
+    \hline
+    {\tt handle\_call} & Takes a request and a state, returns a reply and a new state \\
+    \hline
+    {\tt handle\_cast} & Takes a request and a state, updates state without replying \\
+    \hline
+    {\tt start\_link} & Initialize the OTP process \\
+    \hline
+  \end{tabular}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Another Genserver Demo}
+\begin{lstlisting}[language=erlang]
+-record(state, {offset,list}).
+init([]) ->
+    {ok, #state{offset=0, list=[]}}.
+handle_call({update, List}, _, State) ->
+    {reply, List, State#state{list=List}};
+handle_call(get_word, _, #state{offset=Offset, list=List}) ->
+    NewOffset = (Offset + 1) rem length(List),
+    Elem = lists:nth(Offset + 1, List),
+    {reply, Elem, #state{offset=NewOffset, list=List}};
+handle_call(get_list, _, State) ->
+    {reply, State#state.list, State}.
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Genserver Update Loop}
+  The genserver update loop is how OTP applications manage stateful
+  processes within a pure immutable functional language.  For all key
+  genserver functions, the previous application state is passed in as
+  an explicit function parameter.  Any state changes are made during
+  the process of running the application, and a new state is returned.
+  OTP and the erlang runtime manage this state, between calls.
+  Because all erlang values and variables are immutable, there is no
+  concern of any references within a genserver's state being changed
+  during execution.
 \end{frame}
 
 \section{Tooling}
