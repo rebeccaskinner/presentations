@@ -135,7 +135,7 @@ user@host$ go build
   \begin{figure}
   \begin{tabular}{|l|p{3in}|}
     \hline
-    \emph{go get} & download and install a package and it's dependencies \\
+    \emph{go get} & download and install a package and its dependencies \\
     \hline
     \emph{go build} & Build a project \\
     \hline
@@ -154,7 +154,7 @@ user@host$ go build
 
 \begin{frame}
   \frametitle{The Go Build Environment}
-  Go uses environment variables to define paths to it's build tools
+  Go uses environment variables to define paths to its build tools
   and source files.  For *nix systems, the default system installation
   path is \emph{/usr/local/go}.  If Go is installed elsewhere on the
   system, you must set the \emph{GOROOT} environment variable.
@@ -233,7 +233,7 @@ var unexported = "foo"
   Go variables have a default ``zero'' value.  Any newly created
   variables not explicitly given a value default to the zero value.
   The default value of a struct is a struct where each field is set to
-  it's default value.  The default value of a pointer is {\tt nil}.
+  its default value.  The default value of a pointer is {\tt nil}.
 \end{frame}
 
 \begin{frame}
@@ -581,7 +581,7 @@ e := Example{Foo: 0, Bar: "bar"}
   \frametitle{Embedded Structs}
   Structs may be embedded into one another.  When structs are
   embedded, they inherit the embedded structs fields.  The struct
-  itself may be accessed by it's type name.  To created an embedded
+  itself may be accessed by its type name.  To created an embedded
   struct, add it into the containing struct unnamed.
 \begin{lstlisting}[language=Golang]
 type Embedded struct {
@@ -745,7 +745,7 @@ func main() {
   A channel may be designated for input, output, or both, and has a
   size and a type.  Input channels may only be written to, output
   channels may only be read from.  The only values that can be written
-  to, or read from, a channel are given by it's type.
+  to, or read from, a channel are given by its type.
 
   The size of a channel represents the total number of items it can
   buffer before new writes will block.
