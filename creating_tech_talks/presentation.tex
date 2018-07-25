@@ -1,0 +1,283 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Building Tech Talks}
+\subtitle{Who, What, When, and Where of Talking At People About Tech}
+\author{Rebecca Skinner}
+\institute{Rackspace Hosting}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+  basicstyle=\small,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
+\end{frame}
+
+\section{Introduction}
+\begin{frame}
+  \frametitle{Meta, Meta Meta}
+  \includegraphics[width=.85\paperwidth]{images/abed.png}
+\end{frame}
+\begin{frame}
+  \frametitle{About This Talk}
+  \begin{itemize}
+  \item I Don't Have Anything to Say
+  \item It Takes Too Much Time
+  \item How Can I Explain It in 60 Minutes? 45? 30?
+  \end{itemize}
+\end{frame}
+\begin{frame}[fragile]
+  \frametitle{Some Talk Guidelines}
+  \begin{itemize}
+  \item 1 hour of prep per minute of speaking
+  \item 0.5 to 1 slide per minute fo speaking
+  \item $\frac{1}{3}$rd of your content will be recalled
+  \end{itemize}
+\end{frame}
+
+\section{Selecting a Talk}
+
+\subsection{What to talk about}
+\begin{frame}
+  \frametitle{Picking a Topic}
+  You don't need to be an expert on something to speak about- in fact
+  some times expertise hurts more than it helps.  So how do you know
+  what to talk about?
+  \begin{itemize}
+  \item Tell a story
+  \item Bring a unique perspective
+  \item Empathize with people a little behind you
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Hero's Journey}
+  \includegraphics[width=.85\paperwidth]{images/ww.jpg}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Telling a Story}
+  A good talk should tell a story.  In this talk we're telling the
+  story of a speaker.  Find the story that fits your topic, and make
+  the listeners the hero of the talk.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Empathize With People}
+  You don't have to be an expert to have a good talk.  There's a lot
+  of value in helping people just a little behind you catch up to
+  where you are.
+\end{frame}
+
+\subsection{Who to talk to}
+
+\begin{frame}
+  \frametitle{Finding Your Audience}
+  Don't try to speak to every single person in the audience.  Instead,
+  pick one or two archteypical people and speak to them.  A good
+  audience to pick is:
+  \begin{itemize}
+  \item The complete beginner
+  \item You, 6 to 12 months ago
+  \item The pedantic expert
+  \end{itemize}
+\end{frame}
+
+\subsection{Having Opinions}
+
+\begin{frame}
+  \frametitle{Speak With a Purpose}
+  When you're deciding what to say in a talk, it's better to speak to
+  a narrow purpose than to try to give a broad overview.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Specificity}
+  Talks aren't lectures.  You don't have a semester, a book, or even a
+  full blog post of reader attention.  Keep your focus on one narrow
+  thing.
+  \begin{itemize}
+  \item ``Building a parser with haskell'', not, ``An introduction to haskell''
+  \item ``How to build a tech talk'', not, ``How to speak publicly and teach people things''
+  \item ``Configuring your local dev environment with Converge'' not ``The theory of configuration management''
+  \end{itemize}
+\end{frame}
+
+\section{Pedagogy and Epistemology}
+\begin{frame}
+  \frametitle{Picking A Path}
+  \includegraphics[width=.85\paperwidth]{images/graph.png}
+\end{frame}
+
+\subsection{The Important Bits}
+
+\begin{frame}
+  \frametitle{Figure Out What You Want To Teach}
+  Pick a few short bullet points.  No more than one per 20 minutes of
+  your talk.  Draw them out.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Figure Out What You Can Skip}
+  Pruning is the hardest part of putting together a presetation..
+  Relentlessly prune away anything that isn't important to your story.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Theory of Mind}
+  Be considerate of what your listeners already know.  Pick a few
+  things that you think they'll know already as touch points to start
+  your presentation.  Skip everything else they know already, and
+  everything they can make an easy logical leap to understanding based
+  on what you're already talking about.
+\end{frame}
+
+\subsection{SWBAT}
+
+\begin{frame}
+  \frametitle{Students Will Be Able To}
+  Keep in mind what you want the audience to get to your talk.  Every
+  slide should further their journy to that point.  Start with the end
+  of the presetation, or the end of each section.  Work backwards,
+  each slide should be because it will help the audience learn, do, or
+  think about something.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Create a Digraph}
+  Figure out what concepts you need to understand to understand the
+  things that are important.  What needs to be learned in what order.
+\end{frame}
+
+\begin{frame}
+  \frametitle{A-Star is Born}
+  Pick a path through the graph.  The nodes are your sections or
+  headings.  The edges are your slides.
+\end{frame}
+
+
+\subsection{Seven Bridges of Königsberg}
+
+\begin{frame}
+  \frametitle{Seven Bridges}
+  \includegraphics[width=.85\paperwidth]{images/bridges.jpg}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Connecting Ideas}
+  You should find one or two ideas that are your ``base of
+  operations''.  These will be touch points that you keep coming back
+  to.  In this presentation, it's how to structure your ideas.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Each Concept is a Bridge}
+  Consider the euler circuit.  Each new idea is a bridge.  You want to
+  lead the audience across new ideas, and you don't want to backtrack.
+  Make sure you can still end up on your keystone ideas.
+\end{frame}
+
+
+\section{Slides}
+
+\begin{frame}
+  \frametitle{Slides}
+  \includegraphics[width=.85\paperwidth]{images/slide.jpg}
+\end{frame}
+
+\subsection{Beamer Me Up Scotty}
+\begin{frame}
+  \frametitle{Find a Template and Stick With It}
+  Beamer is a very fast way to put together nice looking slides.
+  Finding a tool that lets you put together ideas quickly can greatly
+  reduce the time and energy investment in putting together slides.
+\end{frame}
+
+\subsection{Literate Content}
+\begin{frame}
+  \frametitle{Literate Programming For Code Slides}
+  Tools like orgmode allow you to integrate your source code, output,
+  and slide data into one document.  Look at ways to create slides
+  from tools like org-mode, jupyter and mathematica notebooks, etc.
+\end{frame}
+
+\subsection{Gene Simmons Dummy}
+
+\begin{frame}
+  \frametitle{KISS}
+    \includegraphics[width=.85\paperwidth]{images/kiss.jpg}
+\end{frame}
+
+\begin{frame}
+  \frametitle{KISS}
+  Remember, in the end, to Keep It Simple, Simmons.
+\end{frame}
+
+\section{Questions?}
+
+\end{document}
