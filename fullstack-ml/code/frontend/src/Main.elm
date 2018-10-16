@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (srcdoc)
+import Html.Attributes exposing (srcdoc, style, height, width)
 import Html.Events exposing (..)
 import Http
 import Json.Decode as Decode
@@ -51,13 +51,10 @@ update msg model =
             )
 
         Tick t ->
-            let
-                newCnt = model.tickCount + 1
-                f =
-                    if newCnt > 1 && (String.isEmpty model.inputData == False) && model.hasChanges then
-                        updatePreview model.inputData (Maybe.withDefault "markdown" model.fmt)
-                    else
-                        Cmd.none
+            let newCnt = model.tickCount + 1
+                f = if newCnt > 1 && (String.isEmpty model.inputData == False) && model.hasChanges
+                    then updatePreview model.inputData (Maybe.withDefault "markdown" model.fmt)
+                    else Cmd.none
             in ({model | tickCount = newCnt }, f)
         FormatUpdateMsg (Err error) ->
             ({model | knownFormats = Nothing }, fetchKnownFormats)
@@ -106,7 +103,12 @@ fetchKnownFormats =
 
 -- VIEW
 view : Model -> Html Msg
-view m = div [] [formatDiv m, inputBox, outputBox m]
+view m = div [ style "width" "100%"
+             , style "height" "100%"]
+             [formatDiv m
+             , inputBox
+             , outputBox m
+             ]
 
 formatButton : String -> Html Msg
 formatButton s =
@@ -131,7 +133,7 @@ formatDiv m =
             then div [] [errText]
             else div [] []
         s = [ warning ] ++ btns
-    in div [] [h2 [] [text "Select Format to Preview" ], div [] s]
+    in div [style "width" "100%", style "height" "100%"] [h2 [] [text "Select Format to Preview" ], div [] s]
 
 
 inputBox : Html Msg
@@ -145,9 +147,9 @@ inputBox =
 outputBox : Model -> Html Msg
 outputBox m =
     let innerHTML = Maybe.withDefault "" m.outputData
-    in div []
+    in div [style "width" "100%", style "height" "100%"]
         [ div [] [ h2 [] [ text "Preview" ] ]
-        , iframe [ srcdoc innerHTML ] []
+        , iframe [style "height" "800px", style "width" "80%",  srcdoc innerHTML ] []
         ]
 
 subscriptions : Model -> Sub Msg

@@ -6191,15 +6191,12 @@ var author$project$Main$update = F2(
 			default:
 				if (msg.a.$ === 'Err') {
 					var error = msg.a.a;
-					var msg1 = author$project$Main$stringifyErr(error);
+					var msg1 = elm$core$Maybe$Just(
+						author$project$Main$stringifyErr(error));
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{
-								hasChanges: false,
-								outputData: elm$core$Maybe$Just(msg1),
-								tickCount: 0
-							}),
+							{hasChanges: false, outputData: msg1, tickCount: 0}),
 						elm$core$Platform$Cmd$none);
 				} else {
 					var innerHTML = msg.a.a;
@@ -6312,7 +6309,11 @@ var author$project$Main$formatDiv = function (m) {
 		btns);
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'width', '100%'),
+				A2(elm$html$Html$Attributes$style, 'height', '100%')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -6387,7 +6388,11 @@ var author$project$Main$outputBox = function (m) {
 	var innerHTML = A2(elm$core$Maybe$withDefault, '', m.outputData);
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'width', '100%'),
+				A2(elm$html$Html$Attributes$style, 'height', '100%')
+			]),
 		_List_fromArray(
 			[
 				A2(
@@ -6407,6 +6412,8 @@ var author$project$Main$outputBox = function (m) {
 				elm$html$Html$iframe,
 				_List_fromArray(
 					[
+						A2(elm$html$Html$Attributes$style, 'height', '800px'),
+						A2(elm$html$Html$Attributes$style, 'width', '80%'),
 						elm$html$Html$Attributes$srcdoc(innerHTML)
 					]),
 				_List_Nil)
@@ -6415,7 +6422,11 @@ var author$project$Main$outputBox = function (m) {
 var author$project$Main$view = function (m) {
 	return A2(
 		elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				A2(elm$html$Html$Attributes$style, 'width', '100%'),
+				A2(elm$html$Html$Attributes$style, 'height', '100%')
+			]),
 		_List_fromArray(
 			[
 				author$project$Main$formatDiv(m),

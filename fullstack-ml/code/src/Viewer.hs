@@ -32,12 +32,10 @@ app' = do
   S.get "/" $ S.file "frontend/index.html"
   S.get "/supportedformats" $ S.json documentTypes
   S.get "/output-formats" $ S.json documentTypes
-
   S.post "/:render" $ do
-    outputFormat <- S.param "render" :: S.ActionM DocumentType
+    outputFormat <- S.param "render"
     inputFormat  <- extractParam "format"
     body <- B.unpack <$> S.body
-    liftIO $ debugMsg outputFormat inputFormat body
     case convertDoc inputFormat outputFormat body of
       Left errMsg -> do
         S.status status500

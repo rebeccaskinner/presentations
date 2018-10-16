@@ -1,0 +1,301 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Building Web Apps with Haskell and Elm}
+\author{Rebecca Skinner\\ \small{@cercerilla}}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+  basicstyle=\tiny,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+  \frametitle{Experience Report}
+  This presentation will focus on the experience of using these two
+  technologies together to build a working application.
+\end{frame}
+
+\begin{frame}
+  \frametitle{MetaLanguage, Not Machine Learning}
+  ML stands for \emph{MetaLanguage}.  It's a language originally
+  designed for working with the LCF theorem prover. Today, there are
+  quite a few ML dialects, as well as several languages that have been
+  influenced by ML
+\end{frame}
+
+\begin{frame}
+  \frametitle{Haskell}
+  Haskell is a functional programming language with a syntax that is
+  heavily influenced by the style of ML dialects.  Haskell compiles to:
+  \begin{itemize}
+  \item x86
+  \item ARM
+  \item LLVM
+  \item Web Assembly
+  \item Javascript
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Elm}
+  Elm is a functional language written in haskell and built for
+  creating client-side single-page applications.  Elm currently
+  compiles to:
+  \begin{itemize}
+  \item Javascript
+  \end{itemize}
+\end{frame}
+
+\section{Motivation}
+
+\begin{frame}
+  \frametitle{Make Programs that Don't Go Wrong}
+  Debugging is much harder than writing code, so I would like the
+  computer to help me find my errors early.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Make Refactoring Easier}
+  For long-lived applications, code is refactored much more often than
+  it's written.  I want to work with tools that make refactoring
+  easier and less error-prone.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Automate Away Tests}
+  I want the biggest return on investment with automated checking.  I
+  want to have to write as few tests as possible to ensure my programs
+  work well.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ergonomics}
+  ML-like languages have comfortable ergonomics that make them nicer
+  to work with compared to languages like Javascript.
+\end{frame}
+
+\subsection{Non-Motivators}
+
+\begin{frame}
+  \frametitle{Popularity}
+  I don't care how many people already know my implementation language.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Performance}
+  Raw performance is less important than good-enough performance along
+  with correctness and ease of refactoring.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Library Support}
+  I only care about the libraries I need for my project, and not about
+  the totality of the library ecosystem.
+\end{frame}
+
+\section{Building A Server}
+
+\begin{frame}
+  \frametitle{Haskell for Backend Services}
+  Haskell is a great choice for building web services.  In particular,
+  it has reasonable performance, good libraries, and can generally
+  runs without crashing.
+\end{frame}
+
+\begin{frame}
+  \frametitle{An Embarassement of Frameworks}
+  There are several web frameworks for haskell.  My favorites are
+  Scotty and Servant.
+  \begin{itemize}
+    \item Scotty
+    \item Spock
+    \item Yesod
+    \item Happstack
+    \item Servant
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Beam Me Up, Scotty}
+\begin{lstlisting}[language=haskell]
+main = scotty 8080 $ do
+  S.get "/" defaultFile
+  S.post "/:render" $ do
+    outputFormat <- param "render"
+    inputFormat  <- param "format"
+    toConvert    <- getPostBody
+    case convertDoc inputFormat outputFormat toConvert of
+      Left errMsg -> do
+        status status500
+        finish
+      Right result -> text result
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Toolchain}
+  \begin{itemize}
+  \item nix
+  \item stack
+  \item docker
+  \item quickcheck
+  \item hlint
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{If It Compiles, It Works}
+  Haskell's type system helps find errors for us that we might miss in
+  other languages.  This can be a big help when we're prototyping
+  because it can save us from having to write a lot of tests or
+  spending a lot of time debugging.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{QuickCheck}
+  Once we decide to write tests, QuickCheck is a great way to write
+  many test cases very quickly and easily.
+\begin{lstlisting}[language=haskell]
+test_wordWrap :: Spec
+test_wordWrap = do
+  it "returns words in the right order" $ property $
+    \str' (Positive width) ->
+      let str = BS.pack str'
+          words =  concatMap BS.words $ HCat.wordWrap width str
+      in words `shouldBe` (BS.words str)
+  it "does not break a word" $ property $
+    \(Positive width) ->
+      let width' = width + 5
+          str = BS.pack $ replicate width' 'a'
+          wrapped = HCat.wordWrap width str
+      in do
+        (length wrapped) `shouldBe` 1
+        (head wrapped) `shouldBe` str
+  it "breaks lines to the appropriate length" $ property $
+    \str' (Positive width) ->
+      let str = BS.pack str'
+          lines = HCat.wordWrap width str
+      in shouldSatisfy lines $ all $ \line ->
+          (BS.length line) <= width ||
+          (length . BS.words $ line) == 1
+\end{lstlisting}
+\end{frame}
+
+\section{Building A Frontend in Elm}
+
+\begin{frame}
+  \frametitle{Why Elm?}
+  Elm borrows syntax from Haskell while being narrowly focused on
+  providing a useful language for the frontend.
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Elm Architecture}
+  The Elm Architecture is the control flow that elm applications
+  follow.  Elm applications are functional reactive event loops that
+  should look familiar to you if you've worked with frameworks like
+  react.js
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Differences Between Elm and Haskell}
+  Elm is a simpler language that is focused on ease of use,
+  approachability, and cohesiveness.  It's less flexible, and offers
+  fewer features than Haskell, but makes up for that with a consistent
+  and coherent sandbox for developing SPAs.
+\end{frame}
+
+\section{A Survey of Other Options}
+
+\begin{frame}
+  \frametitle{Backend Languages}
+  \begin{itemize}
+  \item Go
+  \item Rust
+  \item Erlang
+  \item Ruby
+  \item Python
+  \item Javascript
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Frontend Languages}
+  \begin{itemize}
+  \item PureScript
+  \item Haskell
+  \item Javascript
+  \item TypeScript
+  \end{itemize}
+\end{frame}
+
+\section{Demo}
+
+\end{document}

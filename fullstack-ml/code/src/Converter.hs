@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE LambdaCase #-}
 module Converter where
 import Data.Text
 import Data.Text.Encoding
@@ -29,11 +30,12 @@ data DocumentType = DocTypeMarkdown
                | DocTypeHTML deriving (Eq)
 
 instance Show DocumentType where
-  show DocTypeMarkdown = "markdown"
-  show DocTypeMediaWiki = "MediaWiki"
-  show DocTypeCommonMark = "CommonMark"
-  show DocTypeLaTeX = "LaTeX"
-  show DocTypeHTML = "html"
+  show = \case
+    DocTypeMarkdown   -> "markdown"
+    DocTypeMediaWiki  -> "MediaWiki"
+    DocTypeCommonMark -> "CommonMark"
+    DocTypeLaTeX      -> "LaTeX"
+    DocTypeHTML       -> "html"
 
 class ShowText a where
   showText :: a -> Text
@@ -50,23 +52,25 @@ documentTypes =
   , showText DocTypeHTML
   ]
 
-getReaderFunction :: DocumentType -> (ReaderOptions -> Text -> PandocPure Pandoc)
-getReaderFunction DocTypeMarkdown   = readMarkdown
-getReaderFunction DocTypeMediaWiki  = readMediaWiki
-getReaderFunction DocTypeCommonMark = readCommonMark
-getReaderFunction DocTypeLaTeX      = readLaTeX
-getReaderFunction DocTypeHTML       = readHtml
+getReaderFunction :: DocumentType -> (Text -> PandocPure Pandoc)
+getReaderFunction = \case
+  DocTypeMarkdown   -> readMarkdown $ def { readerExtensions = githubMarkdownExtensions }
+  DocTypeMediaWiki  -> readMediaWiki def
+  DocTypeCommonMark -> readCommonMark def
+  DocTypeLaTeX      -> readLaTeX def
+  DocTypeHTML       -> readHtml def
 
 getWriterFunction :: DocumentType -> (WriterOptions -> Pandoc -> PandocPure Text)
-getWriterFunction DocTypeMarkdown   = writeMarkdown
-getWriterFunction DocTypeMediaWiki  = writeMediaWiki
-getWriterFunction DocTypeCommonMark = writeCommonMark
-getWriterFunction DocTypeLaTeX      = writeLaTeX
-getWriterFunction DocTypeHTML       = writeHtml5String
+getWriterFunction = \case
+  DocTypeMarkdown   -> writeMarkdown
+  DocTypeMediaWiki  -> writeMediaWiki
+  DocTypeCommonMark -> writeCommonMark
+  DocTypeLaTeX      -> writeLaTeX
+  DocTypeHTML       -> writeHtml5String
 
 convertDoc :: DocumentType -> DocumentType -> String -> Either PandocError Text
 convertDoc inputType outputType inputData =
   let readerF = getReaderFunction inputType
       writerF = getWriterFunction outputType
       input   = pack inputData
-  in runPure $ readerF def input >>= writerF def
+  in runPure $ readerF input >>= writerF def
