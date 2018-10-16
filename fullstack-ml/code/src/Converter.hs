@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Converter where
-import Data.Text.Lazy
-import Data.Text.Lazy.Encoding
+import Data.Text
+import Data.Text.Encoding
+import qualified Data.Text.Lazy as LazyText
+-- import Data.Text.Lazy.Encoding
 import Text.Pandoc
 
 import Text.Pandoc.Readers.CommonMark
@@ -15,6 +17,8 @@ import Text.Pandoc.Writers.MediaWiki
 import Text.Pandoc.Writers.Markdown
 import Text.Pandoc.Writers.LaTeX
 import Text.Pandoc.Writers.HTML
+
+import Text.Pandoc.Class
 
 import Text.Blaze.Renderer.Text
 
@@ -46,24 +50,23 @@ documentTypes =
   , showText DocTypeHTML
   ]
 
-getReaderFunction :: DocumentType -> (ReaderOptions -> String -> Either PandocError Pandoc)
-getReaderFunction DocTypeMarkdown = readMarkdown
-getReaderFunction DocTypeMediaWiki = readMediaWiki
+getReaderFunction :: DocumentType -> (ReaderOptions -> Text -> PandocPure Pandoc)
+getReaderFunction DocTypeMarkdown   = readMarkdown
+getReaderFunction DocTypeMediaWiki  = readMediaWiki
 getReaderFunction DocTypeCommonMark = readCommonMark
-getReaderFunction DocTypeLaTeX = readLaTeX
-getReaderFunction DocTypeHTML = readHtml
+getReaderFunction DocTypeLaTeX      = readLaTeX
+getReaderFunction DocTypeHTML       = readHtml
 
-getWriterFunction :: DocumentType -> (WriterOptions -> Pandoc -> Text)
-getWriterFunction DocTypeMarkdown   = pack ... writeMarkdown
-getWriterFunction DocTypeMediaWiki  = pack ... writeMediaWiki
-getWriterFunction DocTypeCommonMark = pack ... writeCommonMark
-getWriterFunction DocTypeLaTeX      = pack ... writeLaTeX
-getWriterFunction DocTypeHTML       = renderMarkup ... writeHtml
+getWriterFunction :: DocumentType -> (WriterOptions -> Pandoc -> PandocPure Text)
+getWriterFunction DocTypeMarkdown   = writeMarkdown
+getWriterFunction DocTypeMediaWiki  = writeMediaWiki
+getWriterFunction DocTypeCommonMark = writeCommonMark
+getWriterFunction DocTypeLaTeX      = writeLaTeX
+getWriterFunction DocTypeHTML       = writeHtml5String
 
 convertDoc :: DocumentType -> DocumentType -> String -> Either PandocError Text
 convertDoc inputType outputType inputData =
   let readerF = getReaderFunction inputType
       writerF = getWriterFunction outputType
-  in writerF def <$> readerF def inputData
-
-(...) = (.) . (.)
+      input   = pack inputData
+  in runPure $ readerF def input >>= writerF def

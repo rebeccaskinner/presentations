@@ -5,6 +5,7 @@ import Data.Aeson (Value(..), object, (.=))
 import Network.Wai (Application)
 import Network
 import qualified Web.Scotty as S
+import qualified Data.Text as T
 import Data.Text.Lazy as Text
 import Converter
 import Network.HTTP.Types.Status
@@ -42,7 +43,7 @@ app' = do
         S.status status500
         (S.text . pack . show) errMsg
         S.finish
-      Right result -> S.text result
+      Right result -> S.text (Text.fromStrict result)
 
 extractParam :: Text -> S.ActionM DocumentType
 extractParam paramName = do

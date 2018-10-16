@@ -28,6 +28,7 @@ library
                      , pandoc
                      , blaze-markup
                      , transformers
+                     , mtl
   default-language:    Haskell2010
 
 executable example
