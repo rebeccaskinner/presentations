@@ -19,7 +19,6 @@ func (p Person) Age() int     { return p._personAge }
 type HasName interface {
 	Name() string
 }
-
 type HasAge interface {
 	Age() int
 }

@@ -10,7 +10,6 @@
 \title{Row, Row, Row your Go}
 \subtitle{Design Patterns for Structural Polymorphism in Go}
 \author{Rebecca Skinner\\ \small{@cercerilla}}
-\institute{Target}
 \date{\today}
 
 \mode<presentation> {\usetheme{metropolis}}
@@ -30,13 +29,14 @@
 \usepackage{soul}
 
 \def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+\newcommand{\hugecenter}[1]{\begin{center}\begin{huge}#1\end{huge}\end{center}}
 
 \definecolor{comment}{rgb}{145,175,188}
 \definecolor{keyword}{rgb}{157,163,199}
 \definecolor{string}{rgb}{155,204,174}
 
 \lstset{ % add your own preferences
-  basicstyle=\tiny,
+%  basicstyle=\tiny,
   showspaces=false,
   showtabs=false,
   numbers=none,
@@ -55,7 +55,7 @@
     \vfill
     \centering
     \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
-      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+      \usebeamerfont{title}\insertsectionnumber\\\insertsectionhead\par%
     \end{beamercolorbox}
     \vfill
   \end{frame}
@@ -73,11 +73,74 @@
 }
 
 \begin{document}
+
 \begin{frame}
   \titlepage{}
+\end{frame}
+\begin{frame}
   \begin{center}
-    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{CC-BY-SA 4.0}}
   \end{center}
+\end{frame}
+
+\section{TLDR}
+\begin{frame}[fragile]
+  \frametitle{Ad Hoc Composable Interfaces}
+  You can define ad-hoc interfaces in Go, and use them for input or
+  output parameters of functions.
+  \pause
+\begin{lstlisting}[language=Golang]
+type A interface{}
+type B interface{}
+func takesAB(x interface {A; B}) {}
+func returnsAB() interface {A; B} {
+  return struct{}{}}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Interfaces For Field Access}
+  You can also use interfaces to allow access to aribtrary nested
+  fields in a structure.  This works with embedded structures too.
+  \pause
+\begin{lstlisting}[language=Golang]
+type T struct {
+  A int
+  B string
+  F func(int) string
+}
+type HasA interface {A() int}
+type HasF interface {F() func(int) string}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Ad-Hoc Interfaces with Accessor Interfaces}
+  You can combine these into something that resembles structural
+  polymorphism, and maybe even extend the idea to row types.
+  \pause
+\begin{lstlisting}[language=Golang]
+% func callF(x interface {HasA; HasF}) string {
+  return x.F()(x.A())
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Can We Run With This?}
+  \hugecenter{Can We Extend This Idea Into Something Powerful?}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Of Course We Can't}
+  \begin{center}
+    \includegraphics[height=.8\paperheight]{img/nopher}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{frame}
+  \hugecenter{Instead, Let's Look At Why Go's Type System Is Broken}
 \end{frame}
 
 \section{The Polymorphism Problem}
@@ -115,34 +178,33 @@
 \begin{frame}[fragile]
   \frametitle{Silly Example}
 \begin{lstlisting}[language=Golang]
-func ReverseMapInt(f func(int) int, ints []int) (out []int) {
-        for _, i := range ints {
-                out = append([]int{f(i)}, out...)
-        }
-        return
+% type idFunc = func(int)int
+func ReverseMapInt(f idFunc, ints []int) []int {
+  out := []int{}
+  for _, i := range ints {
+    out = append([]int{f(i)}, out...)
+  }
+  return
 }
 func IntID(i int) int   { return i }
 func IntSucc(i int) int { return i + 1 }
 func main() {
-        ints := []int{1, 2, 3}
-        fmt.Println(ReverseMapInt(IntSucc, ints))
-        fmt.Println(ReverseMapInt(IntID, ints))
+  ints := []int{1, 2, 3}
+  fmt.Println(ReverseMapInt(IntSucc, ints))
+  fmt.Println(ReverseMapInt(IntID, ints))
 }
 \end{lstlisting}
 \end{frame}
 
 \begin{frame}[fragile]
   \frametitle{output}
+\begin{center}
 \begin{lstlisting}
--*- mode: compilation; default-directory: "~/go/src/playground/at-2019-05-04-182644/" -*-
-Compilation started at Sat May  4 18:28:40
-
-go run *.go
+% go run *.go
 [4 3 2]
 [3 2 1]
-
-Compilation finished at Sat May  4 18:28:40
 \end{lstlisting}
+  \end{center}
 \end{frame}
 
 \subsection{A Generic Problem}
@@ -153,96 +215,474 @@ Compilation finished at Sat May  4 18:28:40
 \end{frame}
 
 \begin{frame}[fragile]
-
+\begin{tiny}
 \begin{lstlisting}[language=ruby]
-# ruby
+% # ruby
 def id(a) return a; end
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}[language=python]
-# python
+% # python
 from typing import TypeVar, Generic
 A = TypeVar('A')
 def id(input: A) -> A:
     return input
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}[language=haskell]
--- haskell
+% -- haskell
 id a = a
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}
-(* ocaml *)
+% (* ocaml *)
 let id a = a;;
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}
-// rust
+% // rust
 fn id<A>(input: A) -> A {return input;}
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}
-(* sml *)
+% (* sml *)
 fun id(x:'a):'a = x;
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}
-// Javascript
+% // Javascript
 function id(x) { return x; }
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}
-// Typescript
+% // Typescript
 function id<T>(x: T): T { return x; }
 \end{lstlisting}
-\pause
+  \pause
 
 \begin{lstlisting}[language=Java]
-// Java
+% // Java
 class Identity {public static <T> T id(T x) {return x; }}
 \end{lstlisting}
+  \end{tiny}
 \end{frame}
 
 \begin{frame}
   \frametitle{And in Go}
-    \begin{center}
+  \begin{center}
     \includegraphics[height=.8\paperheight]{img/nopher}
   \end{center}
 \end{frame}
 
-\begin{frame}
+\begin{frame}[fragile]
   \frametitle{Polymorphism}
   Go lacks the ability to directly express this type of polymorphism.
   Our only choices are to avoid this type of constructor, or else to
   fall back to using go generate or working with \verb!interface{}!.
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Reflection}
+  Reflection and \verb!interface{}! give us an escape hatch of sorts
+  from the type system.  Most of the problems in this talk can be
+  ``solved'' by lifting programs into the unityped space, but we will
+  avoid this due to the difficulties in working with excessively
+  reflective code.
+\end{frame}
+
+
 \section{The Many Shapes of Polymorphism}
 
 \begin{frame}
   \frametitle{Types of Polymorphism}
-  The identity examples rely on {\it parametric} and {\it return type}
-  polymorphism, which go doesn't support.
+  This is just an example of one type of polymorphism, let's look at a
+  few others that are very common in modern languages:
+\end{frame}
 
-  Go doesn't support formally expressing full structural subtyping at
-  the type level, but it's approach to handling structure embedding
-  and interfaces is semantically similar to structural subtyping.
+\subsection{Parametric  Polymorphism}
+
+\begin{frame}
+  \frametitle{Parametric Polymorphism}
+  Parametric polymorphism is what we usually think of when we think of
+  polymorphism.  It let's us write functions that can work for any
+  type of value.  For example:
+  \pause
+  \begin{itemize}
+  \item \texttt{id}
+    \pause
+  \item Higher order functions like \texttt{map} and \texttt{fold}
+    \pause
+  \item Higher Ranked Polymorphic Functions (e.g. polymorphic quantification over closures)
+    \pause
+  \item Generic data structures
+  \end{itemize}
 \end{frame}
 
 \begin{frame}[fragile]
-  \frametitle{Structural Embedding as Subtyping}
-
+  \frametitle{Generics as Parametric Polymorphism}
+  In properly parametric polymorphism, the type of the function is
+  quantified over a set of types.  Template generics don't work that
+  way since semantically they are more like metaprogramming to
+  generate overloaded function, but in practice they fill a similar
+  role in many languages.
+  \begin{center}
+\begin{lstlisting}[language=Golang]
+% func id(type T)(val T) T { return val ; }
+\end{lstlisting}
+  \end{center}
 \end{frame}
 
+\begin{frame}[fragile]
+  \frametitle{Return Type Polymorphism}
+  Return type polymorphism is a special case of parametric
+  polymorphism where we determine which implementation of our function
+  to use based on a return value type.
+  \begin{center}
+\begin{lstlisting}[language=Golang]
+% func parse(type T)(unparsed string) (T, error);
+\end{lstlisting}
+    \end{center}
+\end{frame}
 
+\subsection{Ad-Hoc Polymorphism}
+\begin{frame}
+  \frametitle{Ad-Hoc Polymorphism}
+  Ad-hoc polymorphism allows us to have different implementations of a
+  function for different types.  Function overloading is the typical
+  example of ad-hoc polymorphism.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Interfaces As Polymorphism}
+  Interfaces are a sort of ad-hoc polymorphism that is useful and prevelant
+  in idiomatic go code.\\\vspace{2mm}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Postels Law}
+  \begin{quote}
+    Be conservative in what you send, and liberal in what you accept.
+  \end{quote}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The Robustness Principle for APIs}
+  Accept interfaces and return concrete types.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Interface Based Ad Hoc Polymorphism}
+\begin{lstlisting}[language=Golang]
+% type AdHoc interface {AdHoc() string}
+type A struct{}
+func (a *A) AdHoc() string { return "A.AdHoc" }
+type B struct{}
+func (b *B) AdHoc() string { return "B.AdHoc" }
+func polymorphic(adhoc AdHoc) string {
+return adhoc.AdHoc()
+}
+func main() {
+  fmt.Println(polymorphic((*A)(nil)))
+  fmt.Println(polymorphic((*B)(nil)))
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Compare With Haskell}
+\begin{lstlisting}[language=Haskell]
+% class AdHoc a where adHoc :: Proxy a -> String
+data A
+data B
+instance AdHoc A where adHoc = const "adHoc @A"
+instance AdHoc B where adHoc = const "adHoc @B"
+polymorphic :: AdHoc a => Proxy a -> String
+polymorphic = adHoc
+main :: IO ()
+main = do
+  let a = Proxy @A
+      b = Proxy @B
+  putStrLn (polymorphic a)
+  putStrLn (polymorphic b)
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Limits of Go's Interfaces}
+  \hugecenter{The Limit's of Go's Interfaces}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Return Type Polymorphism}
+\begin{lstlisting}[language=Haskell]
+% class FromStr a where fromStr :: String -> a
+
+data A = A deriving Show
+instance FromStr A where fromStr = const A
+
+newtype B = B { runB :: Int} deriving (Show, Num)
+instance FromStr B where fromStr = const (B 0)
+
+main = do
+  print $ fromStr @A "hello"
+  print $ (fromStr @B "world") + 1
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{In Go}
+\begin{lstlisting}[language=Golang]
+% type FromStr interface {fromStr(string) FromStr}
+type A struct{}
+func (a A) fromStr(s string) FromStr { return A{} }
+type B struct{ x int }
+func (b B) AddNum(y int) B {
+  return B{b.x + y}
+}
+func (b B) fromStr(s string) FromStr {
+  return B{0}
+}
+func main() {
+  fmt.Println(A{}.fromStr("hello"))
+  fmt.Println(B{0}.fromStr("world").AddNum(1))
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{And in Go}
+  \begin{center}
+    \includegraphics[height=.8\paperheight]{img/nopher}
+  \end{center}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Return Type Polymorphism}
+\begin{lstlisting}[language=Haskell]
+% class Addable a where add :: a -> a -> a
+instance Addable Int where add = (+)
+data Point2D = Point2D { _x :: Int
+                       , _y :: Int } deriving Show
+instance Addable Point2D where
+  add (Point2D x1 y1) (Point2D x2 y2) =
+    Point2D (x1 + x2) (y1 + y2)
+type ShowAdd a = (Show a, Addable a)
+polymorphic :: (ShowAdd a) => a -> a -> String
+polymorphic a b = show (add a b)
+main = do
+  let a = 1 :: Int; b = 2 :: Int
+  putStrLn $ polymorphic a b
+  let a = Point2D 1 2; b = Point2D 3 5
+  putStrLn $ polymorphic a b
+\end{lstlisting}
+\end{frame}
+
+\subsection{Subtype Polymorphism}
+\begin{frame}
+  \frametitle{Subtype Polymorphism}
+  In subtype polymorphism we have a partial ordering over interfaces.
+  \begin{huge}
+    \begin{center}
+      \begin{math}
+        \frac{A_1 \leq: B_1 \hspace{6mm} A_2 \leq: B_2}
+        {B_1 \rightarrow A_2 \leq: A_1 \rightarrow B_2}
+      \end{math}
+    \end{center}
+  \end{huge}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Interface Embedding as Subtype Polymorphism}
+\begin{lstlisting}[language=Golang]
+% type B1 interface{}
+type A1 interface {B1}
+type B2 interface{}
+type A2 interface {B2}
+type F1 interface{f1(B1) A2}
+type F2 interface {f2(A1) B2}
+func f2_from_f1(b1 A1) B2 {}
+\end{lstlisting}
+\end{frame}
+
+\section{An Introduction to Row Types and Go}
+
+\begin{frame}
+  \frametitle{What Are Row Types?}
+  \hugecenter{What are row types?}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{What Are Row Types?}
+  Row types provide a polymorphic abstraction over records.  They
+  allow us to express operations over a set of fields.
+  \pause
+  \begin{huge}
+    \begin{center}
+  \begin{math}
+    \tau : \{ \ell_0 : \tau_0, \ell_1 : \tau_1, \rho \}
+  \end{math}
+\end{center}
+\end{huge}
+\end{frame}
+
+\begin{frame}
+  \frametitle{So What Are Row Types?}
+  \hugecenter{So What Are Row Types?}
+\end{frame}
+
+\begin{frame}
+  \frametitle{So What Are Row Types?}
+  Row polymorphism is a way to make functions that are polymorphic
+  over the fields in a record.  On the surface, it's similar to {\it
+    structural subtyping}, since it allows us to abstract over the
+  structure of a record.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Structural Typing}
+  \hugecenter{Structural Typing?\\ Go Can Do That}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Structural Typing}
+  Structural typing uses the ``shape'' of a value to infer it's type.
+  We've seen a lot of examples of this pattern already.
+  \pause
+  \hugecenter{interfaces!}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Recall}
+  \hugecenter{Remember}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Ad Hoc Composable Interfaces}
+  You can define ad-hoc interfaces in Go, and use them for input or
+  output parameters of functions.
+  \pause
+\begin{lstlisting}[language=Golang]
+% type A interface{}
+type B interface{}
+func takesAB(x interface {A; B}) {}
+func returnsAB() interface {A; B} {
+  return struct{}{}}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Interfaces For Field Access}
+  You can also use interfaces to allow access to aribtrary nested
+  fields in a structure.  This works with embedded structures too.
+  \pause
+\begin{lstlisting}[language=Golang]
+type T struct {
+  A int
+  B string
+  F func(int) string
+}
+type HasA interface {A() int}
+type HasF interface {F() func(int) string}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Ad-Hoc Interfaces with Accessor Interfaces}
+  You can combine these into something that resembles structural
+  polymorphism, and maybe even extend the idea to row types.
+  \pause
+\begin{lstlisting}[language=Golang]
+func callF(x interface {HasA; HasF}) string {
+  return x.F()(x.A())
+}
+\end{lstlisting}
+\end{frame}
+
+\subsection{From Structural Types to Row Types}
+
+\begin{frame}
+  \frametitle{The Difference between Structural and Row Types}
+  Structural types seem similar to row types on the surface, but there
+  are some differences.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Quantification}
+  Row types should support quanitification over fields.  It's not sufficent to have:
+  \begin{math}
+    \{\ell_0 : \text{int}, \ell_1 : \text{string} \}
+  \end{math}
+  Instead we need to be able to express the notion of interfaces over fields.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Field Level Constraints}
+\begin{lstlisting}[language=Golang]
+func rowFunc(x interface {
+  GetF() interface {AsInt() int}}) int {
+  return x.GetF().AsInt()
+}
+
+func main() {
+  fmt.Println(rowFunc(Foo{}))
+}
+\end{lstlisting}
+\end{frame}
+
+\section{The Fundamental Problem}
+
+\begin{frame}
+  \frametitle{Type Erasure}
+  \hugecenter{Interfaces $\neq$ Constraints}
+
+  Even when we can construct appropriate constraints based on
+  our ad-hoc and structural polymorphism, the ergonomics are poor due
+  to the differences between interfaces and constraints.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Interfaces are Surjective}
+  Lifting values to interfaces is an epimorphism.  Without resorting
+  to runtime type reflection we don't know what type we put into an
+  interface:
+\begin{lstlisting}[language=Golang]
+type A struct{}
+type B struct{}
+type C interface{}
+func ifaceFunc(c C) C { return c }
+func main() {
+  fmt.Println(ifaceFunc(A{}))
+  fmt.Println(ifaceFunc(B{}))
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Non-Constructive Interfaces}
+  Interfaces can't construct values of the type that implement
+  them. This limits us to interfaces that work on already constructed
+  values.
+\end{frame}
+
+\section{Summary}
+\begin{frame}
+  \frametitle{Summary}
+  \begin{itemize}
+  \item There are a lot of different types of polymorphism
+  \item Go's interfaces give us a lot of them
+  \item Go's type system is a lot more flexible than you might thing
+  \item But doing interesting stuff has poor ergonomics
+  \item Generics would resolve a lot of these problems
+  \item But even syntactic sugar over a few of these idioms would make go more usable
+  \end{itemize}
+\end{frame}
 
 \section{Questions?}
 \end{document}
