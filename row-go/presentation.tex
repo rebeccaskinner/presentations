@@ -1,4 +1,4 @@
-% Copyright 2017 Rebecca Skinner
+% Copyright 2019 Rebecca Skinner
 %
 % This work is licensed under the Creative Commons
 % Attribution-ShareAlike 4.0 International License. To view a copy of
@@ -55,7 +55,7 @@
     \vfill
     \centering
     \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
-      \usebeamerfont{title}\insertsectionnumber\\\insertsectionhead\par%
+      \usebeamerfont{title}\insertsectionnumber\\\insertsectionhead\par
     \end{beamercolorbox}
     \vfill
   \end{frame}
@@ -66,7 +66,7 @@
     \vfill
     \centering
     \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
-      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par
     \end{beamercolorbox}
     \vfill
   \end{frame}
@@ -120,7 +120,7 @@ type HasF interface {F() func(int) string}
   polymorphism, and maybe even extend the idea to row types.
   \pause
 \begin{lstlisting}[language=Golang]
-% func callF(x interface {HasA; HasF}) string {
+ func callF(x interface {HasA; HasF}) string {
   return x.F()(x.A())
 }
 \end{lstlisting}
@@ -178,7 +178,7 @@ type HasF interface {F() func(int) string}
 \begin{frame}[fragile]
   \frametitle{Silly Example}
 \begin{lstlisting}[language=Golang]
-% type idFunc = func(int)int
+type idFunc = func(int)int
 func ReverseMapInt(f idFunc, ints []int) []int {
   out := []int{}
   for _, i := range ints {
@@ -200,7 +200,7 @@ func main() {
   \frametitle{output}
 \begin{center}
 \begin{lstlisting}
-% go run *.go
+go run *.go
 [4 3 2]
 [3 2 1]
 \end{lstlisting}
@@ -217,13 +217,13 @@ func main() {
 \begin{frame}[fragile]
 \begin{tiny}
 \begin{lstlisting}[language=ruby]
-% # ruby
+# ruby
 def id(a) return a; end
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}[language=python]
-% # python
+# python
 from typing import TypeVar, Generic
 A = TypeVar('A')
 def id(input: A) -> A:
@@ -232,43 +232,43 @@ def id(input: A) -> A:
   \pause
 
 \begin{lstlisting}[language=haskell]
-% -- haskell
+-- haskell
 id a = a
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}
-% (* ocaml *)
+(* ocaml *)
 let id a = a;;
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}
-% // rust
+// rust
 fn id<A>(input: A) -> A {return input;}
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}
-% (* sml *)
+(* sml *)
 fun id(x:'a):'a = x;
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}
-% // Javascript
+// Javascript
 function id(x) { return x; }
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}
-% // Typescript
+// Typescript
 function id<T>(x: T): T { return x; }
 \end{lstlisting}
   \pause
 
 \begin{lstlisting}[language=Java]
-% // Java
+// Java
 class Identity {public static <T> T id(T x) {return x; }}
 \end{lstlisting}
   \end{tiny}
@@ -334,7 +334,7 @@ class Identity {public static <T> T id(T x) {return x; }}
   role in many languages.
   \begin{center}
 \begin{lstlisting}[language=Golang]
-% func id(type T)(val T) T { return val ; }
+func id(type T)(val T) T { return val ; }
 \end{lstlisting}
   \end{center}
 \end{frame}
@@ -346,7 +346,7 @@ class Identity {public static <T> T id(T x) {return x; }}
   to use based on a return value type.
   \begin{center}
 \begin{lstlisting}[language=Golang]
-% func parse(type T)(unparsed string) (T, error);
+func parse(type T)(unparsed string) (T, error);
 \end{lstlisting}
     \end{center}
 \end{frame}
@@ -380,7 +380,7 @@ class Identity {public static <T> T id(T x) {return x; }}
 \begin{frame}[fragile]
   \frametitle{Interface Based Ad Hoc Polymorphism}
 \begin{lstlisting}[language=Golang]
-% type AdHoc interface {AdHoc() string}
+type AdHoc interface {AdHoc() string}
 type A struct{}
 func (a *A) AdHoc() string { return "A.AdHoc" }
 type B struct{}
@@ -398,7 +398,7 @@ func main() {
 \begin{frame}[fragile]
   \frametitle{Compare With Haskell}
 \begin{lstlisting}[language=Haskell]
-% class AdHoc a where adHoc :: Proxy a -> String
+class AdHoc a where adHoc :: Proxy a -> String
 data A
 data B
 instance AdHoc A where adHoc = const "adHoc @A"
@@ -422,7 +422,7 @@ main = do
 \begin{frame}[fragile]
   \frametitle{Return Type Polymorphism}
 \begin{lstlisting}[language=Haskell]
-% class FromStr a where fromStr :: String -> a
+class FromStr a where fromStr :: String -> a
 
 data A = A deriving Show
 instance FromStr A where fromStr = const A
@@ -439,7 +439,7 @@ main = do
 \begin{frame}[fragile]
   \frametitle{In Go}
 \begin{lstlisting}[language=Golang]
-% type FromStr interface {fromStr(string) FromStr}
+type FromStr interface {fromStr(string) FromStr}
 type A struct{}
 func (a A) fromStr(s string) FromStr { return A{} }
 type B struct{ x int }
@@ -466,7 +466,7 @@ func main() {
 \begin{frame}[fragile]
   \frametitle{Return Type Polymorphism}
 \begin{lstlisting}[language=Haskell]
-% class Addable a where add :: a -> a -> a
+class Addable a where add :: a -> a -> a
 instance Addable Int where add = (+)
 data Point2D = Point2D { _x :: Int
                        , _y :: Int } deriving Show
@@ -501,7 +501,7 @@ main = do
 \begin{frame}[fragile]
   \frametitle{Interface Embedding as Subtype Polymorphism}
 \begin{lstlisting}[language=Golang]
-% type B1 interface{}
+type B1 interface{}
 type A1 interface {B1}
 type B2 interface{}
 type A2 interface {B2}
@@ -569,7 +569,7 @@ func f2_from_f1(b1 A1) B2 {}
   output parameters of functions.
   \pause
 \begin{lstlisting}[language=Golang]
-% type A interface{}
+type A interface{}
 type B interface{}
 func takesAB(x interface {A; B}) {}
 func returnsAB() interface {A; B} {
