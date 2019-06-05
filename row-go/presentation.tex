@@ -1,0 +1,248 @@
+% Copyright 2017 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Row, Row, Row your Go}
+\subtitle{Design Patterns for Structural Polymorphism in Go}
+\author{Rebecca Skinner\\ \small{@cercerilla}}
+\institute{Target}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{listings-golang}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+\usepackage{soul}
+
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+  basicstyle=\tiny,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber \\ \insertsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par%
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+\begin{frame}
+  \titlepage{}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{LICENSE}}
+  \end{center}
+\end{frame}
+
+\section{The Polymorphism Problem}
+\begin{frame}
+  \frametitle{Making Simple Things Easy}
+  \begin{quote}
+    A good language should make \st{easy} {\bf simple} things easy, and hard things possible.
+  \end{quote}
+\end{frame}
+
+\begin{frame}
+  \frametitle{But For Go}
+  \begin{center}
+    Go feels like\\\vspace{2mm}
+    \begin{tabular}{|c|c|c|} \hline
+      & Simple & Complex \\ \hline
+      Easy & $\times$ & \checkmark \\ \hline
+      Hard & \checkmark & $\times$ \\ \hline
+    \end{tabular}
+  \end{center}
+\end{frame}
+
+\subsection{An Identity Crisis}
+\begin{frame}
+  \frametitle{Simple. Easy. Impossible}
+  The identity function takes a value and returns it.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Why?}
+  The identity function can be very useful when working with
+  high-order functions.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Silly Example}
+\begin{lstlisting}[language=Golang]
+func ReverseMapInt(f func(int) int, ints []int) (out []int) {
+        for _, i := range ints {
+                out = append([]int{f(i)}, out...)
+        }
+        return
+}
+func IntID(i int) int   { return i }
+func IntSucc(i int) int { return i + 1 }
+func main() {
+        ints := []int{1, 2, 3}
+        fmt.Println(ReverseMapInt(IntSucc, ints))
+        fmt.Println(ReverseMapInt(IntID, ints))
+}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{output}
+\begin{lstlisting}
+-*- mode: compilation; default-directory: "~/go/src/playground/at-2019-05-04-182644/" -*-
+Compilation started at Sat May  4 18:28:40
+
+go run *.go
+[4 3 2]
+[3 2 1]
+
+Compilation finished at Sat May  4 18:28:40
+\end{lstlisting}
+\end{frame}
+
+\subsection{A Generic Problem}
+
+\begin{frame}
+  \frametitle{Problem}
+  Write an identity function that works for any input value.
+\end{frame}
+
+\begin{frame}[fragile]
+
+\begin{lstlisting}[language=ruby]
+# ruby
+def id(a) return a; end
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}[language=python]
+# python
+from typing import TypeVar, Generic
+A = TypeVar('A')
+def id(input: A) -> A:
+    return input
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}[language=haskell]
+-- haskell
+id a = a
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}
+(* ocaml *)
+let id a = a;;
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}
+// rust
+fn id<A>(input: A) -> A {return input;}
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}
+(* sml *)
+fun id(x:'a):'a = x;
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}
+// Javascript
+function id(x) { return x; }
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}
+// Typescript
+function id<T>(x: T): T { return x; }
+\end{lstlisting}
+\pause
+
+\begin{lstlisting}[language=Java]
+// Java
+class Identity {public static <T> T id(T x) {return x; }}
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}
+  \frametitle{And in Go}
+    \begin{center}
+    \includegraphics[height=.8\paperheight]{img/nopher}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Polymorphism}
+  Go lacks the ability to directly express this type of polymorphism.
+  Our only choices are to avoid this type of constructor, or else to
+  fall back to using go generate or working with \verb!interface{}!.
+\end{frame}
+
+\section{The Many Shapes of Polymorphism}
+
+\begin{frame}
+  \frametitle{Types of Polymorphism}
+  The identity examples rely on {\it parametric} and {\it return type}
+  polymorphism, which go doesn't support.
+
+  Go doesn't support formally expressing full structural subtyping at
+  the type level, but it's approach to handling structure embedding
+  and interfaces is semantically similar to structural subtyping.
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Structural Embedding as Subtyping}
+
+\end{frame}
+
+
+
+\section{Questions?}
+\end{document}
