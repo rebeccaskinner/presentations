@@ -1,0 +1,123 @@
+% Copyright 2019 Rebecca Skinner
+%
+% This work is licensed under the Creative Commons
+% Attribution-ShareAlike 4.0 International License. To view a copy of
+% this license, visit http://creativecommons.org/licenses/by-sa/4.0/
+% or send a letter to Creative Commons, PO Box 1866, Mountain View, CA
+% 94042, USA.
+\documentclass{beamer}
+
+\title{Building A Console Application with Haskell}
+\author{Rebecca Skinner\\ \small{@cercerilla}}
+\date{\today}
+
+\mode<presentation> {\usetheme{metropolis}}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{amsmath}
+\usepackage{csquotes}
+\usepackage{verbatim}
+\usepackage{fontspec}
+\usepackage{pbox}
+\usepackage{soul}
+
+\def\checkmark{\tikz\fill[scale=0.4](0,.35) -- (.25,0) -- (1,.7) -- (.25,.15) -- cycle;}
+\newcommand{\hugecenter}[1]{\begin{center}\begin{huge}#1\end{huge}\end{center}}
+
+\definecolor{comment}{rgb}{145,175,188}
+\definecolor{keyword}{rgb}{157,163,199}
+\definecolor{string}{rgb}{155,204,174}
+
+\lstset{ % add your own preferences
+%  basicstyle=\tiny,
+  showspaces=false,
+  showtabs=false,
+  numbers=none,
+  numbersep=5pt,
+  showstringspaces=false,
+  stringstyle=\color[rgb]{0.16, .47, 0},
+  tabsize=1
+}
+
+\newcommand{\chref}[3] {
+  {\color{#1} \href{#2}{\underline{#3}}}
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber\\\insertsectionhead\par
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\AtBeginSubsection[]{
+  \begin{frame}
+    \vfill
+    \centering
+    \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+      \usebeamerfont{title}\insertsectionnumber.\insertsubsectionnumber\\\insertsubsectionhead\par
+    \end{beamercolorbox}
+    \vfill
+  \end{frame}
+}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage{}
+\end{frame}
+\begin{frame}
+  \begin{center}
+    \small{\chref{blue}{http://creativecommons.org/licenses/by-sa/4.0/}{CC-BY-SA 4.0}}
+  \end{center}
+\end{frame}
+
+\section{Introduction}
+
+\begin{frame}
+  \frametitle{C is for Cat}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Why Cat?}
+\end{frame}
+
+\begin{frame}
+  \frametitle{About This Workshop}
+\end{frame}
+
+\subsection{Setting Up A Haskell Environment}
+
+\begin{frame}
+  \frametitle{Stack}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Editor}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Verify Your Installation}
+\end{frame}
+
+\section{Hello World}
+
+\section{Read File, Write File}
+
+\section{Pagination}
+
+\section{Configurating}
+
+\section{Scrolling}
+
+\section{Questions?}
+\end{document}
