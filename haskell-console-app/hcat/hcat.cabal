@@ -23,6 +23,8 @@ library
                     , bytestring
                     , text
                     , containers
+                    , filepath
+                    , process
   default-language:   Haskell2010
   default-extensions: GADTs
                     , OverloadedStrings

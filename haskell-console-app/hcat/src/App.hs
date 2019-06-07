@@ -3,6 +3,7 @@ module App where
 import           Control.Monad.Except
 import           Control.Monad.Fail
 import           Control.Monad.Reader
+import qualified System.Process       as Process
 
 -- | The AppT monad represents the application state
 newtype AppT m a = AppT
@@ -36,5 +37,12 @@ data Cfg = Cfg
   , cfgTermHeight :: Int
   }
 
-defaultConfig :: Cfg
-defaultConfig = Cfg { cfgTermWidth = 80, cfgTermHeight = 20 }
+defaultConfig :: IO Cfg
+defaultConfig = do
+  rows <- Process.readProcess "tput" ["lines"] ""
+  cols <- Process.readProcess "tput" ["cols"] ""
+  putStrLn $ "rows: " ++ (show rows)
+  putStrLn $ "cols: " ++ (show cols)
+  return $ Cfg { cfgTermWidth = (read.init $ cols)
+               , cfgTermHeight = (read.init $ rows)
+               }
