@@ -88,17 +88,20 @@ libMain = App.defaultConfig >>= (flip App.runApp libMain')
       paginate (Zipper.mkZipper pagesWithStatusBar)
 
 wordWrap :: Int -> Text.Text -> [Text.Text]
-wordWrap w txt = reverse $ wordWrap' [] w (Text.words txt)
+wordWrap w txt =
+  if Text.length txt < w
+  then [txt]
+  else
+    let myOffset = Maybe.fromMaybe w (boundryOffset w txt)
+        (thisLine, rest) = Text.splitAt myOffset txt
+    in thisLine : wordWrap w rest
   where
-    wordWrap' :: [Text.Text] -> Int -> [Text.Text] -> [Text.Text]
-    wordWrap' carry _ [] = carry
-    wordWrap' [] w (word:words) = wordWrap' [word] w words
-    wordWrap' (line:lines) w (word:words) =
-      let line' = Text.unwords [line, word]
-      in
-        if Text.length line' <= w
-        then wordWrap' (line':lines) w words
-        else wordWrap' (word:line:lines) w words
+    boundryOffset :: Int -> Text.Text -> Maybe Int
+    boundryOffset 0 _ = Nothing
+    boundryOffset idx text =
+      if Text.index text idx == ' '
+      then Just idx
+      else boundryOffset (pred idx) text
 
 nextAction :: IO PagerAction
 nextAction = do

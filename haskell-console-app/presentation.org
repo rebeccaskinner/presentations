@@ -1,0 +1,226 @@
+#+REVEAL_THEME: league
+#+REVEAL_TRANS: linear
+#+author: Rebecca Skinner
+#+email: rebecca@rebeccaskinner.dev · @cercerilla
+#+date: June 2019
+#+title: Building A Console Application in Haskell
+#+OPTIONS: toc:nil
+#+OPTIONS: reveal_title_slide:"<h3>%t</h3><p>%a</p><p>%e</p>"
+
+* Standard Disclaimers
+
+** My Views Are My Own
+
+All views and opinions expressed in this talk are my own, and do not
+necessarily reflect those of my employer.
+
+** License
+
+The contents of this code are covered under the Creative Commons
+license (CC BY 4.0).  Source code included with this talk is covered
+under BSD3 unless otherwise specified.
+
+* Introduction
+
+** About This Talk
+
+In this "workshop-style" talk you'll learn how to build a haskell
+application from the ground up.  We won't have time to build
+everything from scratch, so solutions will be provided, but you're
+encouraged to follow along and build the application yourself.
+
+** Getting Help
+
+Feel free to ask questions at any time during this talk.
+
+** Setting Up Your Environment
+
+#+begin_example
+~$ curl -sSL https://get.haskellstack.org/ | sh
+~$ stack setup
+~$ stack new hcat rebeccaskinner/simple --resolver lts-13.19
+~/hcat$ cd hcat
+~/hcat$ stack build && stack exec hcat
+#+end_example
+
+* HCat
+#+REVEAL_HTML: <a href="https://asciinema.org/a/250585" target="_blank"><img src="https://asciinema.org/a/250585.svg" /></a>
+
+* You Had Me At "Hello World"
+
+Let's start by looking at the application skeleton that stack generated for us
+
+** app/Main.hs
+
+#+begin_src haskell
+module Main where
+import qualified Lib
+
+main :: IO ()
+main = Lib.libMain
+#+end_src
+
+** src/Lib.hs
+#+begin_src haskell
+module Lib (libMain) where
+import qualified App
+import qualified Control.Monad.IO.Class as IO
+
+libMain :: IO ()
+libMain = App.runApp App.defaultConfig $ do
+  IO.liftIO $ putStrLn "Hello, World"
+#+end_src
+
+** src/App.hs
+
+#+begin_src haskell
+  -- | The AppT monad represents the application state
+  newtype AppT m a = AppT
+    { runAppT :: ExceptT AppException (ReaderT Cfg m) a
+    } deriving (Functor,Applicative,Monad
+               ,MonadIO,MonadReader Cfg
+               , MonadError AppException)
+#+end_src
+
+*** Wat?
+
+[[file:img/watowl.png]]
+
+*** That's A Lot for Hello World!
+
+Let's take a step back!
+
+* Hello, World
+
+We can build hello world without any kind of template.  Let's go back
+to ~Main.hs~.
+
+** Return To Main.hs
+
+#+begin_src haskell
+   module Main where
+
+   main :: IO ()
+   main = print "Hello, World"
+#+end_src
+
+** See File, Say File
+
+What's the simplest way we can echo a file's contents to the screen?
+
+*** Echo.hs
+
+#+begin_src haskell
+  module Main where
+  import System.Environment (getArgs)
+  main :: IO ()
+  main = do
+    let
+      getFilename :: IO FilePath
+      getFilename = do
+        args <- getArgs
+        return (head args)
+  {-start-frag-}
+    fileName <- getFilename
+    contents <- readFile fileName
+    putStrLn contents
+  {-end-frag-}
+#+end_src
+
+*** Golf
+
+[[file:img/golf.jpg]]
+
+*** A Pointless Refactoring
+
+#+begin_src haskell
+  module Main where
+  import System.Environment (getArgs)
+
+  main :: IO ()
+  main =
+    (head <$> getArgs) >>= readFile >>= writeFile
+#+end_src
+
+** What's Missing?
+
+*** Efficiency
+
+- ~String~ is slow!
+- ~bytestring~ is a raw array of characters, and fast!
+- ~text~ built on bytestring, but it knows about text and unicode!
+
+*** This Refactoring is BS
+
+Let's look at a refactoring that uses ByteStrings.
+
+#+begin_src haskell
+  module Main where
+  import qualified Data.ByteString.Char8 as BS
+  import           System.Environment    (getArgs)
+
+  main :: IO ()
+  main =
+    let fname = (head <$> getArgs)
+    in fname >>= BS.readFile >>= BS.putStrLn
+#+end_src
+
+*** This one is Textbook
+
+Now let's use Text.
+
+#+begin_src haskell
+    module Main where
+  {-start-frag-}
+    import qualified Data.Text          as Text
+    import qualified Data.Text.IO       as Text
+  {-end-frag-}
+    import           System.Environment (getArgs)
+
+    main :: IO ()
+    main =
+      let fname = (head <$> getArgs)
+      in fname
+      >>= {{{Text.readFile}}}
+      >>= {{{Text.putStrLn}}}
+#+end_src
+
+* Dealing With The Terminal
+
+We're printing data to the screen with no regard for the dimensions of
+the screen.  Let's try to fix that!
+
+** Storing Configuration Data
+
+Let's add a configuration record to ~src/App.hs~!
+
+Our template comes with an empty configuration type:
+
+#+begin_src haskell
+data Cfg = Cfg
+#+end_src
+
+What Shall We do?
+
+** A Custom Configuration
+
+Let's Store The Terminal Width and Height in Config!
+
+#+begin_src haskell
+  data Cfg = Cfg
+     { {{{cfgTermWidth :: Int}}}
+  {{{   , cfgTermHeight :: Int}}}
+     } {{{deriving (Show)}}}
+#+end_src
+
+* Tracking Terminal Dimensions
+
+* Transformers: Monads in Disguise
+
+* Failure Is Always An Option
+
+* Pagination
+
+* Zippers
+
+* (Word) Wrapping It Up
