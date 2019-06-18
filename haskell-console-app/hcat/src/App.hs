@@ -33,18 +33,14 @@ exceptionReason = \case
 
 -- | Cfg contains the configured state of the application
 data Cfg = Cfg
-  { cfgTermHeight  :: Int
-  , cfgTermWidth :: Int
+  { cfgTermHeight :: Int
+  , cfgTermWidth  :: Int
   }
 
 defaultConfig :: IO Cfg
-defaultConfig = do
+defaultConfig =
   Cfg <$> term "lines" <*> term "cols"
-  where
-    term :: String -> IO Int
-    term cmd = read <$> Process.readProcess "tput"  [cmd] ""
-  -- rows <- Process.readProcess "tput" ["lines"] ""
-  -- cols <- Process.readProcess "tput" ["cols"] ""
-  -- return $ Cfg { cfgTermWidth = (read.init $ cols)
-  --              , cfgTermHeight = (read.init $ rows)
-  --              }
+
+term :: String -> IO Int
+term cmd =
+  read <$> Process.readProcess "tput"  [cmd] ""

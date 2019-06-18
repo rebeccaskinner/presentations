@@ -108,10 +108,11 @@ nextAction = do
   IO.hSetBuffering IO.stdin IO.NoBuffering
   IO.hSetEcho IO.stdin False
   chr <- IO.hGetChar IO.stdin
-  return $ case chr of
-             'n' -> PageNext
-             'p' -> PagePrevious
-             'q' -> Exit
+  case chr of
+    'n' -> return PageNext
+    'p' -> return PagePrevious
+    'q' -> return Exit
+    _  -> nextAction
 
 paginate :: Zipper.Zipper Text.Text -> App.AppT IO ()
 paginate pages = do

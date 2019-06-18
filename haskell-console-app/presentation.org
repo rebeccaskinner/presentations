@@ -213,14 +213,525 @@ Let's Store The Terminal Width and Height in Config!
      } {{{deriving (Show)}}}
 #+end_src
 
-* Tracking Terminal Dimensions
+** Making Configuration Easy
 
-* Transformers: Monads in Disguise
+Storing the terminal dimensions is a good start, but we still need a
+way to _get_ them.
 
-* Failure Is Always An Option
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+import System.Process as Process
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  defaultConfig :: IO cfg
+  defaultConfig = do
+    height <- Process.readProcess "tput" ["lines"] ""
+    width <- Process.readProcess "tput" ["cols"] ""
+    return $ Cfg {cfgTermHeight = height, cfgTermWidth = width}
+#+end_src
+
+** Golf
+[[file:img/golf.jpg]]
+
+** defaultCfg
+#+begin_src haskell
+  defaultConfig :: IO cfg
+  defaultConfig = do
+    height <- termInfo "lines"
+    width <- termInfo "cols"
+    return $ Cfg {cfgTermHeight = height, cfgTermWidth = width}
+    where
+      termInfo dim = Process.readProcess "tput" [dim] ""
+#+end_src
+
+** Golf
+[[file:img/golf.jpg]]
+
+** Applicative
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+#+end_src
+
+** defaultCfg Again
+
+#+begin_src haskell
+  defaultConfig :: IO Cfg
+  defaultConfig =
+    Cfg
+    {{{<$> term "lines"}}}
+    {{{<*> term "cols"}}}
+    where
+      term cmd = read <$> Process.readProcess "tput"  [cmd] ""
+
+#+end_src
+
+*** Wat?
+
+[[file:img/watowl.png]]
+
+*** How To Applicative?
+
+#+begin_src haskell
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+(<*>) :: Applicative f => f (a -> b) -> f a -> f b
+Cfg :: Int -> Int -> Cfg
+term :: String -> IO Int
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  term "lines" :: IO Int
+  Cfg <$> :: Functor f => f Int -> f (Int -> Cfg)
+  Cfg <$> term "cols" {{{:: IO (Int -> Cfg)}}}
+  {{{(<$>) ::  (Int -> (Int -> Cfg)) -> IO Int -> IO (Int -> Cfg)}}}
+  {{{(<*>) :: IO (Int -> Cfg) -> IO Int -> IO Cfg}}}
+#+end_src
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  Cfg <$> term "lines" <*> term "cols"
+#+end_src
+
+* Word-Wrapping Text
+
+In the first version of our program we just displayed the input text
+verbatim.  Most terminal emulators that handle word wrapping do it
+naively and will break words.  Let's see if we can do better.
+
+** A Word Wrapping Algorithm
+
+*** Some Definitions
+*let*
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in fade-in fade-in) :frag_idx (1 2 3 4 5 6)
+  - /w/: the width, in characters, of our terminal
+  - /l/: some line of text; "hello, world" for example
+  - /l[n]/: the (0-indexed) nth character of /l/
+  - /l[a:b]/: a string slice from index /a/ to /b/ in /l/
+  - /len(l)/: the number of characters in /l/
+  - /o/: A list of output lines, each of length <= /w/
+
+*** Base Case
+#+ATTR_REVEAL: :frag fade-in
+if /len(l)/ <= /w/ then /o/ = /l/
+
+*** Recursive Case
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in) :frag_idx (1 2 3)
+- Iterating from /w/ to 0, find the first index, /n/ such that /l[n]/ is a whitespace
+- If any valid item is found
+  - Add the substring /l[0:n]/ to the end of /o/
+  - Set /l/ to /l[n:len(l)]/
+  - Recurse
+- Otherwise
+  - Add /l[0:w]/ to the end of /0/
+  - Set /l/ to /l[w:len(l)]/
+  - Recurse
+
+** A Word Wrap Function
+
+#+begin_src haskell
+  wordWrap :: {{{Int -> Text.Text -> [Text.Text]}}}
+  wordWrap w txt =
+  {-start-frag-}if Text.length txt < w
+    then {{{[txt]}}}
+    else
+{-end-frag-}{-start-frag-}      let {{{myOffset = Maybe.fromMaybe w (boundryOffset w txt)}}}
+          {{{(thisLine, rest) = Text.splitAt myOffset txt}}}
+      in thisLine : wordWrap w rest
+  {-end-frag-}
+#+end_src
+
+*** The Boundry Function
+
+#+begin_src haskell
+  boundryOffset :: {{{Int -> Text.Text -> Maybe Int}}}
+  {{{boundryOffset 0 _ = Nothing}}}
+{-start-frag-}  boundryOffset idx text =
+    if {{{Text.index text idx}}} == ' '
+    then {{{Just idx}}}
+    else boundryOffset {{{(pred idx) text}}}
+{-end-frag-}
+#+end_src
+
+* IO and The Environment
+
+** Does ~defaultCfg~ Solve For Terminal Size?
+
+Having ~defaultCfg~ is a nice convenience, but it would be nice if we
+could _initialize_ our application with the data and then access it
+_anywhere_.
+
+** IO Everywhere
+
+We can make any function that needs to access terminal info run in ~IO~.
+#+ATTR_REVEAL: :frag fade-in
+... But that means that we don't know what functions might have side effects.
+
+** Parameter Passing
+What about a procedural shell and a functional core?
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  libMain = void $ do
+    let (Cfg width height) <- defaultCfg
+        fname <- getFilename
+    f width height fname
+    h height [1,2,3]
+#+end_src
+#+ATTR_REVEAL: :frag fade-in
+This weirds pointless code with odd combinators.
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  module Example where
+  f :: String -> Int
+  g :: Int -> Bool
+  h = g . f
+#+end_src
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  module Example where
+  f :: Int -> String -> Int
+  g :: Int -> Int -> Bool
+  h = (g .) .  f
+#+end_src
+
+** Read-Only Environments with Reader
+~Reader~ provides us with a way of carrying around an explicit
+read-only environment that we can use in our functions.  We can say:
+
+#+begin_src haskell
+  f :: String -> Reader Cfg Int
+  g :: Int -> Reader Cfg Bool
+  h = f >=> g
+#+end_src
+
+** What's That Fish Thing About?
+
+Klesili composition is similar to regular function composition, but
+for functions that return a monadic value.
+
+#+begin_src haskell
+  (g . f) = \x -> g (f x)
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+(>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  f >=> g = \x -> f x >>= g
+#+end_src
+
+** Great, that means nothing!
+Let's look at a real example!
+
+#+begin_src haskell
+  countLines :: String -> Reader Cfg Int
+  countLines str = do
+    width <- fromIntegral <$> asks cfgTermWidth
+    let len = fromIntegral $ length str
+    return (ceiling $ len / width)
+
+  getPage' :: String -> Int -> Reader Cfg String
+  getPage' str maxLen = reader $ \(Cfg width height) ->
+    take (max maxLen $ width * height) str
+
+  getPage :: String -> Reader Cfg String
+  getPage s = countLines s >>= getPage' s
+#+end_src
+
+** Running with an environment
+We can run our readers with different environments.  Let's look at a contrived example:
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  addNum :: Int -> Reader Int Int
+  addNum num = (num +) <$> ask
+
+  main = do
+    print $ runReader (addNum 1) 3
+    print $ runReader (addNum 1) 1
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+Using ~runReader~ we can run the same function with different execution contexts.
+
+** Modifying The Environment
+
+We can change the environment using the ~local~ function too!
+
+#+begin_src haskell
+addNum :: Int -> Reader Int Int
+addNum num = (num +) <$> ask
+
+biggerNum :: Int -> (Reader Int a) -> Reader Int a
+biggerNum num = local (* num)
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+λ runReader (addNum 1) 3
+{{{4}}}
+λ runReader (biggerNum 3 (addNum 1)) 3
+{{{10}}}
+#+end_src
+
+** So Why Readers?
+
+Readers give us a *read-only* environment that we can pass round
+within a monadic context
+
+* Transformers: Monads In Disguise
+
+** Print Our Environment To The Screen
+
+Let's write a function that gets something from our read-only
+environment and prints it to the screen.
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+defaultNum :: IO Int
+defaultNum = return 5
+
+main = defaultNum >>= runReader $ do
+  n <- ask
+  putStrLn $ "the number is: " ++ show n
+#+end_src
+
+** Nope!
+
+Reader and IO are two different monads, so we can't combine reading
+our global environment variables with doing IO.  That would seem to
+put a damper on our reader aspirations.
+
+** We Need IO And an Environment!
+
+#+begin_src haskell
+askPrint :: Reader Int (IO ())
+askPrint = do
+  n <- ask
+  return . putStrLn $ "the number is: " ++ show n
+
+main = do
+  def <- defaultNum
+  runReader askPrint def
+#+end_src
+
+** Wouldn't It Be Nice If That Were General Over Any Monad?
+
+#+begin_src haskell
+data MySuperReader r (m :: * -> *) a = Reader r (m a)
+#+end_src
+
+** Haskell's Got That!
+
+~ReaderT~
+
+** Let's Try This Again
+
+#+begin_src haskell
+printAsk :: ReaderT Int IO ()
+printAsk = do
+  n <- ask
+  {{{liftIO . }}}putStrLn $ "the number is: " ++ show n
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+λ {{{runReaderT }}}printAsk 4
+the number is: 4
+#+end_src
+
+** ReaderT With Cfg
+
+If we're keeping all of our global configuration in our ~Cfg~ type,
+then it makes sense that our application might want to work inside of
+a ~ReaderT Cfg~.  We can use a type alias:
+
+#+begin_src haskell
+type MyApp = ReaderT Cfg
+#+end_src
+
+** A More Idiomatic Approach
+
+A more idiomatic approach is to us a ~newtype~ wrapper.  Newtype's are
+zero overhead and give us some nice properties.
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  newtype AppT m a = AppT
+    { runAppT :: ReaderT Cfg m a
+    } deriving ( {{{Functor}}}
+               , {{{Applicative}}}
+               , {{{Monad}}}
+               , {{{MonadIO}}}
+               , {{{MonadReader Cfg}}}
+               )
+#+end_src
+
+** Running An ~AppT~
+
+#+begin_src haskell
+  runApp {{{:: Cfg -> AppT m a -> m a}}}
+  runApp {{{cfg}}} (AppT action) = {{{runReaderT action cfg}}}
+#+end_src
+
+** Golf
+[[file:img/golf.jpg]]
+
+** Running An ~AppT~
+
+#+begin_src haskell
+runApp :: AppT m a -> Cfg -> m a
+runApp = runReaderT . runAppT
+#+end_src
+
+** A Brand New Main
+#+begin_src haskell
+  main :: IO ()
+  main = {{{defaultConfig >>= runApp main'}}}
+    where
+      main' = do
+        filename  <- head <$> getArgs
+        {{{(Cfg w h) <- ask}}}
+        {{{contents  <- Text.readFile filename}}}
+        {{{let wrapped = wordrap w contents}}}
+        {{{mapM_ Text.putStrLn wrapped}}}
+#+end_src
 
 * Pagination
 
+** Implementing a Pager
+
+We have a list of lines of text, but we need to break them into pages.
+Easy, right?
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+  pagesOf :: {{{Int -> [a] -> [[a]]}}}
+  pagesOf cnt lst = {{{reverse $ pagesOf' [] cnt lst}}}
+  {-start-frag-}  where
+      pagesOf' :: {{{[[a]] -> Int -> [a] -> [[a]]}}}
+      pagesOf' carry cnt {{{[]}}} = carry
+  {-end-frag-}{-start-frag-}    pagesOf' carry cnt lst =
+        let (hd,tl) = splitAt cnt lst
+        in pagesOf' {{{(hd:carry) cnt tl}}}
+  {-end-frag-}
+#+end_src
+
 * Zippers
 
-* (Word) Wrapping It Up
+** Zippers
+A zipper is a data structure that lets you quickly traverse a list
+forwards and backwards.  It supports operations like getting a current
+element, inserting an item, removing an item, or moving forward and
+backwards.
+
+** A Zipper Definition
+
+#+begin_src haskell
+data Zipper a = Zipper ![a] ![a] deriving Show
+#+end_src
+
+** Zippers In Action
+#+begin_src haskell
+  import qualified Zipper as Z
+  λ let z = Z.mkZipper [1..6]
+  {{{λ z}}}
+  {{{Zipper [1,2,3,4,5,6] []}}}
+  {{{λ Z.isStart z}}}
+  {{{True}}}
+  {{{λ (Z.isStart . Z.next) z}}}
+  {{{False}}}
+  {{{λ Z.next z}}}
+  {{{Zipper [2,3,4,5,6] [1]}}}
+  {{{λ (Z.get . Z.next . Z.next) z}}}
+  {{{Just 3}}}
+  {{{λ Z.idx z}}}
+  {{{0}}}
+  {{{λ (Z.idx . Z.prev . Z.last) z}}}
+  {{{4}}}
+#+end_src
+
+** Let's Visualize It!
+
+*** A Brand New Zipper
+In our new zipper all of the elements are in the _start_ list.
+The current element is the head of the start _start_ list.
+[[file:img/zippers/idx0.png]]
+
+*** Moving Next
+When we start to move next we set current element to the tail of the
+_start_ list.
+[[file:img/zippers/idx1.1.png]]
+
+*** Saving The Head
+But what do we do with the head of the list?
+[[file:img/zippers/idx1.2.png]]
+
+*** Creating a _previous items_ list
+We move the head of the _next items_ list to the head of the _end_ list
+[[file:img/zippers/idx1.3.png]]
+
+*** A Basic Zipper
+To move next again we get another detached head
+[[file:img/zippers/idx2.0.png]]
+
+*** A Basic Zipper
+It gets moved to the _end_ list too.
+[[file:img/zippers/idx2.1.png]]
+
+*** A Basic Zipper
+Previous items is a FIFO stack of items we've traversed
+[[file:img/zippers/idx3.png]]
+
+*** A Basic Zipper
+Moving back and forth is an O(1) ~tail~ operation and an O(1) ~(:)~
+operation.
+[[file:img/zippers/idx4.png]]
+
+** Implementing A Zipper
+
+*** Recall
+#+begin_src haskell
+data Zipper a = Zipper ![a] ![a] deriving Show
+#+end_src
+
+*** Flip It And Zip It
+How do we construct a zipper?
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+mkZipper :: [a] -> Zipper a
+mkZipper = flip Zipper []
+#+end_src
+
+*** Looking up an element
+How do we get an element from a zipper?
+
+#+begin_src haskell
+get :: {{{Zipper a -> Maybe a}}}
+get {{{(Zipper cur _)}}} = {{{Maybe.listToMaybe cur}}}
+#+end_src
+
+#+ATTR_REVEAL: :frag fade-in
+~Maybe.listToMaybe :: [a] -> Maybe a~
+
+*** What About Traversal?
+#+begin_src haskell
+  start, end, last, next, prev :: {{{Zipper a -> Zipper a}}}
+  next{{{ z@(Zipper [] _) }}}={{{ z}}}
+  next{{{ (Zipper (cur:rest) end) }}}={{{ Zipper rest (cur:end)}}}
+  prev{{{ z@(Zipper _ []) }}}={{{ z}}}
+  prev{{{ (Zipper start (last:end)) }}}={{{ Zipper (last:start) end}}}
+  last{{{ }}}={{{ prev . end}}}
+  end{{{ (Zipper start end) }}}={{{ Zipper [] (reverse start ++ end)}}}
+  start{{{ (Zipper start end) }}}={{{ Zipper ((reverse end) ++ start) []}}}
+#+end_src
