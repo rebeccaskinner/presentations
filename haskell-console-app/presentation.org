@@ -43,6 +43,11 @@ Feel free to ask questions at any time during this talk.
 ~/hcat$ stack build && stack exec hcat
 #+end_example
 
+** Language Extensions
+We'll be using several language extensions that might not be enabled
+if you aren't using the default template.  Check ~hcat.cabal~ for a
+list of the enabled extensions!
+
 * HCat
 #+REVEAL_HTML: <a href="https://asciinema.org/a/250585" target="_blank"><img src="https://asciinema.org/a/250585.svg" /></a>
 
@@ -589,7 +594,6 @@ zero overhead and give us some nice properties.
 [[file:img/golf.jpg]]
 
 ** Running An ~AppT~
-
 #+begin_src haskell
 runApp :: AppT m a -> Cfg -> m a
 runApp = runReaderT . runAppT
@@ -627,7 +631,115 @@ Easy, right?
   {-end-frag-}
 #+end_src
 
-* Zippers
+** What about that fancy status bar?
+
+This will divide the text up into pages, but we need to crate our
+fancy status bar!  Let's start with some bash nonsense.
+
+*** Bash Nonsense
+The ~termSeq~ function generates vt100 control sequences
+#+begin_src haskell
+termSeq :: Char -> [Int] -> Text.Text
+termSeq c codes =
+  let codes' = List.intercalate ";" . map show $ codes
+      escape = Char.chr 27
+  in Text.pack $ Printf.printf "%c[%s%c" escape codes' c
+#+end_src
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+faceSeq :: [Int] -> Text.Text
+faceSeq = termSeq 'm'
+#+end_src
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+screenSeq :: [Int] -> Text.Text
+screenSeq = termSeq 'J'
+#+end_src
+
+*** Creating The Status Bar
+#+begin_src haskell
+  statusBar :: FilePath -> Int -> Int -> Int -> Text.Text
+  statusBar filename width maxPages currentPage  =
+    let
+{-start-frag-}
+      startSeq = faceSeq [7]
+      endSeq = faceSeq [0]
+      ctrlLen = Text.length $ startSeq <> endSeq
+      width' = width + ctrlLen
+      pageCounter = Text.pack $
+                    Printf.printf "(%d/%d)" currentPage maxPages
+      bname = Text.pack . FilePath.takeBaseName $ filename
+      barWidth = Text.length pageCounter + Text.length bname
+      paddingAmount = width - (min width barWidth)
+      padding = Text.replicate paddingAmount " "
+{-end-frag-}
+    in
+{-start-frag-}
+      Text.take width' $ Monoid.mconcat [ startSeq
+                                         , bname
+                                         , padding
+                                         , pageCounter
+                                         , endSeq
+                                         ]
+{-end-frag-}
+#+end_src
+
+*** Adding The Status Bar To A Page
+We can't naively add the status bar to the end of a page of text!
+
+Why?
+
+#+ATTR_REVEAL: :frag fade-in
+Our last page is likely to be a partial page- so our status bar would
+end up in the middle of the screen!
+
+*** Making Pages Sparse
+We can fix this by adding the missing newlines to the end of a page of
+text so that it fills out the full number of available lines:
+
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+mkSparsePage :: Int -> [Text.Text] -> Text.Text
+mkSparsePage pageSize pageLines =
+  let lineCount = length pageLines
+      extraLines = Text.replicate (pageSize - lineCount) "\n"
+      joined = mconcat $ (List.intersperse "\n" pageLines)
+  in joined <> extraLines
+#+end_src
+
+** Yet Another Main
+
+#+begin_src haskell
+libMain = App.defaultConfig >>= (flip App.runApp libMain')
+  where
+    libMain' = do
+      width   <- Reader.asks App.cfgTermWidth
+      height  <- Reader.asks App.cfgTermHeight
+      fname   <- getFilename
+      txt     <- (IO.liftIO . Text.readFile) fname
+
+      let textHeight = height - 2
+          inputLines = Text.lines txt
+          wrapped = concatMap (wordWrap width) inputLines
+          paginated = pagesOf textHeight wrapped
+          pages = map (mkSparsePage textHeight) paginated
+          pageCnt = length pages
+          statusBars = map (statusBar fname width pageCnt) [1..]
+          addBar page bar = Text.unlines [page, bar]
+          pagesWithStatusBar = zipWith addBar pages statusBars
+
+      mapM_ Text.putStr pagesWithStatusBar
+#+end_src
+
+* Scrolling Through Pages
+
+** We're Still Missing Something
+Our latest version of the code lets us print all of the pages to the
+screen, but we really need to scroll!
+
+** How Do We Scroll?
+How do we scroll back and forth through a list when everything is
+immutable?
 
 ** Zippers
 A zipper is a data structure that lets you quickly traverse a list
@@ -636,7 +748,6 @@ element, inserting an item, removing an item, or moving forward and
 backwards.
 
 ** A Zipper Definition
-
 #+begin_src haskell
 data Zipper a = Zipper ![a] ![a] deriving Show
 #+end_src
@@ -735,3 +846,98 @@ get {{{(Zipper cur _)}}} = {{{Maybe.listToMaybe cur}}}
   end{{{ (Zipper start end) }}}={{{ Zipper [] (reverse start ++ end)}}}
   start{{{ (Zipper start end) }}}={{{ Zipper ((reverse end) ++ start) []}}}
 #+end_src
+
+** Handing Scroll Actions
+We have a data structure that supports scrolling, but we need to give
+the user the ability to scroll.  Let's start by creating a data type
+to represent scroll actions:
+#+ATTR_REVEAL: :frag fade-in
+#+begin_src haskell
+data PagerAction = PageNext | PagePrevious | Exit
+#+end_src
+
+** Reading Actions
+#+begin_src haskell
+  nextAction :: IO PagerAction
+  nextAction = do
+    IO.hSetBuffering IO.stdin IO.NoBuffering
+    IO.hSetEcho IO.stdin False
+    chr <- IO.hGetChar IO.stdin
+    case chr of
+      'n' -> return PageNext
+      'p' -> return PagePrevious
+      'q' -> return Exit
+      _   -> nextAction
+#+end_src
+
+** Paging
+#+begin_src haskell
+  paginate :: Zipper.Zipper Text.Text -> App.AppT IO ()
+  paginate pages = do
+    let
+      clearScreen :: App.AppT IO ()
+      clearScreen = IO.liftIO $ do
+        let clearStringCmd = screenSeq [2]
+        IO.liftIO $ Text.putStr clearStringCmd
+
+      currentPage = Maybe.fromMaybe "" (Zipper.get pages)
+
+    clearScreen
+    IO.liftIO $ Text.putStr currentPage
+    action <- IO.liftIO nextAction
+    case action of
+      PageNext     -> Monad.unless (Zipper.isLast pages) $
+                        paginate (Zipper.next pages)
+      PagePrevious -> paginate (Zipper.prev pages)
+      Exit         -> clearScreen
+#+end_src
+
+* The Final Version
+
+** Yet Another Main
+#+begin_src haskell
+libMain :: IO ()
+libMain = App.defaultConfig >>= (flip App.runApp libMain')
+  where
+    libMain' = do
+      width   <- Reader.asks App.cfgTermWidth
+      height  <- Reader.asks App.cfgTermHeight
+      fname   <- getFilename
+      txt     <- (IO.liftIO . Text.readFile) fname
+
+      let textHeight = height - 2
+          inputLines = Text.lines txt
+          wrapped = concatMap (wordWrap width) inputLines
+          paginated = pagesOf textHeight wrapped
+          pages = map (mkSparsePage textHeight) paginated
+          pageCnt = length pages
+          statusBars = map (statusBar fname width pageCnt) [1..]
+          addBar page bar = Text.unlines [page, bar]
+          pagesWithStatusBar = zipWith addBar pages statusBars
+
+      paginate (Zipper.mkZipper pagesWithStatusBar)
+#+end_src
+
+* What's Left?
+
+** Error Handling
+#+begin_src haskell
+  newtype AppT m a = AppT
+    { runAppT :: {{{ExceptT AppException}}} (ReaderT Cfg m) a
+    } deriving ( Functor
+               , Applicative
+               , Monad
+               , MonadIO
+               , MonadReader Cfg
+               {{{, MonadError AppException}}}
+               )
+  {-start-frag-}
+#+end_src
+
+** Tests!
+#+begin_src haskell
+main :: IO ()
+main = putStrLn "Test suite not yet implemented"
+#+end_src
+
+* Questions?

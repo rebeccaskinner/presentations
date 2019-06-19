@@ -16,7 +16,7 @@ import qualified System.IO              as IO
 import qualified Text.Printf            as Printf
 import qualified Zipper
 
-data PagerAction = PageNext | PagePrevious | Exit deriving (Eq, Show)
+data PagerAction = PageNext | PagePrevious | Exit
 
 termSeq :: Char -> [Int] -> Text.Text
 termSeq c codes =
@@ -47,43 +47,51 @@ pagesOf cnt lst = reverse $ pagesOf' [] cnt lst
       let (hd,tl) = splitAt cnt lst
       in pagesOf' (hd:carry) cnt tl
 
-mkSparsePage :: Int -> Text.Text -> Text.Text
-mkSparsePage pageSize pageText =
-  let missingLineCount = max 0 $ pageSize - (length $ Text.lines pageText)
-      newlines = replicate missingLineCount "\n"
-  in Monoid.mconcat (pageText : newlines)
+mkSparsePage :: Int -> [Text.Text] -> Text.Text
+mkSparsePage pageSize pageLines =
+  let lineCount = length pageLines
+      extraLines = Text.replicate (pageSize - lineCount) "\n"
+      joined = mconcat $ (List.intersperse "\n" pageLines)
+  in joined <> extraLines
 
 statusBar :: FilePath -> Int -> Int -> Int -> Text.Text
 statusBar filename width maxPages currentPage  =
-  let startControlSequence = faceSeq [7]
-      resetControlSequence = faceSeq [0]
-      width' = width + (Text.length startControlSequence) + (Text.length resetControlSequence)
-      longPageCountMsg = Text.pack $ Printf.printf "(%d/%d)" currentPage maxPages
-      bname = Text.pack . FilePath.takeBaseName $ filename
-      paddingAmount = width - (min width $ (Text.length longPageCountMsg) + (Text.length bname))
-      padding = Text.replicate paddingAmount " "
-  in Text.take width' $ Monoid.mconcat [ startControlSequence
+  let
+    startSeq = faceSeq [7]
+    endSeq = faceSeq [0]
+    ctrlLen = Text.length $ startSeq <> endSeq
+    width' = width + ctrlLen
+    pageCounter = Text.pack $
+                  Printf.printf "(%d/%d)" currentPage maxPages
+    bname = Text.pack . FilePath.takeBaseName $ filename
+    barWidth = Text.length pageCounter + Text.length bname
+    paddingAmount = width - (min width barWidth)
+    padding = Text.replicate paddingAmount " "
+  in Text.take width' $ Monoid.mconcat [ startSeq
                                        , bname
                                        , padding
-                                       , longPageCountMsg
-                                       , resetControlSequence
+                                       , pageCounter
+                                       , endSeq
                                       ]
 
 libMain :: IO ()
 libMain = App.defaultConfig >>= (flip App.runApp libMain')
   where
     libMain' = do
-      termWidth  <- Reader.asks App.cfgTermWidth
-      termHeight <- Reader.asks App.cfgTermHeight
-      fileName   <- getFilename
-      inputText  <- (IO.liftIO . Text.readFile) fileName
+      width   <- Reader.asks App.cfgTermWidth
+      height  <- Reader.asks App.cfgTermHeight
+      fname   <- getFilename
+      txt     <- (IO.liftIO . Text.readFile) fname
 
-      let textHeight = termHeight - 1
-          inputLines = Text.lines inputText
-          wrapped = concatMap (wordWrap termWidth) inputLines
-          pages = map (mkSparsePage textHeight . Text.unlines) $ pagesOf textHeight wrapped
-          statusBars = map (statusBar fileName termWidth (length pages)) [1..]
-          pagesWithStatusBar = zipWith (\page bar -> Text.unlines [page, bar]) pages statusBars
+      let textHeight = height - 2
+          inputLines = Text.lines txt
+          wrapped = concatMap (wordWrap width) inputLines
+          paginated = pagesOf textHeight wrapped
+          pages = map (mkSparsePage textHeight) paginated
+          pageCnt = length pages
+          statusBars = map (statusBar fname width pageCnt) [1..]
+          addBar page bar = Text.unlines [page, bar]
+          pagesWithStatusBar = zipWith addBar pages statusBars
 
       paginate (Zipper.mkZipper pagesWithStatusBar)
 
@@ -112,24 +120,20 @@ nextAction = do
     'n' -> return PageNext
     'p' -> return PagePrevious
     'q' -> return Exit
-    _  -> nextAction
+    _   -> nextAction
 
 paginate :: Zipper.Zipper Text.Text -> App.AppT IO ()
 paginate pages = do
   let
-    msg :: String -> App.AppT IO ()
-    msg = IO.liftIO . putStrLn
-
     clearScreen :: App.AppT IO ()
-    clearScreen =
+    clearScreen = IO.liftIO $ do
       let clearStringCmd = screenSeq [2]
-      in IO.liftIO $ Text.putStr clearStringCmd
+      IO.liftIO $ Text.putStr clearStringCmd
 
     currentPage = Maybe.fromMaybe "" (Zipper.get pages)
 
   clearScreen
   IO.liftIO $ Text.putStr currentPage
-
   action <- IO.liftIO nextAction
   case action of
     PageNext     -> Monad.unless (Zipper.isLast pages) $
