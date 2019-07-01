@@ -1,0 +1,452 @@
+#+REVEAL_THEME: league
+#+REVEAL_TRANS: linear
+#+author: Rebecca Skinner
+#+email: rebecca@rebeccaskinner.dev · @cercerilla
+#+date: June 2019
+#+title: A Perspective On Software Engineering and Related Careers
+#+OPTIONS: toc:nil
+#+OPTIONS: reveal_title_slide:"<h3>%t</h3><p>%a</p><p>%e</p>"
+
+* Introduction
+** Bio
+- Principal AI Engineer at Target
+- 15 years of industry experience
+- Industry Experience in
+  - Data Enginering, ML, and BI
+  - DevOps & Cloud
+  - Network Security
+  - Applied Research
+  - Systems Engineering
+- No Computer Science Degree
+
+** Technology Background
+  - Functional Programming :: Haskell, Erlang
+  - Systems Languages :: C, C++, Rust, Assembly
+  - Web and Business Oriented Languages :: Go, Ruby, Python, Javascript, Elm, Purescript, Typescript
+  - Declarative and Data Languages :: SQL, Domain Specific Data Languages
+
+** My Views Are My Own
+All views and opinions expressed in this talk are my own, and do not
+necessarily reflect those of my current or any past employer.
+
+* Radical Candor
+
+** Just Be Honest
+[[https://www.radicalcandor.com][Radical Candor]] is fundamentally about being honest with people.  There
+are some common ways that people can be dishonest even when they don't
+intend to.
+
+** Ruinous Empath
+Sometimes people aren't honest with others because the truth isn't
+nice.  It sucks to tell someone something they don't want to hear.
+
+*** The Tech Pipeline
+The technology pipeline frequently suffers from runious empathy.
+
+*** Technology is great
+Technology is great.  Most of us who have a decade or more in the
+industry stay here because, at the end of the day, it's what we love.
+
+*** Computers are awful
+#+ATTR_REVEAL: :frag fade-in1
+But there are some really tough things in the industry.
+
+** This Talk Is A Little Bit Candid
+This talk is my attempt at a candid overview of the industry.  Some
+stuff is hard, sometimes it sucks, and we should talk about that.
+
+* Technology as a Profession
+
+** Titles and Roles
+
+There are a lot of different titles:
+
+- {fullstack,frontend,backend,software} {developer, engineer}
+- Devops Engineer
+- Data Scientist
+- ...
+
+Titles do matter, but we'll speak in generalities.  By the time you
+have a nuanced vied of the industry the language will have shifted
+anyway.
+
+
+** What's The Common Factor?
+
+#+ATTR_REVEAL: :frag fade-in1
+All of these roles boil down to a single thing: Use _technology_ to
+solve _business problems_.
+
+* The Market For Technologists
+
+** What's Today's Market?
+#+ATTR_REVEAL: :frag fade-in
+For all of the buzz around the demand for technologists, the truth is
+that there's a glut of junior and mid-level people in our industry,
+and it's getting worse.  Demand for senior people is high, but it's
+difficult to break into those roles.
+
+** Levels and Career Growth
+Broadly, you can view technical career progression as breaking down
+into four main phases:
+#+ATTR_REVEAL: :frag fade-in
+1. Interns, Entry-Level, and Junior (0-5 years of experience)
+2. "Developer", Mid-Level, Senior, (sometimes) Staff (2-20 years of experience)
+3. Principal, Distinguished (10-∞ years of experience)
+  3.2 This is where the "manager split" often happens
+5. Founders, Hands-on Excutives, Engineers-in-Residence
+
+** The Senior/Junior Gap
+Around the 5 year mark there's a widening gap between fast-growth and
+slow-growth trajectories. The size and speed of the gap is increasing,
+and differences between high and low growth technologists is shifting
+toward a difference in kind rather than just degree.
+
+** Stratification
+Software Engineering is increasingly stratified into groups that very
+much resemble a traditional white/blue collar split.
+
+#+ATTR_REVEAL: :frag fade-in
+Mobility as a technologist is driven in large part by prestige and an
+ability to leap across the gap.
+
+* Prestige
+
+** Location
+
+There's a very strong bias toward physical location in tech.  People
+will draw broad conclusions about your talent and abilities based on
+where you are.
+
+#+ATTR_REVEAL: :frag fade-in
+  1. Sunnyvale, Cupertino, Melano Park, San Fansico
+  2. Rest of the Bay Area, NYC
+  3. Seattle, Boston
+  4. Boulder, Austin, Portland, Chicago
+  5. Everywhere else (St. Louis)
+
+** Companies
+
+Companies that you've worked for in the past can carry a lot of weight.
+
+- FAANG :: Facebook, Amazon, Apple, Netflix, Google
+
+"FAANG-tier" companies are companies with a reputation for exclusivity
+and hiring the best talent.  On a local scale the same dynamics will
+apply, with some employers being more respected than others.
+
+** Schools
+
+Education matters more now than it used to.  As more people move into
+tech from non-traditional backgrounds, the old-guard and people from
+top-5 schools are actively working to keep people in the lower tiers
+of the tech hierarchy.
+
+This isn't an insurmountable challenge, but it's a power dynamic to be
+aware of.
+
+** Titles
+
+Which Title Has More Prestige?
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in) :frag_idx (1 2 3 4 5)
+  * Software Engineer or Software Developer
+  * Software Developer or Mid-Level Developer
+  * Senior Software Developer or Engineer
+  * Senior Cloud Architect or Staff Engineer
+  * Senior Frontend Engineer or Fullstack Engineer
+
+** Technology Skills
+
+You need to know the technology that's in demand to get and keep a
+job, but it's often less in-demand skills that differentiate you in
+the market.
+
+Read Paul Graham's "The Python Paradox" and "Beating the Averages" for
+insight into how the industry views skill.
+
+** Visibility
+
+Visiblity matters when you want to cross the low/high growth gap.
+Blogs, speaking at meetups, github contributions, and twitter are all
+meaningful ways to boost your visibility locally and in the global
+tech community.
+
+** Shibboleths
+
+Shibboleths are all of the little bits of knowledge, jargon, and other
+cultural information that people use to identify the "in" group.
+Being successful in tech means being able to chase down and learn
+shibboleths, and keep up with them continuously.  Failing a shibboleth
+is the first and fastest way you'll fail interviews.
+
+#+ATTR_REVEAL: :frag fade-in
+*Most tech interviews consist, mostly, of shibboleths*
+
+* Picking The Right Job
+
+** It's Okay To Need A Job
+
+You should try to pick a job that's going to fit your interests, let
+you grow, and set you up for long-term success.
+
+Unfortunately, not everyone has the privilege of being selective about
+their jobs.  It's /okay/ to need a job, and to take what you can get.
+
+** Different Roles
+
+*** Developers
+
+There are a huge variety of developer roles doing all kinds of work.
+Development tends to be well paying and well respected.
+
+#+ATTR_REVEAL: :frag fade-in
+Remember that not all development is web development!
+
+*** QA
+
+Many QA roles involve some, or even a lot, of writing code! They can
+be technically interesting jobs and are often sold as a chance to
+"move into" development, but it doesn't happen often, and people are
+often reluctant to hire QA people into development roles due to
+elitism.
+
+*** Data Science
+
+Beware! Data science can be a very interesting (and lucritive!) field,
+but low level data science roles are disappearing quickly!
+
+Consider data science if you have a strong background in mathematics.
+
+*** DevOps
+
+Devops can run the gamut from being a full-on developer role to being
+a modern name for what used to be called ops or release engineering.
+
+*** SRE
+
+SRE roles combine strong development skills with operational
+expertise.  Well paying, but high stress, and there are a limited
+number of roles because not all companies have SREs.
+
+*** Other Tech Adjacent Careers
+
+- Security
+- Design
+- Product Management
+- UX
+- ... Lots of other stuff too!
+
+** Company Size Matters
+
+Company size is an important consideration, but there's no one company
+size that's right for everyone.  Startups, mid-sized companies, and
+large corporations all offer different tradeoffs that might be right
+for different people.
+
+*** Early Stage Startups
+Early stage startups,
+
+**** Pros
+#+ATTR_REVEAL: :frag fade-in
+- Opportunity to try on a lot of different roles
+- Potential to make a large impact
+- You might get hired into a role you couldn't get at a bigger company
+
+**** Cons
+#+ATTR_REVEAL: :frag fade-in
+- Low pay
+- Non-existant stability
+- Lack of mentorship
+- (frequently) Toxic environment
+
+*** Mature Startups
+
+**** Pros
+#+ATTR_REVEAL: :frag fade-in
+- Better pay and (sometimes) less toxic than early stage startups
+- Brand name
+
+**** Cons
+#+ATTR_REVEAL: :frag fade-in
+- Still less stability
+- Lower pay than bigger companies
+- Less structure
+- Frequently less mobility between roles
+
+*** Mid-Sized Companies
+
+**** Pros
+#+ATTR_REVEAL: :frag fade-in
+- More stability than a similarly sized "startup"
+- More transparent pay
+- More organizational maturity (e.g. an HR department)
+
+**** Cons
+#+ATTR_REVEAL: :frag fade-in
+- Harder to get hired
+- Lack of mobility
+
+*** Large Enterprises
+
+**** Pros
+#+ATTR_REVEAL: :frag fade-in
+- Better pay
+- Brand name
+- Sometimes more stability
+- Good operational maturity
+- "Official" mobility between teams
+
+**** Cons
+#+ATTR_REVEAL: :frag fade-in
+- Rigidity
+- Credentialism
+- Still not much stability
+
+* Getting a Job
+
+** A Typical Interview
+
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in) :frag_idx (1 2 3 4 5)
+  * HR/Manager Screen
+  * Technical Phone Screen
+  * Homework Assignment or Automated Assesment
+  * Secondary Screen / Homework Review
+  * On-Site
+
+*** The On-Site
+
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in fade-in) :frag_idx (1 2 3 4 5 6)
+  * Computer Science Core Concepts
+  * Systems Design and Architecture
+  * Behavioral Interview
+  * Job-Specific Skills Assesment
+  * Personality and Cultural Fit
+  * Stretch / Break Interview
+
+** The Interview Gap
+
+Interviews are mostly about things taught in computer science
+curriculums.  People from non-traditional backgrounds are already
+going in hampered by that lack of experience.
+
+Mock interviewing and rigorously studying up on things you fail in
+interviews is crucial to developing the skills you need to get a job.
+
+** Numbers Games
+
+Most interviews won't result in an offer.  Interviewing frequently is
+the only way to get enough practice to be succesful.
+
+#+ATTR_REVEAL: :frag fade-in
+During my last job-hunt I interviwed with over 30 companies.
+
+** Things You Need to Know
+
+ - FizzBuzz
+ - Basic operations on:
+   - Linked Lists
+   - Dictionaries
+   - Graphs
+ - Recursion
+ - Sorting algorithms
+ - Optimization and Dynamic Programming
+ - Bitwise arithmetic
+
+** More things you need to know
+
+ - git
+ - command line (bash, git, wget/curl, ssh, scp,..)
+ - a text edtor (vim, emacs, vs code)
+ - how to debug
+ - how to write (automated, unit) tests
+ - breaking work down into tasks and estimating
+
+** Even More Things You Need To Know
+
+ - Vanilla JS (not just frameworks!)
+ - Build tools (webpack, babel, etc.)
+ - HTML and CSS
+ - A Backend Language (node.js, ruby, python, etc.)
+ - Typescript
+ - "Functional" javascript
+ - "Object Oriented" javascript
+ - Async-Await
+
+** And Even More
+
+ - REST
+ - HTTP
+ - SQL
+ - JSON
+
+** Know The Boundries Of Your Tools
+
+** Do's
+ - Ask questions
+ - Say "I don't know"
+ - Say "no"
+ - Be confident in what you know
+ - Be curious about what you don't
+ - Honestly asses your experience
+
+** Absolute Dont's
+ - Put something on your resume that you don't know
+ - Try to BS your way through a question
+ - Assume you have to know everything
+ - Assume you'll get training
+
+** A Note on Computer Science
+There is a large contingent of people who will tell you that computer
+science doesn't matter much in day-to-day development work.  Although
+that can be true, being conversant in the fundamentals of computer
+science is essential to getting on a high-growth trajectory as early
+as possible.
+
+* Doing The Job
+
+** Interview Success ≠ Job Success
+
+** Money Matters
+At the end of the day, no company is paying for technology for it's
+own sake.  Technology is one way that you'll deliver business value
+(but not the only one!).
+
+You're getting paid for results, and to make the company money.
+
+** Technology Doesn't
+Even when you're using technology to drive business value, it's
+important to remember that technology is rarely the only thing you're
+bringing to the table.  It's at the intersection of people,
+technology, and business that you're really driving value.
+
+#+ATTR_REVEAL: :frag fade-in
+Core technology roles exist, but they tend to be either low-paid and
+unstable or else require a very high degree of experience and
+prestige.
+
+** People Networks
+Tech is a tight knit community, and your networks will do an enormous
+amount to help you find, keep, and grow in your job.  Meetups,
+conferences, slack teams, forums, social media, blogs, and mailing
+lists are all important ways of making connections and maintaining
+networks.
+
+** Technolgists Are In The Business of Business
+Modern technology roles are at their core about business.  The work we
+do is deeply intertwined with business strategy, and it's important to
+think like a business person as well as like an engineer.
+
+Treat business people like peers, not bosses.  Having an employee
+mindset can be damaging to your prospects as a technologist.
+
+* Reading List
+
+** Some Recommended Reading
+
+- The Jargon File
+- The GNU Manifesto
+- The Design of Everyday Things
+- The CIA's Simple Sabatoge Field Manual
+- Mythical Man Month
+
+* Questions?
