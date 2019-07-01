@@ -1,0 +1,254 @@
+#+title: Things I Learned Teaching Haskell
+
+* Outline
+** Introduction: A Story in 3 Acts
+*** Act 1: The Discovery
+Wherein we discover a new gizmo:
+
+  - Someone reads about haskell and decides to give it a try
+  - LYAH or Haskell from First Princples
+  - Quicksort and Fibonacci
+
+*** Act 2: The Quest
+Wherein we decend to the depths
+
+There are a few common inflection points that we tend to find when
+people start learning haskell:
+
+  - Basic IO and Do Notation
+  - Monads and Functors
+  - Typeclasses and Monad Transformers
+  - Structuring Large Programs
+
+*** Act 3: Across The Chasm
+Wherein both groups emerge changed
+**** Those who turned back
+
+  - People who failed tend to see haskell as an impractical novelty
+  - It's viewed as impractical due to it's compexity (they remember the struggle)
+  - They don't want to fail again
+
+**** We Who Endured
+
+  - Are changed by the struggle
+  - Have forgotten the depths of dispair at the bottom of the canyon
+
+
+** Why Do People Fail to Learn Haskell?
+
+Before we can talk about how to address teaching, we should understand
+where people fail.
+
+*** They give up
+
+Ultimately, the reason people fail is that they give up.  There's
+nothing so hard that it's literally beyond comprehension, but they
+stop anyway
+
+*** Lack of Direction
+
+After getting through the entry level texts like Learn You A Haskell,
+the language opens up into a large open world of ideas that can
+overwhelm someone accustomed to directed learning, or someone averse
+to spending too much mental energy on something that won't work out.
+
+*** The Failure of Depth-First Learning
+
+Many experienced developers find themselves at a loss when attemping
+to apply a depth-first learning approach to haskell due to the amount
+of new concepts and terminology.  This often manifests as an obsession
+with understanding monads.
+
+*** What we've got here is a failure to communicate
+
+Related to the problem of depth-first searching is the problem of
+language in general.  For people coming from non-functional languages
+especially, they may find themselves simultaneously needing to
+understand functional programming jargon, haskell specific jargon,
+algebraic and category theory jaron, and the domain of the application
+they are working in.  The cognitive overhead leaves little room to
+actually internalize concepts.
+
+**** Example:
+
+"A monad is a monoid in the category of endofunctors"
+
+**** The Burrito Problem
+
+People have an intuitive understanding of the language problem when it
+comes to teach haskell, but they often approach it in precisely the
+wrong way.  I call the common, but flawed, approach to dealing with
+communication problems "the burrito problem".
+
+People realized that the language around monads made them difficult to
+understand, so they wrote, for themselves or other people, many many
+tutorials about monads.  They likened them to things like gifts,
+railroad tracks, and famously, burritos.  In other words, they
+addressed the problem of language by trying to communicate ideas in
+language the reader already knows.  It turns out this is a disaser-
+the right approach is actually to teach the student the language they
+need to know first, then explain the concept in that language.
+
+*** The Problem of Context
+
+A lot of things that emerged in haskell to solve practical problems
+get treated like mysterious higher truths that are, at best, cargo
+culted.  In many cases this becomes a pathalogical co-routine of
+failure when combined with communication failures as people begin to
+deify concepts they barely understand due to the language barrier.
+
+This problem seems to reoccur at several points during learning
+haskell.  It often starts with monads, and crops up again with higher
+kinded types, type classes, monad transformers, and type-level
+programming.
+
+
+*** Bridging the Gap
+
+The final challenge many people encounter is the lack of broad
+experience with medium and large scale haskell applications.  Most
+people who have managed to learn haskell struggle to find a
+sufficiently large project where they can exercise their knowledge and
+understand how to build large scale programs.  Even teams that use
+haskell often find that they have their own idiosyncratic style caused
+by the lack of experience outside of the team in other types of
+haskell applications.
+
+
+*** Exercise
+
+"A profunctor, or more accuratly an endoprofunctor in the category of
+Hask, is a bifunctor that is covariant in one of it's arguments, and
+contravariant in the other."
+
+Break apart all the different ways that the above statement
+illustrates the concepts we've talked about that cause difficulty when
+people are trying to learn haskell.
+
+
+** When People Want To Learn
+
+*** The Team Achetypes
+
+**** Team 1: Has a few people who've used haskell, interested in FP, but they've never done haskell in prod
+
+Difficulty: Hard
+
+Having many people on the team who have looked at haskell, but who aren't using it, means you have a lot of bias against the language from people who didn't make it through the self-learning process.  You'll have to overcome a lot of ego.
+
+**** Team 2: Polyglot team, no specific haskell or strong FP background, but open to trying new things
+
+Difficulty: Easy
+
+This is the best team to introduce haskell to.  They're broadly interested in learning new things, but don't have any internalized bias against haskell.
+
+**** Team 3: The Traditionalists: Have one (or two) standardized languages, and don't like to deviate
+
+Difficulty: Medium
+
+Although introducing a new language into a team like this can seem daunting, teams who've standardized on one or two languages can be thoughtful about technology choices, and the limited scope of their stack can mean that there will be more time and focus to help people get up to speed.
+
+**** Team 4: Nobody knows what anyone else is doing anyway
+
+Difficulty: Nintendo Hard
+
+When left to your own devices, it can be easy to just pick up a language you like and start using it.  You run the risk here of alienating people and you risk a lot of reputation "going rogue" with haskell here.  It's best to find at least one ally before starting to adopt anything out of the norm here.
+
+
+*** Empathize
+
+The first step to introducing haskell to a team is to empathize with
+them.  Understanding what the team values can help you communicate the
+benefits of the language to them in a way that will resonate and make
+the more receptive to your message.
+
+**** Some Personal Examples of Empathizing
+
+  - Nobody cares about the type system
+  - Ease of refactoring
+  - Testing Frameworks (quickcheck)
+  - High-quality libraries
+  - REPL
+
+
+*** Code Reviews
+
+Sitting with someone and helping them review a haskell application is
+a useful way to get started.  In particular, it offers a chance for
+someone to see how to structure an application, and will give you an
+opportunity to start introducing vocabulary and to guide people away
+from trying to unnecessarily deep in to theory too early on.
+
+*** Vocabulary
+
+Code reviews can be a good way to introduce teammates to the language
+of haskell in a natural environment that lends itself to retention
+better than an overt vocabulary lesson.
+
+**** GHCi and Vocabulary
+
+One technique that's particularly effective when helping someone
+understand vocabulary is to get them to use ghci as part of helping
+them understand what a term means.
+
+**** Example
+
+***** The Burrito Problem
+
+A monad is like a pipeline.  You can have a value and it's in a
+container, and the container lets you pass the value into another type
+of function, and then you can chain them together.
+
+***** REPL-Driven Vocabulary
+
+#+begin_source haskell
+(>>=) :: Monad m => m a -> (a -> m b) -> m b
+
+monadicPipeline :: Monad m => m a -> m b
+monadicPipeline val =
+  val >>= func1 >>= func2 >>= func3
+#+end_source
+
+*** Take it slow
+
+Immersion learning is effective for human languages, but can be a
+difficult approach for teaching haskell.  Cognitive exhaustion is a
+real phenomena and people will start to see the language as
+execssively difficult if pushed to use it too much at first.  It's
+good to limit the scope of haskell early on in order to help the team
+internalize important but difficult concepts early on.
+
+*** SWBAT
+
+*** Lies, Damn Lies, and Metaphores
+
+
+** Dealing With Aversions: Social Engineering for Great Good
+
+Teams and individuals will have varying levels of receptiveness to
+learning haskell.  It's reputation, individual perception and bias,
+how you as a teacher are perceived, all these things can have an
+impact on how, or if, you approach teaching a team.
+
+*** Know when to bring it up
+
+*** Set Them Up For Success
+
+Haskell in particular is a language that is often treated as
+high-risk, and people are frequently unwilling to invest the time to
+learn it on the job.  It's important when
+
+*** Be Heroic
+
+*** Find an Ally
+
+
+** Looking Inward
+
+*** We're all a skeptic about something
+
+*** How we teach is how we learn
+
+** Summary
+
+** Questions
