@@ -1,0 +1,27 @@
+* What Is Erlang?
+* The Basics
+** Commas and Periods and Capitals, Oh My!
+** Variables
+** Strings, Lists, and Binaries
+** Atoms
+** Functions
+** Unification
+** Macros
+** Records
+* Beam
+** What is Beam
+** Some Other Beam Languages
+** Cookies
+** Introspection
+* OTP
+** The Erlang/OTP Architecture
+** Supervisors
+** Genservers
+** Bonus: The State Monad
+* Tooling
+** Kerl
+** Rebar
+** Dialyzer
+** Observer
+* Questions?
+
