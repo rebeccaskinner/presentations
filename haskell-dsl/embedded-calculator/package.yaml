@@ -1,0 +1,85 @@
+name:                embedded-calculator
+version:             0.1.0.0
+github:              "rebeccaskinner/embedded-calculator"
+license:             BSD3
+author:              "Rebecca Skinner"
+maintainer:          "rebecca@rebeccaskinner.net"
+copyright:           "Copyright (c) 2017 Rebecca Skinner; All Rights Reserved"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/rebeccaskinner/embedded-calculator#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- mtl
+
+library:
+  source-dirs: src
+  default-extensions:
+  - GADTs
+  - OverloadedStrings
+  - LambdaCase
+  - RankNTypes
+  - FlexibleContexts
+  - FlexibleInstances
+  - ScopedTypeVariables
+  - TypeApplications
+  - TypeFamilies
+  - BangPatterns
+  - ExistentialQuantification
+  - FunctionalDependencies
+  - MultiParamTypeClasses
+  - DeriveFunctor
+  - GeneralizedNewtypeDeriving
+  - DeriveGeneric
+
+
+executables:
+  embedded-calculator-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - embedded-calculator
+    default-extensions:
+    - GADTs
+    - OverloadedStrings
+    - LambdaCase
+    - RankNTypes
+    - FlexibleContexts
+    - FlexibleInstances
+    - ScopedTypeVariables
+    - TypeApplications
+    - TypeFamilies
+    - BangPatterns
+    - ExistentialQuantification
+    - FunctionalDependencies
+    - MultiParamTypeClasses
+    - DeriveFunctor
+    - GeneralizedNewtypeDeriving
+    - DeriveGeneric
+
+
+tests:
+  embedded-calculator-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - embedded-calculator
