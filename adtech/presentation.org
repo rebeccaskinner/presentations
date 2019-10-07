@@ -36,6 +36,8 @@ section of the talk.
 
 * Real-world impacts of ubiquitous surveillance
 
+[[./cameras.jpg]]
+
 ** The things we think of
 
 There are some common things that we discuss in the context of ad-tech
@@ -67,10 +69,11 @@ javascript or otherwise attempt to sanitize payloads.
 
 ** The things we choose not to
 
-There are also darker effects of the personalization and ad-tech
-ecosystem.  As much as we might not want to think about them, these
-are effects that we need to consider when evaluating the impact of
-these technologies.
+[[./nazis.jpg]]
+
+*** Gamergate and Neo-Nazi Recruitment
+
+[[./milo.png]]
 
 *** Gamergate and Neo-Nazi Recruitment
 
@@ -80,6 +83,8 @@ actively exploiting algorithms on sites like YouTube to drive
 radicalization.
 
 *** Political Interference
+
+[[./brexit.jpg]]
 
 Although advertising and propaganda have been a mainstay of politics
 forever, recent trends toward using hyper-personalization in political
@@ -92,6 +97,10 @@ shootings.
 
 *** Dissident Crackdowns
 
+[[./umbrella.jpg]]
+
+*** Dissident Crackdowns
+
 Many governments have leveraged ad-tech as a means of information
 gathering as part of dissident crackdowns.  The ability to easily
 profile someone based on their online activity and social connections,
@@ -99,58 +108,112 @@ and target them based on location, make the information economy a
 natural ally of authoritarian governments.
 
 *** Genocide
+[[./ice.jpg]]
 
+*** Genocide
 
+Groups like ICE are able to make use of clique identification,
+location tracking and targeting to identify and target individuals and
+groups for capture.
 
 * How do these factor into professional ethics for people working in Data Science?
 
-** Ads aren't Bombs
-
 ** Considering Externalities Of Our Systems
+
+The harm that the information economy does is often indirect.  We need
+to consider indirect effects when building systems.
 
 ** Considering The Scale of Impact
 
-** Due Diligence To Prevent Misuse
+Scale matters.  While we would prefer to avoid all individual harm,
+it's important to realize that the scale of impact has grown to the
+point where it can cause massive social and political changes with
+long-term and broad-reaching consequences.
 
 ** Moral Culpability of Secondary and Tertiary Effects
 
+Understanding the depth and scope of the problem, we must put some
+degree of moral culpability on the builders of these systems for their
+secondary and tertiary effects.
+
 * What is Information Warfare?
+
+[[./spy.jpg]]
 
 ** Information Warfare Is About People
 
+Much of information warfare comes down to people- extracting
+information from them, or using (real or false) information to
+influence them.  The information economy has commoditized both.
+
 *** Mass Communication
+
+Mass communication, usually in the form of propaganda, is an important
+part of information warfare.  Mass communication allows a message to
+be widely distributed among a population in order to affect group
+behavior.
 
 *** Targeting Groups and Individuals
 
+In addition to untargetted mass communication, information warfare
+often involves targeting individuals or specific groups.  This allows
+messages to be tailored to individuals and groups, and groups to be
+influenced in more fine-grained ways.
+
 *** Collecting and Exploiting Knowledge
+
+Effective information warfare requires that knowledge be collected and
+exploited.  This can take several different forms, and we'll look at
+several of them throughout this talk.
 
 ** These Aren't New Techniques
 
 *** The Long History of Propaganda
 
-*** McCarthyism And Social Networks As Tools of Persecution
+[[./triumph.png]]
 
 *** Spycraft During The Cold War (And Before)
 
-** Mass Personalization And The Power of Scale
+Spycraft has existed for all of human history, but the cold war saw an
+explosion in the awareness of spycraft in the modern consciousness.
+These techniques, have continued to grow and be refined.
 
-*** Rapid Iteration on Propaganda and Mass Communication
+*** McCarthyism And Social Networks As Tools of Persecution
 
-*** Mass Individualization Through Targeting Algorithms
-
-*** Data Collection
+[[./mccarthy.jpg]]
 
 * The Information Economy
 
+[[./adtech.png]]
+
 ** Surveillance Capitalism
 
+Surveillance capitalism is a broad term that refers to the
+commodification of personal information.  The information economy is
+the market on which surveillance capitalism runs.
+
 *** The Ad-Tech Ecosystem
+
+The ad-tech ecosystem is the core of the information economy.  Supply
+and demand side providers, data management platforms, content delivery
+networks, and more all work together to monetize personal information
+through
 
 *** Engagement as an Investment Metric
 
 *** Engagement and Retention Services
 
 *** Consumer Demand for Personalization
+
+* Mass Personalization And The Power of Scale
+
+[[./youtube.png]]
+
+** Rapid Iteration on Propaganda and Mass Communication
+
+** Mass Individualization Through Targeting Algorithms
+
+** Data Collection
 
 * How The Information Marketplace is Exploitable
 
@@ -201,6 +264,10 @@ natural ally of authoritarian governments.
 ** Engagement Funnels
 
 ** Targeted Advertising
+
+** Clique Identification
+
+[[./clique.png]]
 
 ** Clique Identification
 
