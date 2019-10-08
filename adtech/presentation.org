@@ -409,46 +409,58 @@ it, to mask drift.
 
 *** GPU Fingerprinting
 
-
+Uninitialized rendering canvases can contain biases that allow
+fingerprinting of GPU hardware.
 
 ** Data Exfiltration
 
 *** Request Exfiltration
 
+Data can be encoded in requests that are sent out of a system.  Even
+when security policy prevents content from being loaded, data can be
+encoded into subdomains in a DNS requests, the timing between
+requests, in the numbers chosen for fake DH key exchanges, and many
+other channels.
+
 *** Acoustic Exfiltration
+
+Devices can transmit data to other devices, including beacons, using
+ultrasonic data.  This can be used to correlate separate devices owned
+by a user, for example to associate a desktop PC with a smartphone, or
+to find out which users are in range of a television.
 
 * Hypothetical Examples
 
 ** Inciting Anti-LGBT Violence Via Mass-Personalization
 
-*** Create Engagement Funnels To Propaganda Content
-
-*** Leverage Side-Channels To A/B Test Content
+#+ATTR_REVEAL: :frag (fade-in fade-in) :frag_idx (1 2)
+  - Create Engagement Funnels To Propaganda Content
+  - Leverage Side-Channels To A/B Test Content
 
 ** Using Injective Exploitation To Crack Down on Dissidents
 
-*** Create an Engagement Funnel
-
-*** Use Targeted Advertising To Inject Fingerprints
-
-*** Leverage Social Media To Identify Nodes In Proximity To Hot/Fingerprinted Nodes
-
-*** Refine Identification With Location Targeting and Beaconing
-
-*** Target Individuals Who Are Likely Dissidents
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in) :frag_idx (1 2 3 4 5)
+  - Create an Engagement Funnel
+  - Use Targeted Advertising To Inject Fingerprints
+  - Leverage Social Media To Identify Nodes In Proximity To Hot/Fingerprinted Nodes
+  - Refine Identification With Location Targeting and Beaconing
+  - Target Individuals Who Are Likely Dissidents
 
 ** Gathering Compromising Intelligence On Public Figures via Data Exfiltration
 
-*** Leverage Social Engineering To Create Targeted Ads
-
-*** Inject Fingerprints To Track User
-
-*** Leverage Media Dragnetting to Identify Sites and Locations
-
-*** Use Site Scraping and Semantic Analysis To Tag Content
-
-*** Identify and Exfiltrate Data From Compromising Sites
+#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in) :frag_idx (1 2 3 4 5)
+  - Leverage Social Engineering To Create Targeted Ads
+  - Inject Fingerprints To Track User
+  - Leverage Media Dragnetting to Identify Sites and Locations
+  - Use Site Scraping and Semantic Analysis To Tag Content
+  - Identify and Exfiltrate Data From Compromising Sites
 
 * How can we mitigate the damage of the current system?
+
+** Don't Sell Ads
+
+** Limit Recommendation and Promotion Systems
+
+** Data Science Red-Teams
 
 * Questions?
