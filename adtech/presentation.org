@@ -5,7 +5,7 @@
 #+OPTIONS: num:nil
 #+OPTIONS: toc:nil
 
-* Introduction
+* Boilerplate
 
 ** Disclaimers
 #+ATTR_REVEAL: :frag (fade-in fade-in fade-in) :frag_idx (1 2 3)
@@ -18,14 +18,11 @@
 - Twitter: [[https://twitter.com/cercerilla/][@cercerilla]]
 - Github: https://github.com/rebeccaskinner
 
-** About This Talk
+* Ad-Tech Is An Existential Threat To Modern Civilization
 
-#+ATTR_REVEAL: :frag (fade-in fade-in fade-in fade-in fade-in) (1 2 3 4 5)
-  1. What are the real-world impacts today of ubiquitous surveillance and engagement as a KPI?
-  2. How do these factor into professional ethics for people working in Data Science?
-  3. What is Information Warfare and how has it become a Commodity?
-  4. How can we exploit the information marketplace in practice?
-  5. How can we mitigate the damage of the current system?
+The modern ad-tech ecosystem and infrastructure constitutes perhaps
+the single largest existential threat to civilization of any
+technology in the modern world.
 
 ** Content Warning
 This talk will address some sensitive topics, including social,
@@ -33,6 +30,7 @@ political, and physical violence. Although I have tried to keep
 discussions of these topics general, anyone who feels like they need
 to limit exposure to these triggers may step away for the first
 section of the talk.
+
 
 * Real-world impacts of ubiquitous surveillance
 
@@ -85,6 +83,8 @@ radicalization.
 *** Political Interference
 
 [[./brexit.jpg]]
+
+*** Political Interference
 
 Although advertising and propaganda have been a mainstay of politics
 forever, recent trends toward using hyper-personalization in political
@@ -197,23 +197,66 @@ the market on which surveillance capitalism runs.
 The ad-tech ecosystem is the core of the information economy.  Supply
 and demand side providers, data management platforms, content delivery
 networks, and more all work together to monetize personal information
-through
+through the placement of personalized ads.
 
 *** Engagement as an Investment Metric
 
+Platform engagement is a key metric that drives investor dolloars.
+This incentivizes companies to design their products to maximize the
+amount of time people spend with their product, and to increase the
+number of ways people interact with it.
+
 *** Engagement and Retention Services
 
+With engagement as a key metric for raising money, services have
+sprung up to offer expertise in helping companies optimize engagement.
+These services are able to leverage knowledge and data from multiple
+platforms to develop better approaches toward targeting content at
+users to maximize the ways that they engage.
+
 *** Consumer Demand for Personalization
+
+Consumers often demand personalization, and will voluntarily provide
+large amounts of data to assist companies in better refining
+personalization algorithms.
 
 * Mass Personalization And The Power of Scale
 
 [[./youtube.png]]
 
+** A Difference In Scale As A Difference In Kind
+
+Although most of the techniques that are being applied in ad-tech have
+been used before, the change in scale is substantial.  Before modern
+ad-tech, even automated surveillance required specific targeting of
+individuals.  Mass propaganda had slow iteration times as campaigns
+had to be developed, deployed, and tested against populations.
+
 ** Rapid Iteration on Propaganda and Mass Communication
+
+As automated systems allow mass deployment of systems that allow
+models to be tested and refined based on data from very large
+populations.  This has turned the work of dozens or hundreds of
+analysts into something that can be done by a few developers at a
+startup in a week.
 
 ** Mass Individualization Through Targeting Algorithms
 
+Before the advent of modern ad-tech, the choice was often between
+targeting a small group of individuals, or creating more general
+campaigns against a larger population.  It was not possible to target
+billions of people individually.  Technology has enabled us to apply
+individually tailored actions against people en-mass, optimizing the
+effects of a campaign on a person-by-person basis.
+
 ** Data Collection
+
+Data collection technologies have been substantially improved through
+the use of ad-tech.  Even considering a hypothetical system that was
+able to collect all telecommunications data for every individual,
+before the use of ad-tech data collection was limited due to the lack
+of technologies to drive engagement and solicit data that might not
+otherwise have ever been transmitted.
 
 * How The Information Marketplace is Exploitable
 
@@ -221,35 +264,92 @@ through
 
 *** Aggregate Market Information
 
+[[./aggregate_data.png]]
+
+*** Aggregate Market Information
+
+Aggregate information markets sell information about specific
+populations in aggregate.  This data is difficult to directly
+de-anonymize, but can provide useful information to help de-anonymize
+data from other sources.
+
 *** Anonymized Market Information
+
+[[./anon_data.png]]
+
+*** Anonymized Market Information
+
+Anonymized markets sell information that has been somehow masked.
+Sometimes this involves removing specific personally identifiable
+information, like a name or email address.  Othertimes, this may
+involve using techniques like differential privacy to mask the data
+being sold.
 
 *** Content Targeting
 
+[[./buy_ad.png]]
+
+*** Content Targeting
+
+Content targeting is one of the most popular parts of the information
+market because companies can use their data collection practices as a
+competitive advantage, and advertise that they do not share data.
+Instead, they allow buyers to send data to users matching any number
+of specific criteria, indirectly selling data.
+
 *** Data Brokers
+
+Data brokers directly sell user data.  Frequently data brokers focus
+on enriching data with specific pieces of additional information.
 
 ** Attacking The Information Market
 
 *** The Information Market is A Market
 
-*** Encoding Data In Market Orders
+The information market is a market.  There are few controls, and most
+of the time data or content placement goes to the highest bidder.
 
-*** Reconstructing Function Approximations
+*** There Are Many Players
+
+Because of the number of players in the information market, it is
+trivial for a determined group to collect data from many different
+providers without being obvious about their end goal.
 
 ** Injective Exploitation
 
-*** Using Ad-Tech For It's Intended Purpose
-
-*** Blind Targeting
-
-*** Hacking Engagement Metrics
+Injective exploitation is the process of using ad-tech networks and
+recommendation systems as they are intended.  This process involves
+placing content into the system and using targeting systems to drive
+your targets to the content.
 
 ** Information Exfiltration
 
+Exfiltration is the process of extracting data out of a system.
+Exfiltration is different than buying data directly.
+
 *** Tunneling Information Out Of Targeted Ads
+
+There are an enormous number of ways to extract information from users
+through targeted ads.  Even in systems designed to protect users from
+information capture, there are extremely effective ways of gathering
+personal information.
 
 *** Refinement Attacks With Multiple Sources
 
+[[./venn.gif]]
+
+*** Refinement Attacks With Multiple Sources
+
+Targeting itself is a valuable way of gathering information.  Thanks
+to fingerprinting, it's possible to identify a specific user that has
+received an ad.  Because ads can be targeted across different
+characteristics it's possible to refine an understanding of what
+characteristics a user matched on.
+
 ** Side-Channel Attacks
+
+Side-channel attacks use the side-effects of a request to collect or
+exfiltrate data.
 
 ** Data Enrichment
 
@@ -263,7 +363,9 @@ through
 
 ** Engagement Funnels
 
-** Targeted Advertising
+Engagement funnels use layers of content that are specifically
+designed to drive a wide set of users down a path toward specific
+content.
 
 ** Clique Identification
 
@@ -271,19 +373,43 @@ through
 
 ** Clique Identification
 
+Clique identification is the process of identifying related sets of
+users.  This can be a useful technique to access data about users who
+might not engage on certain platforms, or who go to lengths to protect
+their data.
+
 * Information Marketplace ⨯ Technical Exploitation
 
 ** Direct Exploitation
 
+In many cases ad platforms allow code to be directly injected into
+apps or websites.  This code can use exploits to access users systems
+and devices.
+
 ** Fingerprinting
+
+Fingerprinting is the process of injecting markers in a users system
+to allow subsequent applications to better identify the user.
+Fingerprinting is typically thought of in terms of bits of information
+that can be encoded through different systems.  There are hundreds of
+ways to fingerprint users.  We'll look at a couple of them:
 
 *** Web Fonts
 
+The specific set of fonts on a user's system can be used to identify
+them.  It's also possible to programatically generate web fonts and
+use them in content to uniquely identify a specific device.
+
 *** Accelerometer Drift
+
+Devices with accelerometers can be uniquely identified by drift caused
+by minor hardware deficiencies.  It is possible to recover this even
+from devices that reduce the accuracy of data, or partially randomize
+it, to mask drift.
 
 *** GPU Fingerprinting
 
-** Clique Identification
+
 
 ** Data Exfiltration
 
