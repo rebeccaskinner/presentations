@@ -1,0 +1,33 @@
+#+title: Introduction To Networking for Developers
+
+* Abstract
+
+As software developers, networks are centeral to the things most of us
+do every day. Whether you're building the front-end to an application
+someone will access through their web browser, writing a service that
+will talk over HTTP, deploying applications into the cloud, or running
+programs distributed across hundreds or thousands of compute nodes, at
+some point a critical part of our functionality relies on one computer
+talking to another one.  As central as networks are to the work we do
+every day, the way that networking works is often mysterious and only
+weakly understood. For the intrepid developer who wants to learn more
+about networking, it can be overwhelming to get started since
+networking is a topic that runs broad and deep. If you've always
+wanted to know more about how networks work, but didn't know where to
+start, this talk is for you.
+
+After listening to this talk you'll understand all the most important
+parts of how computer networks work.  You'll know the pieces involved,
+learn the important terminology, and come away better able to dive
+more deeply into the specific topics that interest you. You'll also
+come away better able to consider networking as a key component of
+your software architecture.
+
+* Bio
+
+Rebecca Skinner is an author, speaker, engineer, and programming
+language enthusiast. She currently serves on the board of the
+Haskell.org committee. She works as a Principal AI Engineer at Target,
+where she supports global supply chain optimization and builds
+foundational tooling to support AI and Machine Learning in retail. She
+resides in St. Louis with her spouse and her parrot, George.
