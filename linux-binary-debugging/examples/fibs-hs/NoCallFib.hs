@@ -1,9 +1,5 @@
-{-# LANGUAGE ForeignFunctionInterface #-}
 module Main where
 import Text.Printf
-import Foreign.C.Types
-
-foreign import ccall "fib" badFib :: CULong -> CULong
 
 fibs = 0 : 1 : (zipWith (+) <*> tail) fibs
 
