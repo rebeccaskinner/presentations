@@ -1,0 +1,22 @@
+* Topics To Cover
+
+  - Type Families
+  - GADTs
+  - Typeclasses
+  - Type Literals
+  - Data Kinds
+  - Tagless Final Encoding
+  - Pragmas
+  - Higher Kinded Types
+
+|----------+---------------+-------------------|
+| Duration | Section Title | Description       |
+|----------+---------------+-------------------|
+| 5m       | Intro         | Outline and Intro |
+| 10m      |               |                   |
+| 10m      |               |                   |
+| 10m      |               |                   |
+| 5m       |               |                   |
+|----------+---------------+-------------------|
+| 40m      | Total         | -                 |
+|----------+---------------+-------------------|
