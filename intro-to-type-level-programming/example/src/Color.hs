@@ -20,22 +20,49 @@ import GHC.TypeLits
 import Data.Kind
 import Data.Proxy
 
-data RGBColor = RGBColor
+data RGB = RGB
   { rgbRed   :: Word8
   , rgbGreen :: Word8
   , rgbBlue  :: Word8
   } deriving (Eq, Show)
 
 class IsColor a where
-  toRGB :: a -> RGBColor
+  toRGB :: a -> RGB
 
 class IsColor a => NamedColor a where
-  type ColorName :: a -> Symbol
+  type ColorName a :: Symbol
 
-data RGBColor' (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor'
+data RGBColor (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor
 
-instance ValidRGB r g b => IsColor (RGBColor' r g b) where
+instance ValidRGB r g b => IsColor (RGBColor r g b) where
   toRGB = reifyRGBColor
+
+type family NatHex (n :: Nat) :: Symbol where
+  NatHex 0 = "0"
+  NatHex 1 = "1"
+  NatHex 2 = "2"
+  NatHex 3 = "3"
+  NatHex 4 = "4"
+  NatHex 5 = "5"
+  NatHex 6 = "6"
+  NatHex 7 = "7"
+  NatHex 8 = "8"
+  NatHex 9 = "9"
+  NatHex 10 = "A"
+  NatHex 11 = "B"
+  NatHex 12 = "C"
+  NatHex 13 = "D"
+  NatHex 14 = "E"
+  NatHex 15 = "F"
+  NatHex n = NatHex (Div n 16) `AppendSymbol` NatHex (Mod n 16)
+
+type family PadNatHex (n :: Nat) :: Symbol where
+  PadNatHex n =
+    IfThenElse (n <=? 15) ("0" `AppendSymbol` NatHex n) (NatHex n)
+
+instance IsColor (RGBColor r g b) => NamedColor (RGBColor r g b) where
+  type ColorName _ =
+      (("RGB #" `AppendSymbol` PadNatHex r) `AppendSymbol` PadNatHex g) `AppendSymbol` PadNatHex b
 
 natWord8 :: forall n . (KnownNat n, n <= 255) => Word8
 natWord8 = fromIntegral $ natVal (Proxy @n)
@@ -44,16 +71,16 @@ type ValidRGB r g b = (KnownNat r, KnownNat g, KnownNat b, r <= 255, g <= 255, b
 
 reifyRGBColor
   :: forall r g b. ValidRGB r g b
-  => RGBColor' r g b -> RGBColor
-reifyRGBColor _proxy = RGBColor (natWord8 @r) (natWord8 @g) (natWord8 @b)
+  => RGBColor r g b -> RGB
+reifyRGBColor _proxy = RGB (natWord8 @r) (natWord8 @g) (natWord8 @b)
 
-instance IsColor RGBColor where
+instance IsColor RGB where
   toRGB = id
 
 data SomeColor = forall color. IsColor color => SomeColor color
 
 someRGB :: Word8 -> Word8 -> Word8 -> SomeColor
-someRGB r g b = SomeColor $ RGBColor r g b
+someRGB r g b = SomeColor $ RGB r g b
 
 instance IsColor SomeColor where
   toRGB (SomeColor color) = toRGB color
@@ -93,15 +120,11 @@ type family FirstMatching (colors :: [Symbol]) (t :: Theme) :: Symbol where
     IfThenElse (EQ True (HasColor color t)) color (FirstMatching colors t)
   FirstMatching '[] t = TypeError (Text "No candidate color matches")
 
-data ColorKind a b
-  = Color a
-  | ColorPair (a,b)
-
 type SatisfiesColor color theme = (True ~ HasColor color theme)
 
 lookupColor :: forall colorName theme.
   (KnownSymbol colorName, SatisfiesColor colorName theme)
-  => ThemeInstance theme -> RGBColor
+  => ThemeInstance theme -> RGB
 lookupColor (ThemeInstance colors) =
   let
     targetColorName = symbolVal $ Proxy @colorName
@@ -117,7 +140,7 @@ lookupDefault :: forall colorName defaultName theme foundColor.
   , KnownSymbol foundColor
   , foundColor ~ FirstMatching [colorName, defaultName] theme
   , SatisfiesColor foundColor theme
-  ) => ThemeInstance theme -> RGBColor
+  ) => ThemeInstance theme -> RGB
 lookupDefault = lookupColor @foundColor
 
 sampleColorSet :: ThemeInstance (ColorTheme "red" (ColorTheme "green" EmptyTheme))
