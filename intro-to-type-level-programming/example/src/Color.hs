@@ -32,10 +32,21 @@ class IsColor a where
 class IsColor a => NamedColor a where
   type ColorName a :: Symbol
 
+colorNameVal :: forall a name. (KnownSymbol name, name ~ ColorName a) => NamedColor a => String
+colorNameVal = symbolVal $ Proxy @(ColorName a)
+
+colorNameVal' :: forall a name. (KnownSymbol name, name ~ ColorName a) => NamedColor a => a -> String
+colorNameVal' _ = symbolVal $ Proxy @(ColorName a)
+
 data RGBColor (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor
 
 instance ValidRGB r g b => IsColor (RGBColor r g b) where
   toRGB = reifyRGBColor
+
+data NamedRGB (name :: Symbol) (r :: Nat) (g :: Nat) (b :: Nat) = NamedRGB
+
+instance ValidRGB r g b => IsColor (NamedRGB name r g b) where
+  toRGB _ = reifyRGBColor (RGBColor :: RGBColor r g b)
 
 type family NatHex (n :: Nat) :: Symbol where
   NatHex 0 = "0"
@@ -62,7 +73,10 @@ type family PadNatHex (n :: Nat) :: Symbol where
 
 instance IsColor (RGBColor r g b) => NamedColor (RGBColor r g b) where
   type ColorName _ =
-      (("RGB #" `AppendSymbol` PadNatHex r) `AppendSymbol` PadNatHex g) `AppendSymbol` PadNatHex b
+      (("#" `AppendSymbol` PadNatHex r) `AppendSymbol` PadNatHex g) `AppendSymbol` PadNatHex b
+
+instance IsColor (NamedRGB name r g b) => NamedColor (NamedRGB name r g b) where
+  type ColorName _ = name
 
 natWord8 :: forall n . (KnownNat n, n <= 255) => Word8
 natWord8 = fromIntegral $ natVal (Proxy @n)
@@ -146,3 +160,18 @@ lookupDefault = lookupColor @foundColor
 sampleColorSet :: ThemeInstance (ColorTheme "red" (ColorTheme "green" EmptyTheme))
 sampleColorSet = ThemeInstance $ [("red", someRGB 255 0 0)
                                  ,("green", someRGB 0 255 0)]
+
+data MkTheme theme where
+  NewTheme :: MkTheme EmptyTheme
+  AddColor :: (KnownSymbol (ColorName color), NamedColor color) => color -> MkTheme theme -> MkTheme (ColorTheme (ColorName color) theme)
+
+instantiateTheme :: MkTheme theme -> ThemeInstance theme
+instantiateTheme mkTheme =
+  case mkTheme of
+    NewTheme -> ThemeInstance []
+    AddColor color mkTheme' ->
+      let
+        (ThemeInstance t) = instantiateTheme mkTheme'
+        colorName = colorNameVal' color
+        colorVal = SomeColor $ toRGB color
+      in ThemeInstance $ (colorName, colorVal) : t
