@@ -1,13 +1,12 @@
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE GADTs   #-}
 {-# LANGUAGE AllowAmbiguousTypes   #-}
+{-# LANGUAGE ConstraintKinds       #-}
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE PolyKinds             #-}
-{-# LANGUAGE RecordWildCards       #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -15,11 +14,12 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 module Color where
-import Data.Word (Word8)
-import Data.List (find)
-import GHC.TypeLits
+import Data.Bifunctor (second)
 import Data.Kind
+import Data.List    (find)
 import Data.Proxy
+import Data.Word    (Word8)
+import GHC.TypeLits
 
 data RGB = RGB
   { rgbRed   :: Word8
@@ -125,8 +125,11 @@ type family ThemeList (colorNames :: [Symbol]) :: Theme where
 
 newtype ThemeInstance (a :: Theme) = ThemeInstance { getThemeInstance :: [(String, SomeColor)] }
 
-instance Show (ThemeInstance a) where
-  show (ThemeInstance t) = show $ map (\(name,c) -> (name, toRGB c)) t
+showThemeInstance :: ThemeInstance (t :: Theme) -> String
+showThemeInstance (ThemeInstance t) =
+  let
+    t' = map (second toRGB) t
+  in show t'
 
 type family MergeThemes (a :: Theme) (b :: Theme) where
   MergeThemes a EmptyTheme = a
@@ -203,7 +206,7 @@ type family ThemeColors (t :: Theme) :: Symbol where
   ThemeColors EmptyTheme = ""
   ThemeColors (ColorTheme color rest) = ""
 
-instance (ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor) => ValidateTheme (ColorTheme currentThemeColor themeRest) ThemeInstance where
+instance ( ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor) => ValidateTheme (ColorTheme currentThemeColor themeRest) ThemeInstance where
   checkSaturated [] =
     let
       colorList = symbolVal $ Proxy @(ThemeColors (ColorTheme currentThemeColor themeRest))
