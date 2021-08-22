@@ -16,6 +16,7 @@
 
 module Color where
 import Data.Word (Word8)
+import Data.List (find)
 import GHC.TypeLits
 import Data.Kind
 import Data.Proxy
@@ -38,12 +39,27 @@ colorNameVal = symbolVal $ Proxy @(ColorName a)
 colorNameVal' :: forall a name. (KnownSymbol name, name ~ ColorName a) => NamedColor a => a -> String
 colorNameVal' _ = symbolVal $ Proxy @(ColorName a)
 
+validateNamedColor
+  :: forall target color.
+  ( KnownSymbol target
+  , NamedColor color
+  , KnownSymbol (ColorName color)
+  ) => color -> Bool
+validateNamedColor color =
+  let
+    targetColorName = symbolVal $ Proxy @target
+    actualColorName = colorNameVal' color
+  in targetColorName == actualColorName
+
 data RGBColor (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor
 
 instance ValidRGB r g b => IsColor (RGBColor r g b) where
   toRGB = reifyRGBColor
 
 data NamedRGB (name :: Symbol) (r :: Nat) (g :: Nat) (b :: Nat) = NamedRGB
+
+namedRGB :: forall name r g b. (KnownSymbol name, ValidRGB r g b) => NamedRGB name r g b
+namedRGB = NamedRGB
 
 instance ValidRGB r g b => IsColor (NamedRGB name r g b) where
   toRGB _ = reifyRGBColor (RGBColor :: RGBColor r g b)
@@ -103,7 +119,14 @@ data Theme
   = EmptyTheme
   | ColorTheme Symbol Theme
 
+type family ThemeList (colorNames :: [Symbol]) :: Theme where
+  ThemeList '[] = EmptyTheme
+  ThemeList (c:cs) = ColorTheme c (ThemeList cs)
+
 newtype ThemeInstance (a :: Theme) = ThemeInstance { getThemeInstance :: [(String, SomeColor)] }
+
+instance Show (ThemeInstance a) where
+  show (ThemeInstance t) = show $ map (\(name,c) -> (name, toRGB c)) t
 
 type family MergeThemes (a :: Theme) (b :: Theme) where
   MergeThemes a EmptyTheme = a
@@ -134,10 +157,8 @@ type family FirstMatching (colors :: [Symbol]) (t :: Theme) :: Symbol where
     IfThenElse (EQ True (HasColor color t)) color (FirstMatching colors t)
   FirstMatching '[] t = TypeError (Text "No candidate color matches")
 
-type SatisfiesColor color theme = (True ~ HasColor color theme)
-
 lookupColor :: forall colorName theme.
-  (KnownSymbol colorName, SatisfiesColor colorName theme)
+  (KnownSymbol colorName, ThemeSatisfies colorName theme)
   => ThemeInstance theme -> RGB
 lookupColor (ThemeInstance colors) =
   let
@@ -153,13 +174,9 @@ lookupDefault :: forall colorName defaultName theme foundColor.
   , KnownSymbol defaultName
   , KnownSymbol foundColor
   , foundColor ~ FirstMatching [colorName, defaultName] theme
-  , SatisfiesColor foundColor theme
+  , ThemeSatisfies foundColor theme
   ) => ThemeInstance theme -> RGB
 lookupDefault = lookupColor @foundColor
-
-sampleColorSet :: ThemeInstance (ColorTheme "red" (ColorTheme "green" EmptyTheme))
-sampleColorSet = ThemeInstance $ [("red", someRGB 255 0 0)
-                                 ,("green", someRGB 0 255 0)]
 
 data MkTheme theme where
   NewTheme :: MkTheme EmptyTheme
@@ -175,3 +192,30 @@ instantiateTheme mkTheme =
         colorName = colorNameVal' color
         colorVal = SomeColor $ toRGB color
       in ThemeInstance $ (colorName, colorVal) : t
+
+class ValidateTheme (t :: Theme) (a :: Theme -> Type) where
+  checkSaturated :: [(String, SomeColor)] -> Either String (a t)
+
+instance ValidateTheme EmptyTheme ThemeInstance where
+  checkSaturated _ = Right $ ThemeInstance []
+
+type family ThemeColors (t :: Theme) :: Symbol where
+  ThemeColors EmptyTheme = ""
+  ThemeColors (ColorTheme color rest) = ""
+
+instance (ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor) => ValidateTheme (ColorTheme currentThemeColor themeRest) ThemeInstance where
+  checkSaturated [] =
+    let
+      colorList = symbolVal $ Proxy @(ThemeColors (ColorTheme currentThemeColor themeRest))
+      errMsg = "Error: missing colors - " <> colorList
+    in Left errMsg
+  checkSaturated colors =
+    let
+      currentColorName = symbolVal $ Proxy @currentThemeColor
+      matchingColor = find (\c -> currentColorName == fst c) colors
+      errorMessage = "Cannot create theme instance: missing " <> currentColorName
+    in case matchingColor of
+         Nothing -> Left errorMessage
+         Just foundColor -> do
+           (ThemeInstance t) <- checkSaturated @themeRest colors
+           pure $ ThemeInstance (foundColor:t)
