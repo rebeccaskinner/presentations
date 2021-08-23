@@ -206,7 +206,7 @@ type family ThemeColors (t :: Theme) :: Symbol where
   ThemeColors EmptyTheme = ""
   ThemeColors (ColorTheme color rest) = ""
 
-instance ( ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor) => ValidateTheme (ColorTheme currentThemeColor themeRest) ThemeInstance where
+instance (ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor) => ValidateTheme (ColorTheme currentThemeColor themeRest) ThemeInstance where
   checkSaturated [] =
     let
       colorList = symbolVal $ Proxy @(ThemeColors (ColorTheme currentThemeColor themeRest))
