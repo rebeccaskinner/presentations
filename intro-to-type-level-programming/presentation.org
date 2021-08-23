@@ -1,0 +1,22 @@
+#+TITLE: Make It Purple
+#+SUBTITLE: An Introduction to Type Level Programming
+#+author: Rebecca Skinner
+#+BEAMER_FRAME_LEVEL: 2
+#+options: H:2
+#+LaTeX_CLASS: beamer
+#+LaTeX_HEADER: \usecolortheme{magpie}
+#+BEAMER_HEADER:\AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
+#+startup: beamer
+#+OPTIONS: toc:nil
+
+#+date: \today
+
+* Introduction
+
+* Fetching Theme Elements
+
+* Constructing Themes
+
+* Runtime Terms
+
+* Conclusion
