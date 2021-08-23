@@ -15,7 +15,10 @@ module Theme where
 
 import Color
 import ColorX11
+import ThemeLoader
 import Data.Proxy
+
+type SampleTheme = ThemeList '["red", "green", "blue", "text", "border"]
 
 sampleColorSet =
   instantiateTheme $

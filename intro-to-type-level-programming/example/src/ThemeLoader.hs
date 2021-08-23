@@ -1,3 +1,4 @@
+{-# LANGUAGE ImportQualifiedPost #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -10,6 +11,7 @@ module ThemeLoader where
 import Control.Applicative
 import Data.Aeson
 import Data.Bifunctor
+import Data.ByteString.Lazy qualified as BS
 import Data.Char
 import Data.Kind
 import Data.List
@@ -35,6 +37,11 @@ data ColorValue w
   = RGBValue RGB
   | X11Value SomeColor
   | OtherColor (HKD w (ColorValue w))
+
+instance IsColor (ColorValue Identity) where
+  toRGB (RGBValue rgb) = rgb
+  toRGB (X11Value c) = toRGB c
+  toRGB (OtherColor ref) = toRGB ref
 
 instance FromJSON (ColorValue (ColorReference RawThemeConfig)) where
   parseJSON = withObject "color" $ \val ->
@@ -75,8 +82,13 @@ type family HKD (wrapper :: Type -> Type) (value :: Type) :: Type where
   HKD wrapper value = wrapper value
 
 newtype RawThemeConfig = RawThemeConfig { getRawThemeConfig :: ThemeConfig' (ColorReference RawThemeConfig) }
+  deriving newtype (FromJSON)
+
 newtype ThemeConfig' w = ThemeConfig'
   { getThemeConfig :: Map.Map String (ColorValue w) }
+
+instance FromJSON (ThemeConfig' (ColorReference RawThemeConfig)) where
+  parseJSON = fmap ThemeConfig' . parseJSON
 
 type ThemeConfig = ThemeConfig' Identity
 
@@ -86,6 +98,13 @@ evalConfig rawConfig =
   traverse (dereferenceColorValue rawConfig)  .
   getThemeConfig .
   getRawThemeConfig $ rawConfig
+
+loadThemeConfig :: FilePath -> IO ThemeConfig
+loadThemeConfig p = do
+  contents <- BS.readFile p
+  case eitherDecode' contents >>= evalConfig of
+    Left err -> ioError $ userError err
+    Right val -> pure val
 
 parseRGB :: MonadFail m => String -> m RGB
 parseRGB s =
@@ -116,3 +135,11 @@ parseX11Color s =
        Just c -> pure $ snd c
   where
     downcase = map toLower
+
+validateConfiguredTheme
+  :: forall theme themeInstance colorWrapper
+  . ( IsColor (ColorValue colorWrapper)
+     , ValidateTheme theme themeInstance)
+  => ThemeConfig' colorWrapper -> Either String (themeInstance theme)
+validateConfiguredTheme =
+  checkSaturated . map (second SomeColor) . Map.toList . getThemeConfig
