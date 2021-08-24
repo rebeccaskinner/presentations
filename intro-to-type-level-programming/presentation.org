@@ -1,4 +1,4 @@
-#+TITLE: Make It Purple
+#+title: Make It Purple
 #+SUBTITLE: An Introduction to Type Level Programming
 #+author: Rebecca Skinner
 #+BEAMER_FRAME_LEVEL: 2
@@ -8,10 +8,13 @@
 #+BEAMER_HEADER:\AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
 #+startup: beamer
 #+OPTIONS: toc:nil
-
 #+date: \today
 
 * Introduction
+
+* Type Level Programming
+
+* Building A Theming Engine
 
 * Fetching Theme Elements
 
