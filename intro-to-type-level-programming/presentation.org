@@ -1,25 +1,209 @@
 #+title: Make It Purple
 #+SUBTITLE: An Introduction to Type Level Programming
+#+institution: Mercury
 #+author: Rebecca Skinner
 #+BEAMER_FRAME_LEVEL: 2
-#+options: H:2
+#+options: toc:nil H:2 num:t
 #+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [10pt, presentation, colorlinks]
 #+LaTeX_HEADER: \usecolortheme{magpie}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usemintedstyle{monokai}
+#+LaTeX_HEADER: \newminted{haskell}{}
 #+BEAMER_HEADER:\AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
 #+startup: beamer
-#+OPTIONS: toc:nil
+
+
 #+date: \today
 
-* Introduction
+* Prelude
 
-* Type Level Programming
+** Frame
+- Rebecca Skinner: Me
+- Mercury: My Employer (We're Hiring)
+- The Ideas and Contents of this Talk: My Own
+- Effective Haskell: My Book! (Est. late 2021 / early 2022)
+- [[https://twitter.com/cercerilla][@cercerilla: Twitter]]
+- [[https://posts/2021-08-25-introduction-to-type-level-programming.html][Slides and Code: https://rebeccaskinner.net]]
 
-* Building A Theming Engine
+#+ATTR_LATEX: :height 0.3\textheight
+[[file:img/url.png]]
 
-* Fetching Theme Elements
+* Building A Theming Engine for XMonad
 
-* Constructing Themes
+** XMonad: Purple Edition
 
-* Runtime Terms
+[[file:img/screenshot.png]]
 
-* Conclusion
+** Let's Build It!
+On the surface, a theming system doesn't need to be very complicated.
+#+beamer: \pause
+#+begin_src haskell :exports code
+  polybarColorScheme = PolybarColorScheme
+    { focusedWorkspaceText        = "#dda0dd"
+    , focusedWorkspaceBackground  = "#2a2035"
+    , visibleWorkspaceText        = "#dda0dd"
+    , visibleWorkspaceBackground  = "#2a2035"
+    }
+#+end_src
+#+beamer: \pause
+
+But now a change to our theme means changing every individual element.
+#+begin_src haskell :exports code
+  stylishConfig :: XConfig a -> XConfig a
+  stylishConfig cfg = cfg
+    { normalBorderColor  = "#dda0dd"
+    , focusedBorderColor = "#2a2035"
+    }
+#+end_src
+
+** With A Color Palette
+One solution to allow us to uniformly change our color scheme would be to use a /color palette/.
+#+beamer: \pause
+#+begin_src haskell :exports code
+  type ColorPalette = Map Text RGB
+
+  defaultPalette = fromList $
+    [ ("text-foreground", "#3a2035")
+    , ("text-background", "#dda0dd") ]
+#+end_src
+#+beamer: \pause
+Now we can consistently reference colors by their name.
+#+begin_src haskell :exports code
+  polybarColorScheme :: ColorPalette -> Maybe PolybarColorScheme
+  polybarColorScheme theme = PolybarColorScheme
+    <$> theme !? "text-foreground"
+    <*> theme !? "text-background"
+    <*> theme !? "text-foreground"
+    <*> theme !? "text-background"
+#+end_src
+
+** Missing Information
+
+This buys us some consistency, but we still have problems:
+
+#+beamer: \pause
+1. Every component needs to know ahead of time what keys are available in the palette
+2. We can't easily tell what parts of a palette are being used, making maintenance harder
+3. We can't statically guarantee that our theme will work
+#+beamer: \pause
+
+Runtime errors can be painful when we're configuring a desktop
+environment, because it might mean that we have to fix everything from
+a terminal.
+
+* Using The Type System To Improve Our Theming System
+
+** Needs More Type System
+
+Let's look at how we can use the type system to help make our theming
+system easier to use.
+#+beamer: \pause
+Here's what we'd like to do:
+#+beamer: \pause
+- Ensure that the type of any function that uses theme elements tells what elements it uses
+#+beamer: \pause
+- Ensure that we can't pass a theme to a function if it's missing required elements
+
+** But First, A Demo
+
+Our ~colorDemo~ function lets us get colors from a ~theme~ by
+name. Instead of passing the color we want as a string, we're using
+/visible type applications/ to pass in the color as a /type/.
+
+#+begin_src haskell :exports code
+  {-# LANGUAGE TypeApplications #-}
+
+  colorDemo theme =
+    let r = lookupColor @"red" theme
+        g = lookupColor @"green" theme
+        b = lookupColor @"blue" theme
+    in show (r,g,b)
+#+end_src
+
+** But First, A Demo
+
+The type of ~colorDemo~ can be inferred for us, and tells us exactly
+which colors must be available in our theme.
+
+#+begin_src haskell :exports code
+  {-# LANGUAGE TypeApplications #-}
+
+  colorDemo
+    :: ( HasColor "red" theme
+       , HasColor "green" theme
+       , HasColor "blue" theme )
+    => ThemeInstance theme -> String
+  colorDemo theme =
+    let r = lookupColor @"red" theme
+        g = lookupColor @"green" theme
+        b = lookupColor @"blue" theme
+    in show (r,g,b)
+#+end_src
+
+** Themes and Theme Instances
+
+We'll start making our demo a reality by creating a new
+~ThemeInstance~ type. The underlying type will be a map from strings
+to RGB values.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  newtype ThemeInstance                  =
+    ThemeInstance { getThemeInstance :: Map String RGB }
+    deriving Show
+#+end_src
+
+
+** Themes and Theme Instances
+
+In order to track the type level information we need to make
+~colorDemo~ happy, we need to know the what theme the theme instance
+should represent. We can use a /phantom type/ to track the extra
+information.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  newtype ThemeInstance  theme           =
+    ThemeInstance { getThemeInstance :: Map String RGB }
+    deriving Show
+#+end_src
+
+** Themes and Theme Instances
+
+The theme that we track with our ~ThemeInstance~ shouldn't be just
+/any/ type though. Most types wouldn't make sense as a theme. What
+would ~ThemeInstance Int~ even be?
+
+We can constrain ~theme~ by giving it a /Kind Signature/. Here we're
+saying the *kind* of ~theme~ must be ~Theme~.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  newtype ThemeInstance (theme :: Theme) =
+    ThemeInstance { getThemeInstance :: Map String RGB }
+    deriving Show
+#+end_src
+
+** How Kind of You
+
+When we're programming haskell at the value level, we tend to think in
+terms of /types/ and /values/. A *type* has /inhabitants/ that are
+plain haskell values. For example, the ~Bool~ type has two
+inhabitants: ~True~ and ~False~.
+#+beamer:\pause
+A *kind* is analogous to a type, but where the inhabitants of a type
+are values, the inhabitants of a kind are types. In other words,
+/kinds are the types of types/.
+
+** My Kind of Theme
+
+
+
+* Death and Rebirth: Refactoring The Theming Engine To The Type Level
+
+* Transformation: Extending Type Level Code
+
+* Atonement: Integrating Runtime and Type-Level Code
+
+* Return: Runtime Type Configuration

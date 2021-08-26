@@ -20,6 +20,7 @@ import Data.List    (find)
 import Data.Proxy
 import Data.Word    (Word8)
 import GHC.TypeLits
+import Text.Printf
 
 data RGB = RGB
   { rgbRed   :: Word8
@@ -29,6 +30,11 @@ data RGB = RGB
 
 class IsColor a where
   toRGB :: a -> RGB
+
+rgbHex :: IsColor a => a -> String
+rgbHex a =
+  let (RGB r g b) = toRGB a
+  in printf "%02x%02x%02x" r g b
 
 class IsColor a => NamedColor a where
   type ColorName a :: Symbol

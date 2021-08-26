@@ -27,12 +27,35 @@ data RGB = RGB
 newtype ThemeInstance (theme :: Theme) =
   ThemeInstance { getThemeInstance :: Map.Map String RGB } deriving (Eq, Show)
 
+class ValidateThemeInstance (theme :: Theme) (a :: Theme -> Type) where
+  validateThemeInstance :: Map.Map String RGB -> Maybe (a theme)
+
+instance ValidateThemeInstance '[] ThemeInstance where
+  validateThemeInstance theme = Just (ThemeInstance theme)
+
+instance ( KnownSymbol currentColor
+         , ValidateThemeInstance rest ThemeInstance
+         ) => ValidateThemeInstance (currentColor:rest) ThemeInstance where
+  validateThemeInstance theme = do
+    let targetColor = symbolVal $ Proxy @currentColor
+    Map.lookup targetColor theme
+    (ThemeInstance m) <- validateThemeInstance @rest theme
+    pure $ ThemeInstance m
+
+themeInstance :: ValidateThemeInstance theme ThemeInstance => Map.Map String RGB -> Maybe (ThemeInstance theme)
+themeInstance = validateThemeInstance
+
 lookupColor :: forall colorName theme. (KnownSymbol colorName, HasColor colorName theme) => ThemeInstance theme -> RGB
 lookupColor (ThemeInstance colors) =
   let
     targetName = symbolVal $ Proxy @colorName
   in colors Map.! targetName
 
+colorDemo
+  :: ( HasColor "red" theme
+     , HasColor "green" theme
+     , HasColor "blue" theme )
+  => ThemeInstance theme -> String
 colorDemo theme =
   let r = lookupColor @"red" theme
       g = lookupColor @"green" theme
@@ -40,7 +63,10 @@ colorDemo theme =
   in show (r,g,b)
 
 type DemoTheme = '["red", "green", "blue"]
+type YellowTheme = '["yellow"]
 
-runDemo :: IO ()
-runDemo =
-  let themeInstance = ThemeInstance $
+demoThemeInstance = Map.fromList $
+  [ ("red", RGB 255 0 0)
+  , ("green", RGB 0 255 0)
+  , ("blue", RGB 0 0 255)
+  ]
