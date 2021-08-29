@@ -13,7 +13,6 @@
 #+BEAMER_HEADER:\AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
 #+startup: beamer
 
-
 #+date: \today
 
 * Prelude
@@ -296,6 +295,27 @@ if the rest of the theme matches.
 #+begin_src haskell :exports code
   instance (HasColor color colors) => HasColor color (curColor : colors)
 #+end_src
+
+** Getting A Theme Element
+
+Now that we can ensure a color is part of a theme, let's get one out
+of a theme instance:
+
+#+begin_src haskell :exports code
+  lookupColor
+    :: forall colorName theme.
+    ( KnownSymbol colorName
+    , HasColor colorName theme)
+    => ThemeInstance theme -> RGB
+  lookupColor (ThemeInstance colors) =
+    let
+      targetName = symbolVal $ Proxy @colorName
+    in colors Map.! targetName
+#+end_src
+
+** Creating A Theme Instance
+
+
 
 * Death and Rebirth: Refactoring The Theming Engine To The Type Level
 

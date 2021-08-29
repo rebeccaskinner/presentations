@@ -46,7 +46,11 @@ instance ( KnownSymbol currentColor
 themeInstance :: ValidateThemeInstance theme ThemeInstance => Map.Map String RGB -> Maybe (ThemeInstance theme)
 themeInstance = validateThemeInstance
 
-lookupColor :: forall colorName theme. (KnownSymbol colorName, HasColor colorName theme) => ThemeInstance theme -> RGB
+lookupColor
+  :: forall colorName theme.
+  ( KnownSymbol colorName
+  , HasColor colorName theme)
+  => ThemeInstance theme -> RGB
 lookupColor (ThemeInstance colors) =
   let
     targetName = symbolVal $ Proxy @colorName
