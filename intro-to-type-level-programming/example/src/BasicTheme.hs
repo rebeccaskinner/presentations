@@ -14,9 +14,10 @@ import Data.Kind
 import qualified Data.Map.Strict as Map
 
 type Theme = [Symbol]
-class HasColor (color :: Symbol) (container :: [Symbol])
-instance HasColor color (color ': colors)
-instance (HasColor color colors) => HasColor color (currentColor ': colors)
+
+class HasColor (color :: Symbol) (container :: Theme)
+instance HasColor color (color : colors)
+instance (HasColor color colors) => HasColor color (currentColor : colors)
 
 data RGB = RGB
   { rgbRed   :: Word8

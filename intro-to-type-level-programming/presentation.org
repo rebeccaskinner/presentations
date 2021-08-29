@@ -187,18 +187,115 @@ saying the *kind* of ~theme~ must be ~Theme~.
 
 ** How Kind of You
 
-When we're programming haskell at the value level, we tend to think in
-terms of /types/ and /values/. A *type* has /inhabitants/ that are
-plain haskell values. For example, the ~Bool~ type has two
-inhabitants: ~True~ and ~False~.
+When we're programming at the value level, we tend to think in terms
+of /types/ and /values/. A *type* has /inhabitants/ that are plain
+haskell values. For example, the ~Bool~ type has two inhabitants:
+~True~ and ~False~.
 #+beamer:\pause
 A *kind* is analogous to a type, but where the inhabitants of a type
 are values, the inhabitants of a kind are types. In other words,
 /kinds are the types of types/.
 
-** My Kind of Theme
+** What Is a Theme?
 
+How should we represent a ~Theme~ at the type level? Let's start with what we know:
 
+#+ATTR_BEAMER: :overlay <+->
+- A ~Theme~ is a collection of colors
+- We'll know what colors belong to the theme at compile time, but not at /development time/
+- We can identify a theme by it's name, for example /"red"/ or /"green"/
+
+** Theme Elements By Name
+
+We want to refer to theme elements by name (/"red"/, /"green"/,
+/"blue"/). We could define types for all the colors:
+#+begin_src haskell :exports code
+  data Red
+  data Green
+  data Blue
+#+end_src
+#+beamer:\pause
+But what a pain! We could try to enumerate every named color, but it
+would be a nightmare. Instead, let's use /type-level strings/
+
+** Symbolism
+
+Symbols are the type-level equivalents to strings. We can type them
+just like strings, and use them like types.
+#+begin_src haskell :exports code
+  λ :type "green"
+  "green" :: [Char]
+  λ :kind "green"
+  "green" :: Symbol
+#+end_src
+#+beamer:\pause
+Symbol literals are all instances the ~KnownSymbol~ typeclass. This
+let's us get the value of a ~Symbol~ at runtime as a string using the
+~symbolVal~ function:
+#+begin_src haskell :exports code
+  λ symbolVal $ Proxy @"green"
+  "green"
+
+  λ :type symbolVal $ Proxy @"green"
+  symbolVal $ Proxy @"green" :: String
+#+end_src
+
+** A Theme Of Many Colors
+
+A theme isn't just a single color, it's a collection of colors. A
+theme type needs to capture all of the colors that belond to the
+theme. We can do this by creating a /type-level list/. The syntax is
+the same as it is for creating a regular list:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  type Theme = [Symbol]
+#+end_src
+
+** Checking The Colors In A Theme
+
+Now that we know what a ~Theme~ is, we need to see if a given color is
+part of a theme. Let's start by looking at a type signature for
+~lookupColor~:
+#+beamer:\pause
+#+begin_src haskell :exports code
+  lookupColor
+    :: forall colorName theme.
+    ( KnownSymbol colorName
+    , HasColor colorName theme)
+    => ThemeInstance theme
+    -> RGB
+#+end_src
+
+** Implementing ~HasColor~
+~HasColor~ is a multi-parameter typeclass with two arguments. The
+first is the color we want to validate is in the theme, and the second
+is the theme we want to check.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  class HasColor (color :: Symbol) (container :: Theme)
+#+end_src
+#+beamer:\pause
+
+We're going to define two instances of ~HasColor~. We'll start with an
+instance that will serve as the /base case/ for our type level
+program.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance HasColor color (color : colors)
+#+end_src
+#+beamer:\pause
+
+Next we'll define a recursive case. If the head of our theme list
+doesn't match the target color, then there is still a valid instance
+if the rest of the theme matches.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance (HasColor color colors) => HasColor color (curColor : colors)
+#+end_src
 
 * Death and Rebirth: Refactoring The Theming Engine To The Type Level
 
