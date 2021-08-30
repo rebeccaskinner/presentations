@@ -16,8 +16,8 @@ import qualified Data.Map.Strict as Map
 type Theme = [Symbol]
 
 class HasColor (color :: Symbol) (container :: Theme)
-instance HasColor color (color : colors)
-instance (HasColor color colors) => HasColor color (currentColor : colors)
+instance HasColor color (color ': colors)
+instance {-# overlappable #-} (HasColor color colors) => HasColor color (currentColor ': colors)
 
 data RGB = RGB
   { rgbRed   :: Word8
@@ -56,6 +56,10 @@ lookupColor (ThemeInstance colors) =
     targetName = symbolVal $ Proxy @colorName
   in colors Map.! targetName
 
+demoThemeInstance :: ThemeInstance ["red","green","blue"]
+demoThemeInstance = ThemeInstance . Map.fromList $
+  [("red", RGB 0xff 0x00 0x00)]
+
 colorDemo
   :: ( HasColor "red" theme
      , HasColor "green" theme
@@ -70,8 +74,8 @@ colorDemo theme =
 type DemoTheme = '["red", "green", "blue"]
 type YellowTheme = '["yellow"]
 
-demoThemeInstance = Map.fromList $
-  [ ("red", RGB 255 0 0)
-  , ("green", RGB 0 255 0)
-  , ("blue", RGB 0 0 255)
-  ]
+-- demoThemeInstance = Map.fromList $
+--   [ ("red", RGB 255 0 0)
+--   , ("green", RGB 0 255 0)
+--   , ("blue", RGB 0 0 255)
+--   ]

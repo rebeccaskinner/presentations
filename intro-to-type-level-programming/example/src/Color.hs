@@ -39,28 +39,16 @@ rgbHex a =
 class IsColor a => NamedColor a where
   type ColorName a :: Symbol
 
-colorNameVal :: forall a name. (KnownSymbol name, name ~ ColorName a) => NamedColor a => String
+colorNameVal :: forall a. KnownSymbol (ColorName a) => String
 colorNameVal = symbolVal $ Proxy @(ColorName a)
 
-colorNameVal' :: forall a name. (KnownSymbol name, name ~ ColorName a) => NamedColor a => a -> String
+colorNameVal' :: forall a proxy. KnownSymbol (ColorName a) => a -> String
 colorNameVal' _ = symbolVal $ Proxy @(ColorName a)
-
-validateNamedColor
-  :: forall target color.
-  ( KnownSymbol target
-  , NamedColor color
-  , KnownSymbol (ColorName color)
-  ) => color -> Bool
-validateNamedColor color =
-  let
-    targetColorName = symbolVal $ Proxy @target
-    actualColorName = colorNameVal' color
-  in targetColorName == actualColorName
 
 data RGBColor (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor
 
 instance ValidRGB r g b => IsColor (RGBColor r g b) where
-  toRGB = reifyRGBColor
+  toRGB _ = RGB (natWord8 @r) (natWord8 @g) (natWord8 @b)
 
 data NamedRGB (name :: Symbol) (r :: Nat) (g :: Nat) (b :: Nat) = NamedRGB
 
@@ -68,7 +56,7 @@ namedRGB :: forall name r g b. (KnownSymbol name, ValidRGB r g b) => NamedRGB na
 namedRGB = NamedRGB
 
 instance ValidRGB r g b => IsColor (NamedRGB name r g b) where
-  toRGB _ = reifyRGBColor (RGBColor :: RGBColor r g b)
+  toRGB _ = toRGB $ (RGBColor :: RGBColor r g b)
 
 type family NatHex (n :: Nat) :: Symbol where
   NatHex 0 = "0"
@@ -95,7 +83,9 @@ type family PadNatHex (n :: Nat) :: Symbol where
 
 instance IsColor (RGBColor r g b) => NamedColor (RGBColor r g b) where
   type ColorName _ =
-      (("#" `AppendSymbol` PadNatHex r) `AppendSymbol` PadNatHex g) `AppendSymbol` PadNatHex b
+    (("#" `AppendSymbol` PadNatHex r)
+      `AppendSymbol` PadNatHex g
+    ) `AppendSymbol` PadNatHex b
 
 instance IsColor (NamedRGB name r g b) => NamedColor (NamedRGB name r g b) where
   type ColorName _ = name
@@ -104,11 +94,6 @@ natWord8 :: forall n . (KnownNat n, n <= 255) => Word8
 natWord8 = fromIntegral $ natVal (Proxy @n)
 
 type ValidRGB r g b = (KnownNat r, KnownNat g, KnownNat b, r <= 255, g <= 255, b <= 255)
-
-reifyRGBColor
-  :: forall r g b. ValidRGB r g b
-  => RGBColor r g b -> RGB
-reifyRGBColor _proxy = RGB (natWord8 @r) (natWord8 @g) (natWord8 @b)
 
 instance IsColor RGB where
   toRGB = id
@@ -121,13 +106,15 @@ someRGB r g b = SomeColor $ RGB r g b
 instance IsColor SomeColor where
   toRGB (SomeColor color) = toRGB color
 
-data Theme
-  = EmptyTheme
-  | ColorTheme Symbol Theme
+-- data Theme
+--   = EmptyTheme
+--   | ColorTheme Symbol Theme
 
-type family ThemeList (colorNames :: [Symbol]) :: Theme where
-  ThemeList '[] = EmptyTheme
-  ThemeList (c:cs) = ColorTheme c (ThemeList cs)
+type Theme = [Symbol]
+
+-- type family ThemeList (colorNames :: [Symbol]) :: Theme where
+--   ThemeList '[] = EmptyTheme
+--   ThemeList (c:cs) = ColorTheme c (ThemeList cs)
 
 newtype ThemeInstance (a :: Theme) = ThemeInstance { getThemeInstance :: [(String, SomeColor)] }
 
@@ -137,21 +124,16 @@ showThemeInstance (ThemeInstance t) =
     t' = map (second toRGB) t
   in show t'
 
-type family MergeThemes (a :: Theme) (b :: Theme) where
-  MergeThemes a EmptyTheme = a
-  MergeThemes a (ColorTheme color rest) =
-    MergeThemes (ColorTheme color a) rest
-
 type family HasColor (n :: Symbol) (t :: Theme) :: Bool where
-  HasColor n EmptyTheme = False
-  HasColor n (ColorTheme n _) = True
-  HasColor n (ColorTheme n' rest) = HasColor n rest
+  HasColor n '[] = False
+  HasColor n (n : _) = True
+  HasColor n (n' : rest) = HasColor n rest
 
 type family EQ a b :: Bool where
   EQ a a = True
   EQ a b = False
 
-type family IfThenElse (cond :: Bool) (trueBranch :: a) (falseBranch :: a) where
+type family IfThenElse (p :: Bool) (t :: a) (f :: a) where
   IfThenElse True t f = t
   IfThenElse False t f = f
 
@@ -188,8 +170,8 @@ lookupDefault :: forall colorName defaultName theme foundColor.
 lookupDefault = lookupColor @foundColor
 
 data MkTheme theme where
-  NewTheme :: MkTheme EmptyTheme
-  AddColor :: (KnownSymbol (ColorName color), NamedColor color) => color -> MkTheme theme -> MkTheme (ColorTheme (ColorName color) theme)
+  NewTheme :: MkTheme '[]
+  AddColor :: (KnownSymbol (ColorName color), NamedColor color) => color -> MkTheme theme -> MkTheme (ColorName color : theme)
 
 instantiateTheme :: MkTheme theme -> ThemeInstance theme
 instantiateTheme mkTheme =
@@ -205,17 +187,18 @@ instantiateTheme mkTheme =
 class ValidateTheme (t :: Theme) (a :: Theme -> Type) where
   checkSaturated :: [(String, SomeColor)] -> Either String (a t)
 
-instance ValidateTheme EmptyTheme ThemeInstance where
+instance ValidateTheme '[] ThemeInstance where
   checkSaturated _ = Right $ ThemeInstance []
 
 type family ThemeColors (t :: Theme) :: Symbol where
-  ThemeColors EmptyTheme = ""
-  ThemeColors (ColorTheme color rest) = ""
+  ThemeColors '[] = ""
+  ThemeColors (color : rest) = ""
 
-instance (ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor) => ValidateTheme (ColorTheme currentThemeColor themeRest) ThemeInstance where
+instance (theme ~ (currentThemeColor : themeRest), ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor)
+  => ValidateTheme theme ThemeInstance where
   checkSaturated [] =
     let
-      colorList = symbolVal $ Proxy @(ThemeColors (ColorTheme currentThemeColor themeRest))
+      colorList = symbolVal $ Proxy @(ThemeColors theme)
       errMsg = "Error: missing colors - " <> colorList
     in Left errMsg
   checkSaturated colors =

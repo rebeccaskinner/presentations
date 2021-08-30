@@ -17,7 +17,7 @@
 
 * Prelude
 
-** Frame
+** Hello, World
 - Rebecca Skinner: Me
 - Mercury: My Employer (We're Hiring)
 - The Ideas and Contents of this Talk: My Own
@@ -222,9 +222,9 @@ would be a nightmare. Instead, let's use /type-level strings/
 Symbols are the type-level equivalents to strings. We can type them
 just like strings, and use them like types.
 #+begin_src haskell :exports code
-  λ :type "green"
+  > :type "green"
   "green" :: [Char]
-  λ :kind "green"
+  > :kind "green"
   "green" :: Symbol
 #+end_src
 #+beamer:\pause
@@ -232,10 +232,10 @@ Symbol literals are all instances the ~KnownSymbol~ typeclass. This
 let's us get the value of a ~Symbol~ at runtime as a string using the
 ~symbolVal~ function:
 #+begin_src haskell :exports code
-  λ symbolVal $ Proxy @"green"
+  > symbolVal $ Proxy @"green"
   "green"
 
-  λ :type symbolVal $ Proxy @"green"
+  > :type symbolVal $ Proxy @"green"
   symbolVal $ Proxy @"green" :: String
 #+end_src
 
@@ -293,7 +293,23 @@ if the rest of the theme matches.
 
 #+beamer:\pause
 #+begin_src haskell :exports code
-  instance (HasColor color colors) => HasColor color (curColor : colors)
+  instance                      (HasColor color colors)
+    => HasColor color (currentColor : colors)
+#+end_src
+
+** Dealing with Overlapping Instances
+
+If we try to use ~HasColor~ right now, we'll run into a problem: our
+two instances seem to overlap if ~color~ is the same as
+~currentColor~.
+
+We can get past the error here by explicitly telling GHC that when
+there is an overlap, to prefer our other instance:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance {-# OVERLAPPABLE #-} (HasColor color colors)
+    => HasColor color (currentColor : colors)
 #+end_src
 
 ** Getting A Theme Element
@@ -301,6 +317,7 @@ if the rest of the theme matches.
 Now that we can ensure a color is part of a theme, let's get one out
 of a theme instance:
 
+#+beamer:\pause
 #+begin_src haskell :exports code
   lookupColor
     :: forall colorName theme.
@@ -313,13 +330,327 @@ of a theme instance:
     in colors Map.! targetName
 #+end_src
 
-** Creating A Theme Instance
+** Demo
+
+#+begin_src haskell :exports code
+  demoThemeInstance :: ThemeInstance ["red","green","blue"]
+  demoThemeInstance = ThemeInstance . Map.fromList $
+    [("red", RGB 0xff 0x00 0x00)
+    ,("green", RGB 0x00 0xff 0x00)
+    ,("blue", RGB 0x00 0x00 0xff)]
+#+end_src
+#+beamer:\pause
+#+begin_src haskell :exports code
+  > lookupColor @"red" demoThemeInstance
+  RGB {rgbRed = 255, rgbGreen = 0, rgbBlue = 0}
+#+end_src
+#+beamer:\pause
+#+begin_src haskell :exports code
+  > lookupColor @"yellow" demoThemeInstance
+
+  <interactive>:80:1: error:
+      • No instance for (HasColor "yellow" '[])
+          arising from a use of ‘lookupColor’
+      • In the expression: lookupColor @"yellow" demoThemeInstance
+        In an equation for ‘it’:
+            it = lookupColor @"yellow" demoThemeInstanc
+#+end_src
+
+* Building A Better Theme Instance
+
+** Mind The Gap
+
+Using the type system to track the colors in our theme lets us feel
+safe, but we have a runtime error lurking:
+#+beamer:\pause
+#+begin_src haskell :exports code
+  > lookupColor @"blue" demoThemeInstance
+    ,*** Exception: Map.!: given key is not an element in the map
+    CallStack (from HasCallStack):
+      error, called at
+        libraries/containers/containers/src/Data/Map/Internal.hs:627:17
+        in containers-0.6.2.1:Data.Map.Internal
+#+end_src
+#+beamer:\pause
+
+** An Instance of Weakness
+
+What happened?
+#+beamer:\pause
+#+begin_src haskell :exports code
+  demoThemeInstance :: ThemeInstance ["red","green","blue"]
+  demoThemeInstance = ThemeInstance . Map.fromList $
+    [("red", RGB 0xff 0x00 0x00)]
+#+end_src
+
+** Constructive Criticism
+
+Problem: The definition of a theme is decoupled from the value.
+#+beamer:\pause
+Solution: Bring the theme elements into the type level.
+
+** X11 Colors At The Type Level
+
+One way to bring colors to the type level is to define new types for a
+common set of colors we might want to use. This gives us an easy way
+to refer to a fixed collection of colors that each have their own
+type.
+
+#+begin_src haskell :exports code
+  data RebeccaPurple = RebeccaPurple
+#+end_src
+
+** Type Level RGB
+
+Working with a fixed color pallet can be a nice convenience, but as we
+noted earlier it can end up being inflexible. We'd like to also
+provide a way to work with arbitrary RGB colors:
+#+beamer:\pause
+
+#+begin_src haskell :exports code
+  data RGBColor (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor
+#+end_src
+
+** Type Level RGB Is A Color
+
+When we're working with type level colors, we still need to get a
+runtime representation of an RGB color so that we can style things.
+
+An ~IsColor~ typeclass can help us identify things that have a runtime
+representation as an RGB color:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  class IsColor a where
+    toRGB :: a -> RGB
+#+end_src
+#+beamer:\pause
+Creating an instance for ~RGB~ is trivial
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance IsColor RGB where
+    toRGB = id
+#+end_src
+
+#+beamer:\pause
+As is creating an instance for a color from a pre-defined color pallet.
+#+begin_src haskell :exports code
+  instance IsColor RebeccaPurple where
+    toRGB = const $ RGB 0x66 0x33 0x99
+#+end_src
+
+** Making an ~RGBColor~ Type Into a Runtime Value
+
+Not all types ~RGBColor r g b~ can map to an ~RGB~ color. To be able
+to make a valid color we have to put some constraints on ~r~, ~g~, and ~b~:
+
+#+ATTR_BEAMER: :overlay <+->
+- They must be numbers
+- With a value between 0 and 255 (inclusive)
+
+#+beamer:\pause
+We can use ~ConstraintKinds~ to create an alias for this set of constraints:
+#+beamer:\pause
+
+#+begin_src haskell :exports code
+  type ValidRGB r g b =
+    ( KnownNat r, KnownNat g, KnownNat b
+    , r <= 255, g <= 255, b <= 255)
+#+end_src
+
+** Converting an RGBColor Into A Runtime RGBValue
+
+Now that we can guarantee the parameters to ~RGBColor~ are valid, we
+can easily generate a runtime ~RGB~ value from one.
+
+#+begin_src haskell :exports code
+  instance ValidRGB r g b => IsColor (RGBColor r g b) where
+    toRGB _ = RGB (natWord8 @r) (natWord8 @g) (natWord8 @b)
+#+end_src
+
+** The Hardest Problem in Computer Science
+
+Although we can now create a type-level RGB value, the only way we
+have to refer to it is directly by it's value. This isn't any better
+than hard-coding the color values everywhere in the first place.
+
+Let's think about a way to provide names for our colors given that:
+
+#+ATTR_BEAMER: :overlay <+->
+- Naming should be general. It should be able to support our
+  type-level RGB colors, but other types of colors as well.
+- Names need be ~Symbol~s, so that we can use them at the type level.
+
+** Type Families
+
+When we want to define a function for several different /types/, we
+often look toward functions defined by typeclasses.
+
+In our case though, we don't want to have a function from one value to
+another. Instead, we want something to go from one type to another
+type. For that, we use /Type Families/.
+
+** Creating A Type Family For Color Names
+
+Let's create a type family for things that are colors and can be named:
+
+#+begin_src haskell :exports code
+  class IsColor a => NamedColor a where
+    type ColorName a :: Symbol
+#+end_src
+
+~ColorName~ is an /associated type family/ that let's us map a type of
+to another type (of kind ~Symbol~).
+
+\vspace{5mm}
+
+#+beamer:\pause
+Let's use ~NamedColor~ to write a function that will let us get the
+name of a given color as a runtime ~String~:
+#+beamer:\pause
+
+#+begin_src haskell :exports code
+  colorNameVal :: forall a. KnownSymbol (ColorName a) => String
+  colorNameVal = symbolVal $ Proxy @(ColorName a)
+#+end_src
+
+** Simple NamedColor Instances
+
+Creating a named color for the colors in our color palet is easy.
+
+#+begin_src haskell :exports code
+  instance NamedColor RebeccaPurple where
+    type ColorName RebeccaPurple = "RebeccaPurple"
+#+end_src
+
+#+beamer:\pause
+
+We can also create a new type, ~NamedRGB~, that makes it easy for us
+to give a name to some particular RGB color:
+
+#+begin_src haskell :exports code
+  data NamedRGB (name :: Symbol) (r :: Nat) (g :: Nat) (b :: Nat) = NamedRGB
+
+  instance ValidRGB r g b => IsColor (NamedRGB name r g b) where
+    toRGB _ = toRGB $ (RGBColor :: RGBColor r g b)
+
+  instance IsColor (NamedRGB name r g b)
+    => NamedColor (NamedRGB name r g b) where
+
+    type ColorName _ = name
+#+end_src
+
+** Renaming Things Is An Even Harder Problem
+
+How can we create a ~NamedColor~ instance for ~RGBColor~? Let's start
+by looking at a demo of what we want:
+#+beamer:\pause
+#+begin_src haskell :exports code
+  λ colorNameVal @(RGBColor 0 190 239)
+  "#00BEEF"
+#+end_src
+#+beamer:\pause
+From our demo we can see that there are a few key requirements:
+#+ATTR_BEAMER: :overlay <+->
+- Convert a ~Nat~ to a ~Symbol~, representing it's hex value
+- Pad a hex string out to 2 digits
+- Append several symbols together to make a human-readable hex string
+- Use the symbol in our ~NamedColor~ instance
+
+** Hexing The Type Families
+
+We want to convert a ~Nat~ to a ~Symbol~. Whenever we want to create a
+“function” from one type to another, we can think of type families.
+
+\vspace{5mm}
+
+In this case, we'll create a /closed type family/ to handle the
+mapping.
+
+** Casting Hexes
+
+#+begin_src haskell :exports code
+  type family NatHex (n :: Nat) :: Symbol where
+    NatHex 0  = "0"
+    NatHex 1  = "1"
+    NatHex 2  = "2"
+    NatHex 3  = "3"
+    NatHex 4  = "4"
+    NatHex 5  = "5"
+    NatHex 6  = "6"
+    NatHex 7  = "7"
+    NatHex 8  = "8"
+    NatHex 9  = "9"
+    NatHex 10 = "A"
+    NatHex 11 = "B"
+    NatHex 12 = "C"
+    NatHex 13 = "D"
+    NatHex 14 = "E"
+    NatHex 15 = "F"
+    NatHex n = NatHex (Div n 16) `AppendSymbol` NatHex (Mod n 16)
+#+end_src
+
+** Padding, Part 1
+
+The algorithm to pad a hex string to two digits is pretty straightforward:
+
+#+beamer:\pause
+
+#+begin_src
+if the number is less than 15:
+  return "0" prepended to the stringified value
+else:
+  return the stringified value
+#+end_src
+
+** It's Looking Kind of Iffy
+
+And so, to left-pad our string, we just need to implement conditional
+logic at the type level.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  type family IfThenElse (p :: Bool) (t :: a) (f :: a) where
+    IfThenElse True t f = t
+    IfThenElse False t f = f
+#+end_src
+
+** Bringing It All Together
+
+Now that we can use conditionals at the type level, we can create a
+type family to create zero-padded hex strings from naturals:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  type family PadNatHex (n :: Nat) :: Symbol where
+    PadNatHex n =
+      IfThenElse (n <=? 15) ("0" `AppendSymbol` NatHex n) (NatHex n)
+#+end_src
+
+#+beamer:\pause
+Using ~PadNatHex~ we can now also write an instance of ~NamedColor~
+for plain ~RGBColor~ types:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance IsColor (RGBColor r g b) => NamedColor (RGBColor r g b) where
+    type ColorName _ =
+      (("#" `AppendSymbol` PadNatHex r)
+        `AppendSymbol` PadNatHex g
+      ) `AppendSymbol` PadNatHex b
+#+end_src
+
+* Constructing A Theme Instance With ~NamedColor~
+
+** What's Old Is New Again
+
+Now that we can refer to colors and their names at the type level, we
+can return to the problem of creating a theme instance whose runtime
+values are guaranteed to match the theme type parameter.
+
+** An Old Twist On a New ThemeInstance
 
 
-
-* Death and Rebirth: Refactoring The Theming Engine To The Type Level
-
-* Transformation: Extending Type Level Code
 
 * Atonement: Integrating Runtime and Type-Level Code
 
