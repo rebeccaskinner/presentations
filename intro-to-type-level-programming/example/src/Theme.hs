@@ -24,6 +24,6 @@ sampleColorSet =
   instantiateTheme $
   AddColor (namedRGB @"red" @255 @0 @0) $
   AddColor (namedRGB @"green" @0 @255 @0) $
-  AddColor AliceBlue $
+  AddColor RebeccaPurple $
   AddColor DarkViolet
   NewTheme

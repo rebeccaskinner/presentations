@@ -1,32 +1,32 @@
-{-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ImportQualifiedPost #-}
+{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module ThemeLoader where
 
+import Color
+import ColorX11
 import Control.Applicative
+import Control.Monad.Except
+import Control.Monad.Fail
+import Control.Monad.Reader
 import Data.Aeson
 import Data.Bifunctor
 import Data.ByteString.Lazy qualified as BS
 import Data.Char
+import Data.Functor.Identity
 import Data.Kind
 import Data.List
-import Data.Functor.Identity
-import Control.Monad.Fail
+import Data.Map.Strict qualified as Map
 import GHC.Generics
-import Color
-import ColorX11
 import Text.Read
-import qualified Data.Map.Strict as Map
-import Control.Monad.Except
-import Control.Monad.Reader
 
-newtype ColorReference r a =
-  ColorReference { unColorReference :: ExceptT String (Reader r) a }
+newtype ColorReference r a = ColorReference {unColorReference :: ExceptT String (Reader r) a}
   deriving newtype (Functor, Applicative, Monad, MonadReader r, MonadError String)
 
 evalColorReference :: r -> ColorReference r a -> Either String a
@@ -65,10 +65,10 @@ instance FromJSON (ColorValue (ColorReference RawThemeConfig)) where
           Nothing -> throwError $ "Referenced color not found: " <> name
           Just color' -> pure color'
 
-dereferenceColorValue
-  :: RawThemeConfig
-  -> ColorValue (ColorReference RawThemeConfig)
-  -> Either String (ColorValue Identity)
+dereferenceColorValue ::
+  RawThemeConfig ->
+  ColorValue (ColorReference RawThemeConfig) ->
+  Either String (ColorValue Identity)
 dereferenceColorValue env colorValue =
   case colorValue of
     RGBValue r -> Right $ RGBValue r
@@ -81,11 +81,11 @@ type family HKD (wrapper :: Type -> Type) (value :: Type) :: Type where
   HKD Identity value = value
   HKD wrapper value = wrapper value
 
-newtype RawThemeConfig = RawThemeConfig { getRawThemeConfig :: ThemeConfig' (ColorReference RawThemeConfig) }
+newtype RawThemeConfig = RawThemeConfig {getRawThemeConfig :: ThemeConfig' (ColorReference RawThemeConfig)}
   deriving newtype (FromJSON)
 
 newtype ThemeConfig' w = ThemeConfig'
-  { getThemeConfig :: Map.Map String (ColorValue w) }
+  {getThemeConfig :: Map.Map String (ColorValue w)}
 
 instance FromJSON (ThemeConfig' (ColorReference RawThemeConfig)) where
   parseJSON = fmap ThemeConfig' . parseJSON
@@ -94,10 +94,11 @@ type ThemeConfig = ThemeConfig' Identity
 
 evalConfig :: RawThemeConfig -> Either String ThemeConfig
 evalConfig rawConfig =
-  fmap ThemeConfig' .
-  traverse (dereferenceColorValue rawConfig)  .
-  getThemeConfig .
-  getRawThemeConfig $ rawConfig
+  fmap ThemeConfig'
+    . traverse (dereferenceColorValue rawConfig)
+    . getThemeConfig
+    . getRawThemeConfig
+    $ rawConfig
 
 loadThemeConfig :: FilePath -> IO ThemeConfig
 loadThemeConfig p = do
@@ -109,37 +110,54 @@ loadThemeConfig p = do
 parseRGB :: MonadFail m => String -> m RGB
 parseRGB s =
   case s of
-    '#':s' -> parseRGB s'
-    [r,r',g,g',b,b'] -> do
+    '#' : s' -> parseRGB s'
+    [r, r', g, g', b, b'] -> do
       RGB
         <$> parseHex r r'
         <*> parseHex g g'
         <*> parseHex b b'
     otherwise ->
-      fail $ "invalid RGB hex string "
+      fail $
+        "invalid RGB hex string "
           <> s
           <> " expected a string in the form of #1a2b3c"
-    where
-      parseHex a b =
-        let s = ['0','x',a,b]
-        in case readEither s of
-             Left err -> fail err
-             Right val -> pure val
+  where
+    parseHex a b =
+      let s = ['0', 'x', a, b]
+       in case readEither s of
+            Left err -> fail err
+            Right val -> pure val
 
 parseX11Color :: MonadFail m => String -> m SomeColor
-parseX11Color s =
+parseX11Color colorName =
   let (ThemeInstance t) = x11Theme
-      p (name,color) = s == name
-  in case find p t of
-       Nothing -> fail $ "no X11 color " <> s
-       Just c -> pure $ snd c
-  where
-    downcase = map toLower
+   in case Map.lookup colorName t of
+        Nothing -> fail $ "no x11 color " <> colorName
+        Just color -> pure color
 
-validateConfiguredTheme
-  :: forall theme themeInstance colorWrapper
-  . ( IsColor (ColorValue colorWrapper)
-     , ValidateTheme theme themeInstance)
-  => ThemeConfig' colorWrapper -> Either String (themeInstance theme)
-validateConfiguredTheme =
-  checkSaturated . map (second SomeColor) . Map.toList . getThemeConfig
+rgbTheme :: ThemeConfig -> Map.Map String SomeColor
+rgbTheme = Map.map SomeColor . getThemeConfig
+
+type SampleTheme = '["red", "green", "blue", "text", "border"]
+
+sampleColorSet =
+  instantiateTheme $
+  AddColor (namedRGB @"red" @255 @0 @0) $
+  AddColor (namedRGB @"green" @0 @255 @0) $
+  AddColor RebeccaPurple $
+  AddColor DarkViolet
+  NewTheme
+
+sampleQuery themeInstance =
+  let
+    r = lookupColor @"red" themeInstance
+    g = lookupColor @"green" themeInstance
+    b = lookupColor @"blue" themeInstance
+  in show (r,g,b)
+
+sampleQuery' themeInstance =
+  let
+    h = lookupColor @"hue" themeInstance
+    s = lookupColor @"saturation" themeInstance
+    v = lookupColor @"value" themeInstance
+  in show (h,s,v)
