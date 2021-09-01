@@ -73,9 +73,3 @@ colorDemo theme =
 
 type DemoTheme = '["red", "green", "blue"]
 type YellowTheme = '["yellow"]
-
--- demoThemeInstance = Map.fromList $
---   [ ("red", RGB 255 0 0)
---   , ("green", RGB 0 255 0)
---   , ("blue", RGB 0 0 255)
---   ]

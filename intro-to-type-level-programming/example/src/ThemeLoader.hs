@@ -148,12 +148,24 @@ sampleColorSet =
   AddColor DarkViolet
   NewTheme
 
+sampleQuery
+  :: (WithColor "blue" theme, WithColor "green" theme,
+      WithColor "red" theme) =>
+     ThemeInstance theme -> String
 sampleQuery themeInstance =
   let
     r = lookupColor @"red" themeInstance
     g = lookupColor @"green" themeInstance
     b = lookupColor @"blue" themeInstance
   in show (r,g,b)
+
+testQuery :: FilePath -> IO ()
+testQuery p = do
+  (ThemeConfig' c) <- loadThemeConfig p
+  let
+    c' = Map.map SomeColor c
+    r = sampleQuery <$> themeInstance @["blue", "green", "red", "hue", "saturation", "value"] c'
+  print r
 
 sampleQuery' themeInstance =
   let

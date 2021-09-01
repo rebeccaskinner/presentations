@@ -122,6 +122,11 @@ type family HasColor (n :: Symbol) (t :: Theme) :: Bool where
   HasColor n (n : _) = True
   HasColor n (n' : rest) = HasColor n rest
 
+type family WithColor (n :: Symbol) (t :: Theme) :: Constraint where
+  WithColor colorName '[] = TypeError (Text (AppendSymbol "Missing Color: " colorName)) :: Constraint
+  WithColor colorName (colorName : rest) = ()
+  WithColor colorName (otherColor : rest) = WithColor colorName rest
+
 type family EQ a b :: Bool where
   EQ a a = True
   EQ a b = False
@@ -134,7 +139,7 @@ type family ThemeSatisfies (n :: Symbol) (t :: Theme) :: Constraint where
   ThemeSatisfies color theme =
     IfThenElse (EQ True (HasColor color theme))
     (() :: Constraint)
-    (TypeError (Text (AppendSymbol "Missing Color" color)) :: Constraint)
+    (TypeError (Text (AppendSymbol "Missing Color: " color)) :: Constraint)
 
 type family FirstMatching (colors :: [Symbol]) (t :: Theme) :: Symbol where
   FirstMatching (color:colors) t =
@@ -142,21 +147,31 @@ type family FirstMatching (colors :: [Symbol]) (t :: Theme) :: Symbol where
   FirstMatching '[] t = TypeError (Text "No candidate color matches")
 
 lookupColor :: forall colorName theme.
-  (KnownSymbol colorName, ThemeSatisfies colorName theme)
+  (KnownSymbol colorName, WithColor colorName theme)
   => ThemeInstance theme -> RGB
 lookupColor (ThemeInstance colors) =
   let
     targetColorName = symbolVal $ Proxy @colorName
   in toRGB $ colors Map.! targetColorName
 
+colorDemo theme =
+  let r = lookupColor @"red" theme
+      g = lookupColor @"green" theme
+      b = lookupColor @"blue" theme
+  in show (r,g,b)
+
 lookupDefault :: forall colorName defaultName theme foundColor.
   ( KnownSymbol colorName
   , KnownSymbol defaultName
   , KnownSymbol foundColor
   , foundColor ~ FirstMatching [colorName, defaultName] theme
-  , ThemeSatisfies foundColor theme
+  , WithColor foundColor theme
   ) => ThemeInstance theme -> RGB
 lookupDefault = lookupColor @foundColor
+
+type family ThemeColors (t :: Theme) :: Symbol where
+  ThemeColors '[] = ""
+  ThemeColors (color : rest) = ""
 
 data MkTheme theme where
   NewTheme :: MkTheme '[]
@@ -173,31 +188,24 @@ instantiateTheme mkTheme =
         colorVal = SomeColor $ toRGB color
       in ThemeInstance $ Map.insert colorName colorVal t
 
-class ValidateTheme (t :: Theme) (a :: Theme -> Type) where
-  checkSaturated :: Map.Map String SomeColor -> Either String (a t)
+class ValidateThemeInstance (theme :: Theme) (a :: Theme -> Type) where
+  validateThemeInstance :: Map.Map String SomeColor -> Either String (a theme)
 
-instance ValidateTheme '[] ThemeInstance where
-  checkSaturated _ = Right $ ThemeInstance Map.empty
+instance ValidateThemeInstance '[] ThemeInstance where
+  validateThemeInstance theme = Right (ThemeInstance theme)
 
-type family ThemeColors (t :: Theme) :: Symbol where
-  ThemeColors '[] = ""
-  ThemeColors (color : rest) = ""
+instance ( KnownSymbol currentColor
+         , ValidateThemeInstance rest ThemeInstance
+         ) => ValidateThemeInstance (currentColor:rest) ThemeInstance where
+  validateThemeInstance theme =
+    let targetColor = symbolVal $ Proxy @currentColor
+    in case Map.lookup targetColor theme of
+      Nothing ->
+        let colorName = symbolVal $ Proxy @currentColor
+        in Left $ "missing color: " <> colorName
+      Just _ -> do
+        (ThemeInstance m) <- validateThemeInstance @rest theme
+        pure $ ThemeInstance m
 
-instance (theme ~ (currentThemeColor : themeRest), ValidateTheme themeRest ThemeInstance, KnownSymbol currentThemeColor)
-  => ValidateTheme theme ThemeInstance where
-  checkSaturated m
-    | Map.null m =
-      let
-        colorList = symbolVal $ Proxy @(ThemeColors theme)
-        errMsg = "Error: missing colors - " <> colorList
-      in Left errMsg
-    | otherwise  =
-      let
-        currentColorName = symbolVal $ Proxy @currentThemeColor
-        matchingColor = Map.lookup currentColorName m -- find (\c -> currentColorName == fst c) colors
-        errorMessage = "Cannot create theme instance: missing " <> currentColorName
-      in case matchingColor of
-           Nothing -> Left errorMessage
-           Just foundColor -> do
-             (ThemeInstance t) <- checkSaturated @themeRest m
-             pure $ ThemeInstance (Map.insert currentColorName foundColor m)
+themeInstance :: forall theme. ValidateThemeInstance theme ThemeInstance => Map.Map String SomeColor -> Either String (ThemeInstance theme)
+themeInstance = validateThemeInstance
