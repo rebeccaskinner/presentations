@@ -648,10 +648,139 @@ Now that we can refer to colors and their names at the type level, we
 can return to the problem of creating a theme instance whose runtime
 values are guaranteed to match the theme type parameter.
 
-** An Old Twist On a New ThemeInstance
+** Constructive Theming
+
+We need a way to create a new ~ThemeInstance~ with a type parameter
+that matches the colors we've added to the instance.
+
+#+beamer:\pause
+\vspace{5mm}
+
+This seems like a job for GADTs
+
+** MkTheme
+
+Instead of directly trying to build a ~ThemeInstance~ we'll have
+better luck building up an expression and evaluating that to an
+appropriately typed ~ThemeInstance~.
+
+#+beamer:\pause
+\vspace{5mm}
+
+#+begin_src haskell :exports code
+  data MkTheme theme where
+    NewTheme :: MkTheme '[]
+    AddColor :: (KnownSymbol (ColorName color), NamedColor color)
+             => color
+             -> MkTheme theme
+             -> MkTheme (ColorName color : theme)
+#+end_src
+
+** ~MkTheme~-ing A ~ThemeInstance~
+
+Once we have constructed a ~MkTheme~ value that represents our theme,
+we need to convert it into a ~ThemeInstance~:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instantiateTheme :: MkTheme theme -> ThemeInstance theme
+#+end_src
+
+** ~MkTheme~-ing A ~ThemeInstance~
+
+Once we have constructed a ~MkTheme~ value that represents our theme,
+we need to convert it into a ~ThemeInstance~:
+
+#+begin_src haskell :exports code
+  instantiateTheme :: MkTheme theme -> ThemeInstance theme
+  instantiateTheme NewTheme = ThemeInstance Map.empty
+#+end_src
+
+** ~MkTheme~-ing A ~ThemeInstance~
+
+Once we have constructed a ~MkTheme~ value that represents our theme,
+we need to convert it into a ~ThemeInstance~:
+
+#+begin_src haskell :exports code
+  instantiateTheme :: MkTheme theme -> ThemeInstance theme
+  instantiateTheme NewTheme = ThemeInstance Map.empty
+  instantiateTheme (AddColor color mkTheme') =
+    let
+      (ThemeInstance t) = instantiateTheme mkTheme'
+      colorName = colorNameVal' color
+      colorVal = SomeColor $ toRGB color
+    in ThemeInstance $ Map.insert colorName colorVal t
+#+end_src
+
+** A ~MkTheme~ Demo
+
+#+begin_src haskell :exports code
+  sampleColorSet =
+    instantiateTheme $
+    AddColor (namedRGB @"red"   @255 @0   @0)   $
+    AddColor (namedRGB @"green" @0   @255 @0)   $
+    AddColor (namedRGB @"blue"  @0   @0   @255) $
+    NewTheme
+
+  sampleThemer theme = show
+    ( lookupColor @"red" theme
+    , lookupColor @"green" theme
+    , lookupColor @"blue" theme)
+#+end_src
+#+beamer:\pause
+
+If we run our function in ghci we can see that we're able to get the
+colors as we expected.
+#+begin_example
+  > sampleThemer sampleColorSet
+  (RGB {rgbRed = 255, rgbGreen = 0,   rgbBlue = 0}
+  ,RGB {rgbRed = 0,   rgbGreen = 255, rgbBlue = 0},
+  ,RGB {rgbRed = 0,   rgbGreen = 0,   rgbBlue = 255})
+#+end_example
+
+* Integrating Runtime and Type-Level Code
+
+** Runtime Configuration
+
+We now have a theming system that works if it compiles...
+
+#+beamer:\pause
+\vspace{5mm}
+
+...But we have to compile the application every time we want to make a
+change.
+
+** Type Safety + Runtime Theme Configuration
+
+We can't use the type system to ensure that we always get a correct
+and complete runtime theme configuration, but we /can/ keep our
+typesafe theme implementation and provide an additional less safe way
+to generate themes at runtime.
+
+** ~theme.json~
+
+We'll start by defining a theme file format. For simplicity, we'll use JSON.
+
+#+beamer:\pause
+- Top-level keys are theme element names
+- Top-level values hold colors
+- A color can be an RGB color, an X11 color name
+#+beamer:\pause
+- ... Or /a reference to another color/
+
+#+beamer:\pause
+#+begin_src json :exports code
+  {
+      "red": {"rgb": "#ff0000"},
+      "green": {"rgb": "#00ff00"},
+      "blue": {"x11": "AliceBlue"},
+      "text": {"same-as": "blue"},
+      "border": {"same-as": "text"}
+  }
+#+end_src
+
+** Defining The Theme Config Format
 
 
 
-* Atonement: Integrating Runtime and Type-Level Code
-
-* Return: Runtime Type Configuration
+* Questions

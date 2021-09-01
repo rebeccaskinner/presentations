@@ -57,7 +57,12 @@ namedRGB :: forall name r g b. (KnownSymbol name, ValidRGB r g b) => NamedRGB na
 namedRGB = NamedRGB
 
 instance ValidRGB r g b => IsColor (NamedRGB name r g b) where
-  toRGB _ = toRGB $ RGBColor :: RGBColor r g b
+  toRGB _ = toRGB (RGBColor :: RGBColor r g b)
+
+data RenameColor (name :: Symbol) = forall color. IsColor color => RenameColor color
+
+instance IsColor (RenameColor name) where
+  toRGB (RenameColor c) = toRGB c
 
 type family NatHex (n :: Nat) :: Symbol where
   NatHex 0 = "0"
@@ -89,6 +94,9 @@ instance IsColor (RGBColor r g b) => NamedColor (RGBColor r g b) where
     ) `AppendSymbol` PadNatHex b
 
 instance IsColor (NamedRGB name r g b) => NamedColor (NamedRGB name r g b) where
+  type ColorName _ = name
+
+instance NamedColor (RenameColor name) where
   type ColorName _ = name
 
 natWord8 :: forall n . (KnownNat n, n <= 255) => Word8
@@ -172,15 +180,13 @@ data MkTheme theme where
   AddColor :: (KnownSymbol (ColorName color), NamedColor color) => color -> MkTheme theme -> MkTheme (ColorName color : theme)
 
 instantiateTheme :: MkTheme theme -> ThemeInstance theme
-instantiateTheme mkTheme =
-  case mkTheme of
-    NewTheme -> ThemeInstance Map.empty
-    AddColor color mkTheme' ->
-      let
-        (ThemeInstance t) = instantiateTheme mkTheme'
-        colorName = colorNameVal' color
-        colorVal = SomeColor $ toRGB color
-      in ThemeInstance $ Map.insert colorName colorVal t
+instantiateTheme NewTheme = ThemeInstance Map.empty
+instantiateTheme (AddColor color mkTheme') =
+  let
+    (ThemeInstance t) = instantiateTheme mkTheme'
+    colorName = colorNameVal' color
+    colorVal = SomeColor $ toRGB color
+  in ThemeInstance $ Map.insert colorName colorVal t
 
 class ValidateThemeInstance (theme :: Theme) (a :: Theme -> Type) where
   validateThemeInstance :: Map.Map String SomeColor -> Either String (a theme)

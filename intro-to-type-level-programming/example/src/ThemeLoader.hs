@@ -138,13 +138,18 @@ rgbTheme = Map.map SomeColor . getThemeConfig
 
 type SampleTheme = '["red", "green", "blue", "text", "border"]
 
+sampleColorSet :: ThemeInstance '["red","green","blue"]
 sampleColorSet =
   instantiateTheme $
-  AddColor (namedRGB @"red" @255 @0 @0) $
+  AddColor (RenameColor @"red" DarkViolet) $
   AddColor (namedRGB @"green" @0 @255 @0) $
-  AddColor RebeccaPurple $
-  AddColor DarkViolet
+  AddColor (RenameColor @"blue" RebeccaPurple) $
   NewTheme
+
+sampleThemer theme = show
+  ( lookupColor @"red" theme
+  , lookupColor @"green" theme
+  , lookupColor @"blue" theme)
 
 sampleQuery
   :: (WithColor "blue" theme, WithColor "green" theme,
@@ -164,6 +169,10 @@ testQuery p = do
     c' = Map.map SomeColor c
     r = sampleQuery <$> themeInstance @["blue", "green", "red", "hue", "saturation", "value"] c'
   print r
+
+testMkTheme :: IO ()
+testMkTheme = do
+  print $ sampleQuery sampleColorSet
 
 sampleQuery' themeInstance =
   let
