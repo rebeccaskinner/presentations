@@ -3,8 +3,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeFamilies #-}
 
 module ThemeLoader where
@@ -116,7 +114,7 @@ parseRGB s =
         <$> parseHex r r'
         <*> parseHex g g'
         <*> parseHex b b'
-    otherwise ->
+    _ ->
       fail $
         "invalid RGB hex string "
           <> s

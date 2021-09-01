@@ -57,7 +57,7 @@ namedRGB :: forall name r g b. (KnownSymbol name, ValidRGB r g b) => NamedRGB na
 namedRGB = NamedRGB
 
 instance ValidRGB r g b => IsColor (NamedRGB name r g b) where
-  toRGB _ = toRGB $ (RGBColor :: RGBColor r g b)
+  toRGB _ = toRGB $ RGBColor :: RGBColor r g b
 
 type family NatHex (n :: Nat) :: Symbol where
   NatHex 0 = "0"
@@ -134,12 +134,6 @@ type family EQ a b :: Bool where
 type family IfThenElse (p :: Bool) (t :: a) (f :: a) where
   IfThenElse True t f = t
   IfThenElse False t f = f
-
-type family ThemeSatisfies (n :: Symbol) (t :: Theme) :: Constraint where
-  ThemeSatisfies color theme =
-    IfThenElse (EQ True (HasColor color theme))
-    (() :: Constraint)
-    (TypeError (Text (AppendSymbol "Missing Color: " color)) :: Constraint)
 
 type family FirstMatching (colors :: [Symbol]) (t :: Theme) :: Symbol where
   FirstMatching (color:colors) t =
