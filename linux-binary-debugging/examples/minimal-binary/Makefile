@@ -20,5 +20,8 @@ min-dynamic-unstripped: min.o
 
 .PHONY: clean
 clean:
-	-rm -fr *.o
-	-rm -fr min-{static,dynamic}-{stripped,unstripped}
+	-rm -f *.o
+	-rm -f min-static-stripped
+	-rm -f min-dynamic-stripped
+	-rm -f min-static-unstripped
+	-rm -f min-dynamic-unstripped
