@@ -738,7 +738,7 @@ colors as we expected.
   ,RGB {rgbRed = 0,   rgbGreen = 0,   rgbBlue = 255})
 #+end_example
 
-* Integrating Runtime and Type-Level Code
+* Generating A Runtime Theme Configuration
 
 ** Runtime Configuration
 
@@ -781,6 +781,274 @@ We'll start by defining a theme file format. For simplicity, we'll use JSON.
 
 ** Defining The Theme Config Format
 
+A theme that's configured at runtime can be represented as a map from
+strings to some sort of a color value:
 
+#+begin_src haskell :exports code
+  newtype ThemeConfig = ThemeConfig
+    {getThemeConfig :: Map.Map String ColorValue}
+#+end_src
+
+But how do we represent the individual color values?
+
+** Creating A Runtime Color Value
+
+We have three different types of values we can use for an element in our theme:
+
+#+ATTR_BEAMER: :overlay <+->
+- RGB colors
+- Named X11 Colors
+- References to other colors
+
+#+beamer:\pause
+The first two cases are pretty easy to handle:
+#+beamer:\pause
+#+begin_src haskell :exports code
+  data ColorValue
+    = RGBValue RGB
+    | X11Value SomeColor
+#+end_src
+#+beamer:\pause
+What about references?
+
+** Reader References
+
+An idiomatic way to handle references to other part of our data
+structure would be to use a ~Reader~.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  newtype ColorReference r a =
+    ColorReference {unColorReference :: ExceptT String (Reader r) a}
+    deriving newtype (Functor, Applicative, Monad, MonadReader r, MonadError String)
+
+    data ColorValue
+      = RGBValue RGB
+      | X11Value SomeColor
+      | OtherColor (ColorReference ThemeConfig ColorValue)
+#+end_src
+
+** The Reader Problem
+
+But we have some problems here:
+
+#+ATTR_BEAMER: :overlay <+->
+- Every reader is a now a landmine that could fail when we read it
+- We won't even know right away if something has failed- only when
+  (if) we actually use that value
+- Every time we want to access a color element, we have to run the
+  reader, reducing ergonomics
+
+** Strictly Evaluating A Color Value
+
+One way we could handle some of the problems with our color value is
+to introduce a function that strictly evaluates a ~ColorValue~.
+
+We'll start by introducing another type:
+#+beamer:\pause
+#+begin_src haskell :exports code
+  data StrictColorValue
+    = StrictRGBValue RGB
+    | StrictX11Value SomeColor
+    | StrictOtherColor StrictColorValue
+#+end_src
+#+beamer:\pause
+Now we can write a function to handle the conversion strictly, ensuring that we catch any failures upfront:
+#+beamer:\pause
+
+#+begin_src haskell :exports code
+  strictlyEvaluateColorValue :: ColorValue -> Either String StrictColorValue
+#+end_src
+
+** Custom Reader References
+
+Strictly evaluating our reference solves both the problem of hidden
+errors and makes accessing colors more ergonomic, but now we've
+introduced a new problem: We have two copies of our data structure,
+and we have to maintain both of them.
+\vspace{5mm}
+#+beamer:\pause
+We can address this problem with a little help from type families and
+the /Higher-Kinded Data/ pattern.
+
+** The Higher-Kinded Data Pattern
+
+The higher-kinded data pattern lets us take a higher-kinded type and
+erase it if it's ~Identity~:
+
+#+begin_src haskell :exports code
+  type family HKD (wrapper :: Type -> Type) (value :: Type) :: Type where
+    HKD Identity value = value
+    HKD wrapper value = wrapper value
+#+end_src
+#+beamer:\pause
+We can see how this works in practice in GHCI:
+#+beamer:\pause
+#+begin_src haskell :exports code
+  > :kind! HKD (ColorReference RawThemeConfig) ColorValue
+  HKD (ColorReference RawThemeConfig) ColorValue :: *
+  = ColorReference RawThemeConfig ColorValue
+
+  > :kind! HKD Identity ColorValue
+  HKD Identity ColorValue :: *
+  = ColorValue
+#+end_src
+
+** Using Higher-Kinded Data Improve ~ColorValue~
+
+We can use higher-kinded data now to wrap our reference and have a
+single ~ColorValue~ type:
+#+beamer:\pause
+
+#+begin_src haskell :exports code
+  data ColorValue w
+    = RGBValue RGB
+    | X11Value SomeColor
+    | OtherColor (HKD w (ColorValue w))
+#+end_src
+
+** Updating ~ThemeConfig~
+
+The next step is we need to refactor ~ThemeConfig~ to pass the right
+type into ~ColorValue~. Let's make that a parameter to ~ThemeConfig~:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  newtype ThemeConfig w = ThemeConfig
+    {getThemeConfig :: Map.Map String (ColorValue w)}
+#+end_src
+
+#+beamer:\pause
+But what should ~w~ be?
+#+beamer:\pause
+
+We can't directly pass a ~ColoreReference~ that holds a ~ThemeConfig~
+because the type would be infinite:
+
+#+beamer:\pause
+#+begin_src haskell
+  ColorValue (ColoreReference (ThemeConfig (ColorReference (ThemeConfig ...
+#+end_src
+
+** Wrapping Up The Theme Config
+
+Thankfully we have an easy way out of this problem using a
+newtype. First, let's rename ~ThemeConfig~ and create a type alias for
+a resolved configuration:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+newtype ThemeConfig' w = ThemeConfig'
+  {getThemeConfig :: Map.Map String (ColorValue w)}
+
+type ThemeConfig = ThemeConfig' Identity
+#+end_src
+#+beamer:\pause
+
+Next, we'll add a /newtype wrapper/ that doesn't take a type
+parameter. This is what we'll reference:
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  newtype RawThemeConfig = RawThemeConfig
+    { getRawThemeConfig :: ThemeConfig' (ColorReference RawThemeConfig) }
+#+end_src
+
+** Evaluating The ~ThemeConfig~
+
+As a final step, we can implement our strict evaluation code and
+return a clean and valid theme configuration:
+
+#+begin_src haskell :exports code
+evalConfig :: RawThemeConfig -> Either String ThemeConfig
+#+end_src
+
+** ~ThemeConfig~ Demo
+
+#+begin_src haskell :exports code
+  > loadThemeConfig "../theme.json"
+  ThemeConfig'
+    {getThemeConfig = fromList
+      [ ("blue",X11Value RGB {rgbRed = 240, rgbGreen = 248, rgbBlue = 255})
+      , ("border",OtherColor (OtherColor (X11Value RGB {rgbRed = 240, rgbGreen = 248, rgbBlue = 255})))
+      , ("green",RGBValue (RGB {rgbRed = 0, rgbGreen = 255, rgbBlue = 0}))
+      , ("red",RGBValue (RGB {rgbRed = 255, rgbGreen = 0, rgbBlue = 0}))
+      , ("text",OtherColor (X11Value RGB {rgbRed = 240, rgbGreen = 248, rgbBlue = 255}))]}
+#+end_src
+
+* Integrating The Runtime and Type Level Theming Systems
+
+** Bringing It All Together
+
+Now we have a way to handle queries safely at the type level using a
+~ThemeInstance~ and we have a way to get a theme configuration at
+runtime with ~ThemeConfig~.
+\vspace{5mm}
+How can we bring these two together?
+
+** Theme Validation
+
+To validate that our runtime theme matches the type-level theme
+definition, we need to step through each element of our theme type and
+ensure that it exists in the configured theme. We'll start with a new
+typeclass:
+
+#+begin_src haskell :exports code
+  class ValidateThemeInstance (theme :: Theme) (a :: Theme -> Type) where
+    validateThemeInstance :: Map.Map String SomeColor -> Either String (a theme)
+#+end_src
+#+beamer:\pause
+And an instance for our base case, an empty theme
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance ValidateThemeInstance '[] ThemeInstance where
+    validateThemeInstance theme = Right (ThemeInstance theme)
+#+end_src
+
+** Stepping Through Theme Validation
+
+When we have a non-empty theme, our validation algorithm is fairly
+straightforward: Get the runtime representation of the element at the
+head of our theme list. If it's in the runtime map, add it to the
+theme instance and recurse. Otherwise fail.
+
+#+beamer:\pause
+#+begin_src haskell :exports code
+  instance ( KnownSymbol currentColor
+           , ValidateThemeInstance rest ThemeInstance
+           ) => ValidateThemeInstance (currentColor:rest) ThemeInstance where
+    validateThemeInstance theme =
+      let targetColor = symbolVal $ Proxy @currentColor
+      in case Map.lookup targetColor theme of
+        Nothing ->
+          let colorName = symbolVal $ Proxy @currentColor
+          in Left $ "missing color: " <> colorName
+        Just _ -> do
+          (ThemeInstance m) <- validateThemeInstance @rest theme
+          pure $ ThemeInstance m
+#+end_src
+
+** Runtime Theme Config Demo
+
+Let's look at how we can use this in a real program
+
+#+begin_src haskell :exports code
+  type RuntimeTheme = ["blue", "green", "red"]
+  validateThemeConfig
+    :: forall (theme :: Theme).
+       ValidateThemeInstance theme ThemeInstance
+    => ThemeConfig
+    -> Either String (ThemeInstance theme)
+  validateThemeConfig =
+    validateThemeInstance . Map.map SomeColor . getThemeConfig
+
+  testQuery :: FilePath -> IO ()
+  testQuery p = do
+    cfg <- loadThemeConfig p
+    let
+      sampleQuery t = (lookupColor @"red" t, lookupColor @"blue" t)
+      r = sampleQuery <$> validateThemeConfig @RuntimeTheme cfg
+    print r
+#+end_src
 
 * Questions
