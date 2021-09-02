@@ -109,6 +109,9 @@ instance IsColor RGB where
 
 data SomeColor = forall color. IsColor color => SomeColor color
 
+instance Show SomeColor where
+  show = show . toRGB
+
 someRGB :: Word8 -> Word8 -> Word8 -> SomeColor
 someRGB r g b = SomeColor $ RGB r g b
 
@@ -206,6 +209,3 @@ instance ( KnownSymbol currentColor
       Just _ -> do
         (ThemeInstance m) <- validateThemeInstance @rest theme
         pure $ ThemeInstance m
-
-themeInstance :: forall theme. ValidateThemeInstance theme ThemeInstance => Map.Map String SomeColor -> Either String (ThemeInstance theme)
-themeInstance = validateThemeInstance

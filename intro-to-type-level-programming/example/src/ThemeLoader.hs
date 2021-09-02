@@ -1,3 +1,4 @@
+{-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -35,6 +36,8 @@ data ColorValue w
   = RGBValue RGB
   | X11Value SomeColor
   | OtherColor (HKD w (ColorValue w))
+
+deriving instance Show (ColorValue Identity)
 
 instance IsColor (ColorValue Identity) where
   toRGB (RGBValue rgb) = rgb
@@ -89,6 +92,8 @@ instance FromJSON (ThemeConfig' (ColorReference RawThemeConfig)) where
   parseJSON = fmap ThemeConfig' . parseJSON
 
 type ThemeConfig = ThemeConfig' Identity
+
+deriving instance Show ThemeConfig
 
 evalConfig :: RawThemeConfig -> Either String ThemeConfig
 evalConfig rawConfig =
@@ -162,12 +167,22 @@ sampleQuery themeInstance =
     b = lookupColor @"blue" themeInstance
   in show (r,g,b)
 
+validateThemeConfig
+  :: forall (theme :: Theme).
+     ValidateThemeInstance theme ThemeInstance
+  => ThemeConfig
+  -> Either String (ThemeInstance theme)
+validateThemeConfig =
+  validateThemeInstance . Map.map SomeColor . getThemeConfig
+
+type RuntimeTheme = ["blue", "green", "red"]
+
 testQuery :: FilePath -> IO ()
 testQuery p = do
-  (ThemeConfig' c) <- loadThemeConfig p
+  cfg <- loadThemeConfig p
   let
-    c' = Map.map SomeColor c
-    r = sampleQuery <$> themeInstance @["blue", "green", "red", "hue", "saturation", "value"] c'
+    sampleQuery t = (lookupColor @"red" t, lookupColor @"blue" t)
+    r = sampleQuery <$> validateThemeConfig @RuntimeTheme cfg
   print r
 
 testMkTheme :: IO ()
