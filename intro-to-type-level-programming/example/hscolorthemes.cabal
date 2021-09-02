@@ -1,0 +1,40 @@
+cabal-version:      3.0
+name:               hscolorthemes
+version:            0.1.0.0
+synopsis:
+
+-- A longer description of the package.
+-- description:
+homepage:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             rebecca skinner
+maintainer:         rebecca@rebeccaskinner.net
+
+-- A copyright notice.
+-- copyright:
+-- category:
+extra-source-files: CHANGELOG.md
+
+library
+    exposed-modules:  ColorTheme
+                    , ColorX11
+                    , Color
+
+    -- Modules included in this library but not exported.
+    -- other-modules:
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:    base ^>=4.14.1.0
+                    , aeson
+                    , bytestring
+                    , containers
+                    , mtl
+                    , text
+                    , transformers
+    hs-source-dirs:   src
+    default-language: Haskell2010

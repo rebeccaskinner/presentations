@@ -1,0 +1,7 @@
+{
+    "red": {"rgb": "#ff0000"},
+    "green": {"rgb": "#00ff00"},
+    "blue": {"x11": "AliceBlue"},
+    "text": {"same-as": "blue"},
+    "border": {"same-as": "text"}
+}
