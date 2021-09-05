@@ -23,7 +23,7 @@
 - The Ideas and Contents of this Talk: My Own
 - Effective Haskell: My Book! (Est. late 2021 / early 2022)
 - [[https://twitter.com/cercerilla][@cercerilla: Twitter]]
-- [[https://posts/2021-08-25-introduction-to-type-level-programming.html][Slides and Code: https://rebeccaskinner.net]]
+- [[https://rebeccaskinner.net/posts/2021-08-25-introduction-to-type-level-programming.html][Slides and Code: https://rebeccaskinner.net]]
 
 #+ATTR_LATEX: :height 0.3\textheight
 [[file:img/url.png]]
@@ -60,21 +60,30 @@ But now a change to our theme means changing every individual element.
 One solution to allow us to uniformly change our color scheme would be to use a /color palette/.
 #+beamer: \pause
 #+begin_src haskell :exports code
+  data RGB = RGB
+    { rgbRed   :: Word8
+    , rgbGreen :: Word8
+    , rgbBlue  :: Word8
+    } deriving (Eq, Show)
+
   type ColorPalette = Map Text RGB
 
   defaultPalette = fromList $
-    [ ("text-foreground", "#3a2035")
-    , ("text-background", "#dda0dd") ]
+    [ ("foreground", RGB 0x3a 0x20 0x35)
+    , ("background", RGB 0xdd 0xa0 0xdd) ]
 #+end_src
-#+beamer: \pause
+
+** Theming With A Color Palette
+
 Now we can consistently reference colors by their name.
+
 #+begin_src haskell :exports code
   polybarColorScheme :: ColorPalette -> Maybe PolybarColorScheme
   polybarColorScheme theme = PolybarColorScheme
-    <$> theme !? "text-foreground"
-    <*> theme !? "text-background"
-    <*> theme !? "text-foreground"
-    <*> theme !? "text-background"
+    <$> theme !? "foreground"
+    <*> theme !? "background"
+    <*> theme !? "foreground"
+    <*> theme !? "background"
 #+end_src
 
 ** Missing Information
@@ -140,11 +149,10 @@ which colors must be available in our theme.
     in show (r,g,b)
 #+end_src
 
-** Themes and Theme Instances
+** Let's Make A Theme Instance
 
-We'll start making our demo a reality by creating a new
-~ThemeInstance~ type. The underlying type will be a map from strings
-to RGB values.
+Our demo referenced a ~ThemeInstance~ type that holds theme
+information, so let's make one.
 
 #+beamer:\pause
 #+begin_src haskell :exports code
@@ -153,13 +161,15 @@ to RGB values.
     deriving Show
 #+end_src
 
+** A Theme Instance With Phantom Types
 
-** Themes and Theme Instances
+We need to keep track of all of the theme elements that belond to the
+theme somehow.
 
-In order to track the type level information we need to make
-~colorDemo~ happy, we need to know the what theme the theme instance
-should represent. We can use a /phantom type/ to track the extra
-information.
+\vspace{5mm}
+#+beamer:\pause
+We can use a /phantom type/ to hold the list of colors in our theme.
+\vspace{5mm}
 
 #+beamer:\pause
 #+begin_src haskell :exports code
@@ -168,7 +178,8 @@ information.
     deriving Show
 #+end_src
 
-** Themes and Theme Instances
+
+** A Phantom Type With a Theme Kind
 
 The theme that we track with our ~ThemeInstance~ shouldn't be just
 /any/ type though. Most types wouldn't make sense as a theme. What
@@ -195,14 +206,22 @@ A *kind* is analogous to a type, but where the inhabitants of a type
 are values, the inhabitants of a kind are types. In other words,
 /kinds are the types of types/.
 
+* Defining A Theme At The Type Level
+
 ** What Is a Theme?
 
-How should we represent a ~Theme~ at the type level? Let's start with what we know:
+We said that ~ThemeInstance~ has a phantom type parameter with the
+*kind* ~Theme~, but what is a ~Theme~ anyway?
 
 #+ATTR_BEAMER: :overlay <+->
-- A ~Theme~ is a collection of colors
-- We'll know what colors belong to the theme at compile time, but not at /development time/
-- We can identify a theme by it's name, for example /"red"/ or /"green"/
+- A collection of colors
+- Known at compile time
+- Identifiable with a name like /"red"/ or /"foreground"/
+
+** Colors At The Type Level
+
+A ~Theme~ is a collection of type-level colors, so we need to define
+what a color looks like at the type level.
 
 ** Theme Elements By Name
 
@@ -340,11 +359,13 @@ of a theme instance:
     ,("blue", RGB 0x00 0x00 0xff)]
 #+end_src
 #+beamer:\pause
+If we look up a color that exists in the theme, we get back the right value.
 #+begin_src haskell :exports code
   > lookupColor @"red" demoThemeInstance
   RGB {rgbRed = 255, rgbGreen = 0, rgbBlue = 0}
 #+end_src
 #+beamer:\pause
+If we try to look up a color not in the theme, we get a compile-time error
 #+begin_src haskell :exports code
   > lookupColor @"yellow" demoThemeInstance
 
@@ -371,7 +392,6 @@ safe, but we have a runtime error lurking:
         libraries/containers/containers/src/Data/Map/Internal.hs:627:17
         in containers-0.6.2.1:Data.Map.Internal
 #+end_src
-#+beamer:\pause
 
 ** An Instance of Weakness
 
@@ -382,12 +402,22 @@ What happened?
   demoThemeInstance = ThemeInstance . Map.fromList $
     [("red", RGB 0xff 0x00 0x00)]
 #+end_src
-
-** Constructive Criticism
-
-Problem: The definition of a theme is decoupled from the value.
 #+beamer:\pause
-Solution: Bring the theme elements into the type level.
+There's nothing ensuring the contents of the map actually match the
+colors in the ~Theme~.
+
+** Fixing The Problem
+
+If we want to fix the problem, we need to bring more of the theming
+system into the type level. We'll start by defining colors at the type
+level (again).
+
+** Colors At The Type Level: Part 2
+
+Earlier we defined colors at the type level as ~Symbol~ types. Now
+let's try to capture more information about a color at the type level.
+\vspace{5mm}
+Our goal: Capture all of the relevant information about a color at compile time.
 
 ** X11 Colors At The Type Level
 
@@ -411,10 +441,12 @@ provide a way to work with arbitrary RGB colors:
   data RGBColor (r :: Nat) (g :: Nat) (b :: Nat) = RGBColor
 #+end_src
 
-** Type Level RGB Is A Color
+** Color Level At Runtime
 
-When we're working with type level colors, we still need to get a
-runtime representation of an RGB color so that we can style things.
+If we define color information at the type level, we need a way to get
+access to it at runtime.
+
+** Type Level RGB Is A Color
 
 An ~IsColor~ typeclass can help us identify things that have a runtime
 representation as an RGB color:
@@ -425,7 +457,7 @@ representation as an RGB color:
     toRGB :: a -> RGB
 #+end_src
 #+beamer:\pause
-Creating an instance for ~RGB~ is trivial
+Creating an instance for our runtime ~RGB~ records is trivial
 #+beamer:\pause
 #+begin_src haskell :exports code
   instance IsColor RGB where
@@ -468,13 +500,25 @@ can easily generate a runtime ~RGB~ value from one.
     toRGB _ = RGB (natWord8 @r) (natWord8 @g) (natWord8 @b)
 #+end_src
 
+** The ~RGBColor~ Problem
+
+Now we can create ~RGBColor~ types at compile time, but that brings
+back to mind an old problem:
+
+#+begin_src haskell :exports code
+  RGBColor @255 @0 @255
+#+end_src
+
+#+begin_src haskell :exports code
+  RGB 0xff 0x00 0xff
+#+end_src
+
+It looks like we're back to the problem of using raw RGB values everywhere.
+
 ** The Hardest Problem in Computer Science
 
-Although we can now create a type-level RGB value, the only way we
-have to refer to it is directly by it's value. This isn't any better
-than hard-coding the color values everywhere in the first place.
-
-Let's think about a way to provide names for our colors given that:
+Having the option of using a pallet of named colors showed some
+promise. How can we bring that to the type level?
 
 #+ATTR_BEAMER: :overlay <+->
 - Naming should be general. It should be able to support our
