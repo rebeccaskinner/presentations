@@ -15,13 +15,13 @@ module Theme where
 
 import Color
 import ColorX11
-import ThemeLoader
 import Data.Proxy
 
-type SampleTheme = '["red", "green", "blue", "text", "border"]
+-- type SampleTheme = '["red", "green", "blue", "text", "border"]
+
+sampleTheme = instantiateTheme $ sampleColorSet
 
 sampleColorSet =
-  instantiateTheme $
   AddColor (namedRGB @"red" @255 @0 @0) $
   AddColor (namedRGB @"green" @0 @255 @0) $
   AddColor RebeccaPurple $

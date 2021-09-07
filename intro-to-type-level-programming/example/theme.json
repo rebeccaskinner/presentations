@@ -3,5 +3,7 @@
     "green": {"rgb": "#00ff00"},
     "blue": {"x11": "AliceBlue"},
     "text": {"same-as": "blue"},
-    "border": {"same-as": "text"}
+    "border": {"same-as": "text"},
+    "inner-border": {"same-as": "border"},
+    "underline": {"same-as": "inner-border"}
 }

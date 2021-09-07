@@ -1307,6 +1307,38 @@ instance IsColor YellowGreen where
 instance NamedColor YellowGreen where
   type ColorName YellowGreen = "YellowGreen"
 
+x11Theme
+  :: ThemeInstance
+     '["AliceBlue", "AntiqueWhite", "Aqua", "Aquamarine", "Azure",
+        "Beige", "Bisque", "Black", "BlanchedAlmond", "Blue", "BlueViolet",
+        "Brown", "Burlywood", "CadetBlue", "Chartreuse", "Chocolate",
+        "Coral", "CornflowerBlue", "Cornsilk", "Crimson", "Cyan",
+        "DarkBlue", "DarkCyan", "DarkGoldenrod", "DarkGray", "DarkGreen",
+        "DarkKhaki", "DarkMagenta", "DarkOlive", "DarkOrange",
+        "DarkOrchid", "DarkRed", "DarkSalmon", "DarkSea", "DarkSlateBlue",
+        "DarkSlateGray", "DarkTurquoise", "DarkViolet", "DeepPink",
+        "DeepSkyBlue", "DimGray", "DodgerBlue", "Firebrick", "FloralWhite",
+        "ForestGreen", "Fuchsia", "Gainsboro", "GhostWhite", "Gold",
+        "Goldenrod", "Gray", "WebGray", "Green", "WebGreen", "GreenYellow",
+        "Honeydew", "HotPink", "Indian", "Indigo", "Ivory", "Khaki",
+        "Lavender", "LavenderBlush", "LawnGreen", "LemonChiffon",
+        "LightBlue", "LightCoral", "LightCyan", "LightGoldenrod",
+        "LightGray", "LightGreen", "LightPink", "LightSalmon", "LightSea",
+        "LightSky", "LightSlate", "LightSteel", "LightYellow", "Lime",
+        "LimeGreen", "Linen", "Magenta", "Maroon", "Web",
+        "MediumAquamarine", "MediumBlue", "MediumOrchid", "MediumPurple",
+        "MediumSeaGreen", "MediumSlateBlue", "MediumSpringGreen",
+        "MediumTurquoise", "MediumVioletRed", "MidnightBlue", "MintCream",
+        "MistyRose", "Moccasin", "NavajoWhite", "NavyBlue", "OldLace",
+        "Olive", "OliveDrab", "Orange", "OrangeRed", "Orchid",
+        "PaleGoldenrod", "PaleGreen", "PaleTurquoise", "PaleViolet",
+        "PapayaWhip", "PeachPuff", "Peru", "Pink", "Plum", "Powder",
+        "Purple", "WebPurple", "RebeccaPurple", "Red", "RosyBrown",
+        "RoyalBlue", "SaddleBrown", "Salmon", "SandyBrown", "SeaGreen",
+        "Seashell", "Sienna", "Silver", "SkyBlue", "SlateBlue",
+        "SlateGray", "Snow", "SpringGreen", "SteelBlue", "Tan", "Teal",
+        "Thistle", "Tomato", "Turquoise", "Violet", "Wheat", "White",
+        "WhiteSmoke", "Yellow", "YellowGreen"]
 x11Theme = instantiateTheme  $
   AddColor AliceBlue         $
   AddColor AntiqueWhite      $

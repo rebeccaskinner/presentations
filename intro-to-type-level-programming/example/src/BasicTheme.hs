@@ -17,7 +17,7 @@ type Theme = [Symbol]
 
 class HasColor (color :: Symbol) (container :: Theme)
 instance HasColor color (color ': colors)
-instance {-# overlappable #-} (HasColor color colors) => HasColor color (currentColor ': colors)
+instance {-# OVERLAPPABLE #-} (HasColor color colors) => HasColor color (currentColor ': colors)
 
 data RGB = RGB
   { rgbRed   :: Word8
