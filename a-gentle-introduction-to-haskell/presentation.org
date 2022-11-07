@@ -1,0 +1,89 @@
+#+title: Your First Haskell Terminal Application
+#+subtitle: A Gentle Project-Based Introduction to Haskell
+#+author: Rebecca Skinner
+#+institution: Mercury
+#+date: <2022-11-08 Tue>
+#+BEAMER_FRAME_LEVEL: 2
+#+options: toc:nil H:2 num:t
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [10pt, presentation, colorlinks]
+#+LaTeX_HEADER: \usecolortheme{magpie}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usemintedstyle{monokai}
+#+LaTeX_HEADER: \newminted{haskell}{}
+#+BEAMER_HEADER:\AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
+#+startup: beamer
+
+* Prelude
+
+** About Me
+
+** Effective Haskell
+
+** About This Talk
+
+* Build Your Tools!
+
+** Re-Inventing a Thousand Wheels
+
+** Choosing Haskell for Developer Tooling
+
+** HCat: A Haskell Pager
+
+* Setting Up Your Environment
+
+** Operating System
+
+** Installing Haskell
+
+** Configuring Your Editor
+
+** Linting
+
+** Pretty Printing
+
+** IDEs and Not-IDEs
+
+** Developing with Nix
+
+* Getting Help
+
+** Browse Documentation on Hackage
+
+** Search Libraries with Hoogle
+
+** Local Documentation
+
+** Getting Help From the Haskell Community
+
+* Starting a New Project
+
+** Haskell Packaging Overview
+
+** Cabal Projects
+
+** App, Src, and Test
+
+** Managing Dependencies
+
+* Putting the M in MVP
+
+** Read File, Write File
+
+** Zoom, Enhance, Refactor
+
+* That's No Moon: Working With IO
+
+** A Tale of Two Languages
+
+* Working With Text, and Other Hard Problems
+
+** A Tale of Three Text Types
+
+** String
+
+** ByteString
+
+** Text
+
+* Questions?
