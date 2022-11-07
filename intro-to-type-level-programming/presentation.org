@@ -178,7 +178,7 @@ information, so let's make one.
 
 ** A Theme Instance With Phantom Types
 
-We need to keep track of all of the theme elements that belond to the
+We need to keep track of all of the theme elements that belong to the
 theme somehow.
 
 \vspace{5mm}
