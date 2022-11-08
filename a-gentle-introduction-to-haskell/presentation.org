@@ -16,39 +16,217 @@
 
 * Prelude
 
-** About Me
+** Hello, World
+- About Me: Rebecca Skinner
+  - Lead Software Engineer at Mercury
+  - Author of Effective Haskell
+- @cercerilla on Twitter and Cohost
+- https://rebeccaskinner.net
+- https://github.com/rebeccaskinner/
 
-** Effective Haskell
+#+ATTR_LATEX: :height 0.3\textheight
+[[file:img/url.png]]
 
 ** About This Talk
 
+*** Col left                                                          :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+#+ATTR_LATEX: :height 0.5\textheight
+[[file:img/overview.png]]
+
+*** Col right                                                         :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+  - This talk is inspired by the first half of _Effective Haskell_.
+  - We'll focus on one happy path, there are tools and libraries that
+    are good but won't be covered.
+  - This talk will give you a "lay of the land" but we'll leave out
+    some details.
+
+** Effective Haskell
+
+*** Col left                                                          :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+#+ATTR_LATEX: :height 0.7\textheight
+[[file:img/rshaskell.jpg]]
+
+*** Col right                                                         :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+#+ATTR_LATEX: :height 0.3\textheight :caption {\tiny{https://tinyurl.com/2744kfu7\\ Now in Beta!}}
+[[file:img/effective-haskell-url.png]]
+
 * Build Your Tools!
 
-** Re-Inventing a Thousand Wheels
+** Build Your Tools!
 
-** Choosing Haskell for Developer Tooling
+#+ATTR_LATEX: :height 0.7\textheight
+[[file:img/build-your-own-tools.png]]
 
 ** HCat: A Haskell Pager
 
+A *pager* is a command line tool that lets you view long documents one
+page at a time. Some examples you might be familiar with incldue:
+
+#+beamer: \pause
+- less
+- more
+- bat
+#+beamer: \pause
+
+We're going to build our own pager in Haskell. I'm calling mine *hcat*.
+
+** HCat: A Screenshot
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[file:img/hcat-screen.png]]
+
+** Re-Inventing a Thousand Wheels
+
+Why write something boring like a pager?
+
+#+beamer: \pause
+- Teaches you how to do basic IO and work with the local system
+#+beamer: \pause
+- Implementing word wrap and pagination will help you think about problems in a functional way
+#+beamer: \pause
+- Building something similar to tools you use ever day will help you make good decisions, and give you something you can benefit from
+
+** Choosing Haskell for Developer Tooling
+
+Why choose *Haskell* to build your developer tooling?
+
+#+beamer: \pause
+- You want to learn Haskell, and building things for yourself is a good way to learn
+- Haskell is a compiled language, so you don't have to deal with the startup times of a JIT language like Java
+- Haskell is garbage collected (fewer memory errors)
+- Haskell is *statically typed* so you'll have fewer runtime errors
+- Haskell has good performance
+  - Frequently, but not always slower than C and C++ programs
+  - About as fast as Java programs while using a bit less memory, and having no JIT warmup cost
+  - Nearly always faster than Python programs
+
 * Setting Up Your Environment
+
+** Setting Up Your Environment
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[file:img/environment.png]]
 
 ** Operating System
 
+Haskell works on all of the major operating systems.
+
+- Linux
+  - x86 and arm. Best on x86
+- macOS
+  - Intel and Apple hardware are well supported
+- Windows
+  - x86. Native and WSL supported, but best with WSL.
+
+#+beamer: \pause
+I use NixOS. Haskell works great with NixOS, but it's a steep learning curve.
+
+** Operating System
+
+#+ATTR_LATEX: :height 0.5\textheight
+[[file:img/windows.png]]
+
 ** Installing Haskell
+
+The best way to install Haskell is with ghcup:
+
+https://www.haskell.org/ghcup/
+
+#+beamer: \pause
+
+- Managing Haskell with nixpkgs works well, but is a steep learning curve.
+- Avoid using linux distro packages, homebrew, etc.
+- Installing Haskell with Stack is no longer recommended, but you can install stack with ghcup if you like.
 
 ** Configuring Your Editor
 
+VSCode is the most popular editor for working with Haskell. It will
+help you set up additional tooling and offers the most IDE-like
+experience.
+
+Emacs and vim also have good Haskell support, and can be configured
+with more IDE like features if you want.
+
 ** Linting
+
+*hlint* is the most popular Haskell linter by far. You should try to use hlint when you are developing.
+
+- hlint will sometimes tell you things that you might not have learned yet, try not to worry about that too much.
+- hlint sometimes makes bad suggestions, but most of the time it's suggestions are good and will help you learn to write better Haskell programs.
+- hlint is very configurable, so you can tune it if there are things that you find annoying.
 
 ** Pretty Printing
 
+There are a lot of different pretty printers for Haskell. None of them
+do a perfect job, and they'll all make your code worse on occasion, so
+you should treat them as a tool to help you format your code, rather
+than something that should be enforced.
+
+#+beamer: \pause
+- Fourmolu is modestly configurable, and tends to work reliably. It's also fairly aggressive and is more likely to uglify your code.
+- Stylish Haskell tends to lag a bit in supporting newer GHC versions, and can be a little flaky, but is less intrusive and it's style is a bit more idiomatic to classic haskellers
+#+beamer: \pause
+
+There are a bunch of other options you can explore if you want
+
+** Too Much Text
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[file:img/tools.png]]
+
 ** IDEs and Not-IDEs
 
-** Developing with Nix
+The Haskell Language Server (HLS) provides the most IDE-like experience for working with Haskell. Other tools you might like are:
+
+- ghci :: The GHC REPL
+- ghcid :: The ghci repl as a deamon, with some extra features
+- halfsp :: A minimal Haskell language server with good performance
+- haskell-mode :: Emacs major mode with good REPL integration
+- hasktags :: ctags and etags support for navigating files
+
+** Picking a GHC Version
+
+- As a rule of thumb, staying one version behind the newest release is a
+safe strategy for getting new features in a timely manner while
+avoiding broken packages.
+
+- Tools tend to take longer to update than libraries, so if you are
+flexible about what tools you want you can typically upgrade sooner.
 
 * Getting Help
 
 ** Browse Documentation on Hackage
+
+https://hackage.haskell.org
+
+- Hot Tip :: When browsing documentaiton the *s* key to bring up a box
+  that will let you search for functions by name or type
+- Hot Tip :: The *source* links take you to a page where you can
+  browse the source of packages. The source is typically *hyperlinked*
+  to source in other packages, so you can follow definitions to other
+  code from your browser
+- Hot Tip :: In search engines like DuckDuckGo and Kagi you can use
+  *!hackage <package>* to search for a package.
 
 ** Search Libraries with Hoogle
 
