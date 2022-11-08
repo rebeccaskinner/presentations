@@ -1,4 +1,4 @@
-% Created 2022-11-08 Tue 00:49
+% Created 2022-11-08 Tue 01:27
 % Intended LaTeX compiler: pdflatex
 \documentclass[10pt, presentation, colorlinks]{beamer}
 \usepackage[utf8]{inputenc}
@@ -34,9 +34,9 @@
 \maketitle
 
 \section{Prelude}
-\label{sec:org4f139d7}
+\label{sec:org67c5b58}
 
-\begin{frame}[label={sec:org9b38032}]{Hello, World}
+\begin{frame}[label={sec:org128bab2}]{Hello, World}
 \begin{itemize}
 \item About Me: Rebecca Skinner
 \begin{itemize}
@@ -53,7 +53,7 @@
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org227a721}]{About This Talk}
+\begin{frame}[label={sec:orge9e9a24}]{About This Talk}
 \begin{columns}
 \begin{column}[t]{0.45\columnwidth}
 \begin{center}
@@ -73,7 +73,7 @@ some details.
 \end{columns}
 \end{frame}
 
-\begin{frame}[label={sec:org74d4a3f}]{Effective Haskell}
+\begin{frame}[label={sec:org93869df}]{Effective Haskell}
 \begin{columns}
 \begin{column}[t]{0.45\columnwidth}
 \begin{center}
@@ -92,18 +92,19 @@ some details.
 \end{frame}
 
 \section{Build Your Tools!}
-\label{sec:org41e8e2d}
+\label{sec:orge85bcd0}
 
-\begin{frame}[label={sec:org2b3a077}]{Build Your Tools!}
+\begin{frame}[label={sec:orgb12d12d}]{Build Your Tools!}
 \begin{center}
 \includegraphics[height=0.7\textheight]{img/build-your-own-tools.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org7d66774}]{HCat: A Haskell Pager}
+\begin{frame}[label={sec:orge1fe100}]{HCat: A Haskell Pager}
 A \alert{pager} is a command line tool that lets you view long documents one
 page at a time. Some examples you might be familiar with incldue:
 
+\bigskip
 \pause
 \begin{itemize}
 \item less
@@ -115,13 +116,13 @@ page at a time. Some examples you might be familiar with incldue:
 We're going to build our own pager in Haskell. I'm calling mine \alert{hcat}.
 \end{frame}
 
-\begin{frame}[label={sec:org3a195e2}]{HCat: A Screenshot}
+\begin{frame}[label={sec:orgb934aad}]{HCat: A Screenshot}
 \begin{center}
 \includegraphics[height=0.8\textheight]{img/hcat-screen.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org27d8f13}]{Re-Inventing a Thousand Wheels}
+\begin{frame}[label={sec:org6e107de}]{Re-Inventing a Thousand Wheels}
 Why write something boring like a pager?
 
 \pause
@@ -138,7 +139,7 @@ Why write something boring like a pager?
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orga65aba3}]{Choosing Haskell for Developer Tooling}
+\begin{frame}[label={sec:org1411c5c}]{Choosing Haskell for Developer Tooling}
 Why choose \alert{Haskell} to build your developer tooling?
 
 \pause
@@ -157,16 +158,18 @@ Why choose \alert{Haskell} to build your developer tooling?
 \end{frame}
 
 \section{Setting Up Your Environment}
-\label{sec:orga43ecd8}
+\label{sec:orgba53ea2}
 
-\begin{frame}[label={sec:org1e2ff38}]{Setting Up Your Environment}
+\begin{frame}[label={sec:org4b457c2}]{Setting Up Your Environment}
 \begin{center}
 \includegraphics[height=0.8\textheight]{img/environment.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org168b8eb}]{Operating System}
+\begin{frame}[label={sec:org61758fc}]{Operating System}
 Haskell works on all of the major operating systems.
+
+\bigskip
 
 \begin{itemize}
 \item Linux
@@ -183,21 +186,25 @@ Haskell works on all of the major operating systems.
 \end{itemize}
 \end{itemize}
 
+\bigskip
+
 \pause
 I use NixOS. Haskell works great with NixOS, but it's a steep learning curve.
 \end{frame}
 
-\begin{frame}[label={sec:orgb1989e1}]{Operating System}
+\begin{frame}[label={sec:org21c0dd9}]{Operating System}
 \begin{center}
 \includegraphics[height=0.5\textheight]{img/windows.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org191dc1e}]{Installing Haskell}
+\begin{frame}[label={sec:org67b3bd6}]{Installing Haskell}
 The best way to install Haskell is with ghcup:
+\bigskip
 
 \url{https://www.haskell.org/ghcup/}
 
+\bigskip
 \pause
 
 \begin{itemize}
@@ -207,17 +214,21 @@ The best way to install Haskell is with ghcup:
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orgc645316}]{Configuring Your Editor}
+\begin{frame}[label={sec:org775c3f9}]{Configuring Your Editor}
 VSCode is the most popular editor for working with Haskell. It will
 help you set up additional tooling and offers the most IDE-like
 experience.
+
+\bigskip
 
 Emacs and vim also have good Haskell support, and can be configured
 with more IDE like features if you want.
 \end{frame}
 
-\begin{frame}[label={sec:org07152c1}]{Linting}
+\begin{frame}[label={sec:orge23ff8e}]{Linting}
 \alert{hlint} is the most popular Haskell linter by far. You should try to use hlint when you are developing.
+
+\bigskip
 
 \begin{itemize}
 \item hlint will sometimes tell you things that you might not have learned yet, try not to worry about that too much.
@@ -226,30 +237,34 @@ with more IDE like features if you want.
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orge9a396e}]{Pretty Printing}
+\begin{frame}[label={sec:orgadd2e3d}]{Pretty Printing}
 There are a lot of different pretty printers for Haskell. None of them
 do a perfect job, and they'll all make your code worse on occasion, so
 you should treat them as a tool to help you format your code, rather
 than something that should be enforced.
 
+\bigskip
 \pause
 \begin{itemize}
 \item Fourmolu is modestly configurable, and tends to work reliably. It's also fairly aggressive and is more likely to uglify your code.
 \item Stylish Haskell tends to lag a bit in supporting newer GHC versions, and can be a little flaky, but is less intrusive and it's style is a bit more idiomatic to classic haskellers
 \end{itemize}
 \pause
+\bigskip
 
 There are a bunch of other options you can explore if you want
 \end{frame}
 
-\begin{frame}[label={sec:orgf26fc3a}]{Too Much Text}
+\begin{frame}[label={sec:org76b853b}]{Too Much Text}
 \begin{center}
 \includegraphics[height=0.8\textheight]{img/tools.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org5703c01}]{IDEs and Not-IDEs}
+\begin{frame}[label={sec:org158067e}]{IDEs and Not-IDEs}
 The Haskell Language Server (HLS) provides the most IDE-like experience for working with Haskell. Other tools you might like are:
+
+\bigskip
 
 \begin{description}
 \item[{ghci}] The GHC REPL
@@ -260,7 +275,7 @@ The Haskell Language Server (HLS) provides the most IDE-like experience for work
 \end{description}
 \end{frame}
 
-\begin{frame}[label={sec:orgb7f03ec}]{Picking a GHC Version}
+\begin{frame}[label={sec:orgae2399d}]{Picking a GHC Version}
 \begin{itemize}
 \item As a rule of thumb, staying one version behind the newest release is a
 \end{itemize}
@@ -274,9 +289,9 @@ flexible about what tools you want you can typically upgrade sooner.
 \end{frame}
 
 \section{Getting Help}
-\label{sec:org3353417}
+\label{sec:org2c878fc}
 
-\begin{frame}[label={sec:org8b43b33}]{Browse Documentation on Hackage}
+\begin{frame}[label={sec:orgf863fa4}]{Browse Documentation on Hackage}
 \url{https://hackage.haskell.org}
 
 \begin{description}
@@ -291,24 +306,24 @@ code from your browser
 \end{description}
 \end{frame}
 
-\begin{frame}[label={sec:org65fdc3c}]{Browse Documentation on Hackage}
+\begin{frame}[label={sec:orgea9048a}]{Browse Documentation on Hackage}
 \url{img/hackage-demo.webm}
 \end{frame}
 
-\begin{frame}[label={sec:org94af0ef}]{Search Libraries with Hoogle}
+\begin{frame}[label={sec:orgb739389}]{Search Libraries with Hoogle}
 \url{img/hoogle-demo.webm}
 \end{frame}
 
 \section{Starting a New Project}
-\label{sec:orgc75eae7}
+\label{sec:orgdd6bd5c}
 
-\begin{frame}[label={sec:org52fd736}]{Starting a New Project}
+\begin{frame}[label={sec:org6f9bff3}]{Starting a New Project}
 \begin{center}
 \includegraphics[height=0.8\textheight]{img/project.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org818179a},fragile]{Haskell Packaging Overview}
+\begin{frame}[label={sec:org2f8f6a3},fragile]{Haskell Packaging Overview}
  You can write, build, and run a Haskell program without any special build tools:
 
 \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{shell}
@@ -321,9 +336,10 @@ Usually you want to use a tool like \alert{cabal} to make it easier to
 manage dependencies, build your program, and run tests.
 \end{frame}
 
-\begin{frame}[label={sec:org3d8a217}]{Picking a Build Tool}
+\begin{frame}[label={sec:orgfaeea18}]{Picking a Build Tool}
 There are three popular ways to build Haskell programs:
 
+\bigskip
 \pause
 
 \begin{description}
@@ -333,11 +349,11 @@ There are three popular ways to build Haskell programs:
 \end{description}
 
 \pause
-
+\bigskip
 \alert{cabal} is a good default choice and we'll stick with it in this talk.
 \end{frame}
 
-\begin{frame}[label={sec:orgf67ba1d},fragile]{Cabal Basics}
+\begin{frame}[label={sec:orgb157299},fragile]{Cabal Basics}
  \begin{description}
 \item[{\texttt{cabal init}}] Start a new project
 \item[{\texttt{cabal build}}] Compiler your project
@@ -346,8 +362,8 @@ There are three popular ways to build Haskell programs:
 \end{description}
 \end{frame}
 
-\begin{frame}[label={sec:orgab51906},fragile]{The Cabal File}
- \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell-cabal}
+\begin{frame}[label={sec:orgc9f8405},fragile]{The Cabal File}
+ \begin{verbatim}
 cabal-version:       2.4
 name:                hcat
 version:             0.1.0.0
@@ -364,10 +380,10 @@ executable hcat
   main-is:             Main.hs
   build-depends:       base, hcat
   default-language:    Haskell2010
-\end{minted}
+\end{verbatim}
 \end{frame}
 
-\begin{frame}[label={sec:org741202e},fragile]{App, Src, and Test}
+\begin{frame}[label={sec:org44343cb},fragile]{App, Src, and Test}
  \begin{itemize}
 \item Most haskell applications have a very minimal application. Often, the executable is a single file named \texttt{Main.hs}
 \item The application logic is typically all in a library that lives in the same project along with the executable
@@ -375,7 +391,7 @@ executable hcat
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orge48dceb}]{Managing Dependencies}
+\begin{frame}[label={sec:org27c3a58}]{Managing Dependencies}
 Don't worry too much about things like version boundaries when you are
 just getting started. Focus on writing programs using only a few
 popular libraries, and stick with the defaults where you can. You'll
@@ -384,9 +400,9 @@ being concerned with.
 \end{frame}
 
 \section{Putting the M in MVP}
-\label{sec:orgee276a1}
+\label{sec:org82974cd}
 
-\begin{frame}[label={sec:orgd2acce2},fragile]{Read File, Write File}
+\begin{frame}[label={sec:org8cfe94e},fragile]{Read File, Write File}
  Haskell can look a lot like other languages you might have seen. Here's a working version of \alert{hcat}:
 
 \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
@@ -407,7 +423,7 @@ main = do {
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org4fe1cae},fragile]{Read File, Write File}
+\begin{frame}[label={sec:org2d10ac5},fragile]{Read File, Write File}
  But this is another working version:
 
 \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
@@ -419,7 +435,7 @@ main = getArgs >>= readFile . head >>= putStr
 Programs you read are more likely to look like this example than the previous one.
 \end{frame}
 
-\begin{frame}[label={sec:org486e1d3}]{Read File, Write File}
+\begin{frame}[label={sec:orgbfc48b6}]{Read File, Write File}
 The lesson:
 
 \pause
@@ -431,13 +447,13 @@ working even if they aren't the "right way". Refactor as you learn
 more.
 \end{frame}
 
-\begin{frame}[label={sec:orgea99345}]{Zoom, Enhance, Refactor}
+\begin{frame}[label={sec:org286a5ac}]{Zoom, Enhance, Refactor}
 \begin{center}
 \includegraphics[height=0.8\textheight]{img/refactoring.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org76c50f1},fragile]{Zoom, Enhance, Refactor}
+\begin{frame}[label={sec:org6aff8a4},fragile]{Zoom, Enhance, Refactor}
  Let's give this another shot. How might a reasonable version of our program look?
 
 \pause
@@ -465,15 +481,15 @@ hcat = do
 
 
 \section{That's No Moon: Working With IO}
-\label{sec:org9025e6b}
+\label{sec:org18ff1a9}
 
-\begin{frame}[label={sec:org873817e}]{A Tale of Two Languages}
+\begin{frame}[label={sec:orgc15ba5c}]{A Tale of Two Languages}
 At first glance, our first hcat implementation seems straightforward,
 but writing your first Haskell program that does substantial IO can be
 tricky.
 \end{frame}
 
-\begin{frame}[label={sec:orgb43ca3a},fragile]{A Tale of Two Languages}
+\begin{frame}[label={sec:orge3c6803},fragile]{A Tale of Two Languages}
  \begin{columns}
 \begin{column}[t]{0.45\columnwidth}
 \begin{block}{In this function we're only using \alert{let} and \alert{in}}
@@ -502,7 +518,7 @@ printSentenceBackwards = do
 \end{columns}
 \end{frame}
 
-\begin{frame}[label={sec:org67adecd},fragile]{A Tale of Two Languages}
+\begin{frame}[label={sec:orgab5cce2},fragile]{A Tale of Two Languages}
  \begin{columns}
 \begin{column}[t]{0.45\columnwidth}
 \begin{block}{This is a \alert{pure function}}
@@ -533,7 +549,7 @@ printSentenceBackwards = do
 \end{columns}
 \end{frame}
 
-\begin{frame}[label={sec:org343e624}]{We put code in your code}
+\begin{frame}[label={sec:orgd54a88d}]{We put code in your code}
 An \alert{IO Action} is a \uline{program} that will be executed by the Haskell
 runtime when a user launches the program. All executable Haskell
 programs ultimately work by running a single IO action named \alert{main}.
@@ -557,7 +573,7 @@ effectful programs in the \alert{IO Action} language:
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:org4297879}]{How \alert{do} you \alert{do} it?}
+\begin{frame}[label={sec:org9877880}]{How \alert{do} you \alert{do} it?}
 Haskell's \alert{do notation} gives us special syntax for working with
 things like IO actions. You can think of a \alert{do block} as special
 syntax to \uline{embed a program written in the IO Action language} directly
@@ -565,7 +581,7 @@ into your pure functional program. You can even \uline{interleave} pure
 functional Haskell code with code written in the IO Action language.
 \end{frame}
 
-\begin{frame}[label={sec:org91a3373},fragile]{How \alert{do} you \alert{do} it?}
+\begin{frame}[label={sec:org3ebbf00},fragile]{How \alert{do} you \alert{do} it?}
  Code inside of \alert{do} blocks can really look a lot like impure
 procedural programming languages. Let's look at an example from
 \uline{Effective Haskell}:
@@ -596,7 +612,7 @@ editDistance stringA stringB = runST $ do
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org7a4cbf1}]{Slings and Arrows}
+\begin{frame}[label={sec:org3e14907}]{Slings and Arrows}
 It's important to remember that things “inside” of an IO Action \uline{don't
 really exist yet} when you are writing pure functional code. They
 won't exist until the IO Action is run. When an IO Action program runs
@@ -613,7 +629,7 @@ IO Action programs are regular values, and you \uline{can} return them, and
 work with them like any other kind of value.
 \end{frame}
 
-\begin{frame}[label={sec:org9867486},fragile]{Slings and Arrows}
+\begin{frame}[label={sec:org1b48c37},fragile]{Slings and Arrows}
  \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
 aBunchOfPrintStatements :: Int -> [IO ()]
 aBunchOfPrintStatements count =
@@ -628,16 +644,19 @@ printTenTimes =
 \end{frame}
 
 \section{Putting It All Together}
-\label{sec:org5d5a147}
+\label{sec:org10155dc}
 
-\begin{frame}[label={sec:org9f9f494}]{Putting It All Together}
+\begin{frame}[label={sec:orgb4066dc}]{Putting It All Together}
 \begin{center}
 \includegraphics[height=0.5\textheight]{img/cat.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:orgcbcdd43},fragile]{Putting It All Together}
- \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+\begin{frame}[label={sec:orgbe1f0ef},fragile]{Putting It All Together}
+ At the top level of our program we have an IO action that runs several
+other IO actions.
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
 runHCat :: IO ()
 runHCat = do
   targetFilePath <- handleArgs
@@ -650,6 +669,107 @@ runHCat = do
 \end{minted}
 \end{frame}
 
+\begin{frame}[label={sec:org9235d82},fragile]{Putting It All Together}
+ Some IO Actions run other programs, like this one that calls the
+\alert{tput} command to get the dimensions of the terminal.
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+getTerminalSizeBind :: IO ScreenDimensions
+getTerminalSizeBind =
+  case System.Info.os of
+    "darwin" -> tputScreenDimensions
+    "linux" -> tputScreenDimensions
+    _other -> pure $ ScreenDimensions 25 80
+  where
+    tputScreenDimensions = do
+      lines <- Process.readProcess "tput" ["lines"] ""
+      cols <- Process.readProcess "tput" ["cols"] ""
+      let lines' = read $ init lines
+          cols'  = read $ init cols
+      pure $ ScreenDimensions lines' cols'
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:org15d0eed},fragile]{Putting It All Together}
+ IO Actions can also be run recursively. Here we run actions
+recursively to scroll through a list of pages:
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+getContinue :: IO ContinueCancel
+getContinue = do
+  hSetBuffering stdin NoBuffering
+  hSetEcho stdin False
+  keyInput <- getChar
+  case keyInput of
+    ' ' -> return Continue
+    'q' -> return Cancel
+    _   -> getContinue
+
+showPages :: [Text.Text] -> IO ()
+showPages [] = return ()
+showPages (page:pages) = do
+  clearScreen
+  TextIO.putStr page
+  shouldContinue <- getContinue
+  case shouldContinue of
+    Continue -> showPages pages
+    Cancel   -> return ()
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:org3961632},fragile]{There's Still Room For Pure Code}
+ Even though we're doing a lot of IO in our program, there's still
+plenty of room for pure functions, like this pagination function:
+
+\bigskip
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+paginate :: ScreenDimensions -> FileInfo -> Text.Text -> [Text.Text]
+paginate (ScreenDimensions rows cols) finfo text =
+  let
+    rows' = rows - 1
+    wrappedLines = concatMap (wordWrap cols) (Text.lines text)
+    pages = map (Text.unlines . padTo rows') $ groupsOf rows' wrappedLines
+    pageCount = length pages
+    statusLines = map (formatFileInfo finfo cols pageCount) [1..pageCount]
+  in zipWith (<>) pages statusLines
+  where
+    padTo :: Int -> [Text.Text] -> [Text.Text]
+    padTo lineCount rowsToPad =
+      take lineCount $ rowsToPad <> repeat ""
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:orga8f99e2}]{Finding The Patterns}
+\begin{center}
+\includegraphics[height=0.3\textheight]{img/together.png}
+\end{center}
+\end{frame}
+
+\begin{frame}[label={sec:org76dbcbf}]{Finding The Patterns}
+In these examples, notice that the IO actions tended to run a lot of
+other IO actions. They included a little bit of pure code, but not
+very much. That's an intentional pattern in many Haskell programs:
+
+\bigskip
+
+\begin{itemize}
+\item Write small IO actions that do a particular thing
+\item Keep the bulk of your logic in pure functions
+\item Have IO actions gather all of their inputs, then pass them to pure functions.
+\item Avoid mostly pure functions "that can have a little IO, as a treat"
+\end{itemize}
+\end{frame}
+
+\section{What's Next?}
+\label{sec:org10a436d}
+
+\begin{frame}[label={sec:org9f050e4}]{Build Your Own!}
+We've only looked at a few small parts of \alert{hcat} but you can try to
+build your own! If you want more guidance, check out Chapter 8 of
+\uline{Effective Haskell}.
+\end{frame}
+
 \section{Questions?}
-\label{sec:orgd923891}
+\label{sec:org84b90a0}
 \end{document}

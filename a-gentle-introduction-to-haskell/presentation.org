@@ -82,6 +82,7 @@
 A *pager* is a command line tool that lets you view long documents one
 page at a time. Some examples you might be familiar with incldue:
 
+\bigskip
 #+beamer: \pause
 - less
 - more
@@ -131,12 +132,16 @@ Why choose *Haskell* to build your developer tooling?
 
 Haskell works on all of the major operating systems.
 
+\bigskip
+
 - Linux
   - x86 and arm. Best on x86
 - macOS
   - Intel and Apple hardware are well supported
 - Windows
   - x86. Native and WSL supported, but best with WSL.
+
+\bigskip
 
 #+beamer: \pause
 I use NixOS. Haskell works great with NixOS, but it's a steep learning curve.
@@ -149,9 +154,11 @@ I use NixOS. Haskell works great with NixOS, but it's a steep learning curve.
 ** Installing Haskell
 
 The best way to install Haskell is with ghcup:
+\bigskip
 
 https://www.haskell.org/ghcup/
 
+\bigskip
 #+beamer: \pause
 
 - Managing Haskell with nixpkgs works well, but is a steep learning curve.
@@ -164,12 +171,16 @@ VSCode is the most popular editor for working with Haskell. It will
 help you set up additional tooling and offers the most IDE-like
 experience.
 
+\bigskip
+
 Emacs and vim also have good Haskell support, and can be configured
 with more IDE like features if you want.
 
 ** Linting
 
 *hlint* is the most popular Haskell linter by far. You should try to use hlint when you are developing.
+
+\bigskip
 
 - hlint will sometimes tell you things that you might not have learned yet, try not to worry about that too much.
 - hlint sometimes makes bad suggestions, but most of the time it's suggestions are good and will help you learn to write better Haskell programs.
@@ -182,10 +193,12 @@ do a perfect job, and they'll all make your code worse on occasion, so
 you should treat them as a tool to help you format your code, rather
 than something that should be enforced.
 
+\bigskip
 #+beamer: \pause
 - Fourmolu is modestly configurable, and tends to work reliably. It's also fairly aggressive and is more likely to uglify your code.
 - Stylish Haskell tends to lag a bit in supporting newer GHC versions, and can be a little flaky, but is less intrusive and it's style is a bit more idiomatic to classic haskellers
 #+beamer: \pause
+\bigskip
 
 There are a bunch of other options you can explore if you want
 
@@ -197,6 +210,8 @@ There are a bunch of other options you can explore if you want
 ** IDEs and Not-IDEs
 
 The Haskell Language Server (HLS) provides the most IDE-like experience for working with Haskell. Other tools you might like are:
+
+\bigskip
 
 - ghci :: The GHC REPL
 - ghcid :: The ghci repl as a deamon, with some extra features
@@ -260,6 +275,7 @@ manage dependencies, build your program, and run tests.
 
 There are three popular ways to build Haskell programs:
 
+\bigskip
 #+beamer: \pause
 
 - cabal :: The default tool for building packages with GHC.
@@ -267,7 +283,7 @@ There are three popular ways to build Haskell programs:
 - nix :: Uses cabal under the hood. Provides reproducibility.
 
 #+beamer: \pause
-
+\bigskip
 *cabal* is a good default choice and we'll stick with it in this talk.
 
 ** Cabal Basics
@@ -279,7 +295,7 @@ There are three popular ways to build Haskell programs:
 
 ** The Cabal File
 
-#+begin_src haskell-cabal :exports code
+#+begin_example
   cabal-version:       2.4
   name:                hcat
   version:             0.1.0.0
@@ -296,7 +312,7 @@ There are three popular ways to build Haskell programs:
     main-is:             Main.hs
     build-depends:       base, hcat
     default-language:    Haskell2010
-#+end_src
+#+end_example
 
 ** App, Src, and Test
 
@@ -572,6 +588,9 @@ printTenTimes =
 
 ** Putting It All Together
 
+At the top level of our program we have an IO action that runs several
+other IO actions.
+
 #+begin_src haskell :exports code
 runHCat :: IO ()
 runHCat = do
@@ -583,5 +602,102 @@ runHCat = do
   let pages = paginate termSize finfo contents
   showPages pages
 #+end_src
+
+** Putting It All Together
+
+Some IO Actions run other programs, like this one that calls the
+*tput* command to get the dimensions of the terminal.
+
+#+begin_src haskell :exports code
+  getTerminalSizeBind :: IO ScreenDimensions
+  getTerminalSizeBind =
+    case System.Info.os of
+      "darwin" -> tputScreenDimensions
+      "linux" -> tputScreenDimensions
+      _other -> pure $ ScreenDimensions 25 80
+    where
+      tputScreenDimensions = do
+        lines <- Process.readProcess "tput" ["lines"] ""
+        cols <- Process.readProcess "tput" ["cols"] ""
+        let lines' = read $ init lines
+            cols'  = read $ init cols
+        pure $ ScreenDimensions lines' cols'
+#+end_src
+
+** Putting It All Together
+
+IO Actions can also be run recursively. Here we run actions
+recursively to scroll through a list of pages:
+
+#+begin_src haskell :exports code
+  getContinue :: IO ContinueCancel
+  getContinue = do
+    hSetBuffering stdin NoBuffering
+    hSetEcho stdin False
+    keyInput <- getChar
+    case keyInput of
+      ' ' -> return Continue
+      'q' -> return Cancel
+      _   -> getContinue
+
+  showPages :: [Text.Text] -> IO ()
+  showPages [] = return ()
+  showPages (page:pages) = do
+    clearScreen
+    TextIO.putStr page
+    shouldContinue <- getContinue
+    case shouldContinue of
+      Continue -> showPages pages
+      Cancel   -> return ()
+#+end_src
+
+** There's Still Room For Pure Code
+
+Even though we're doing a lot of IO in our program, there's still
+plenty of room for pure functions, like this pagination function:
+
+\bigskip
+
+#+begin_src haskell :exports code
+  paginate :: ScreenDimensions -> FileInfo -> Text.Text -> [Text.Text]
+  paginate (ScreenDimensions rows cols) finfo text =
+    let
+      rows' = rows - 1
+      wrappedLines = concatMap (wordWrap cols) (Text.lines text)
+      pages = map (Text.unlines . padTo rows') $ groupsOf rows' wrappedLines
+      pageCount = length pages
+      statusLines = map (formatFileInfo finfo cols pageCount) [1..pageCount]
+    in zipWith (<>) pages statusLines
+    where
+      padTo :: Int -> [Text.Text] -> [Text.Text]
+      padTo lineCount rowsToPad =
+        take lineCount $ rowsToPad <> repeat ""
+#+end_src
+
+** Finding The Patterns
+
+#+ATTR_LATEX: :height 0.3\textheight
+[[file:img/together.png]]
+
+** Finding The Patterns
+
+In these examples, notice that the IO actions tended to run a lot of
+other IO actions. They included a little bit of pure code, but not
+very much. That's an intentional pattern in many Haskell programs:
+
+\bigskip
+
+- Write small IO actions that do a particular thing
+- Keep the bulk of your logic in pure functions
+- Have IO actions gather all of their inputs, then pass them to pure functions.
+- Avoid mostly pure functions "that can have a little IO, as a treat"
+
+* What's Next?
+
+** Build Your Own!
+
+We've only looked at a few small parts of *hcat* but you can try to
+build your own! If you want more guidance, check out Chapter 8 of
+_Effective Haskell_.
 
 * Questions?

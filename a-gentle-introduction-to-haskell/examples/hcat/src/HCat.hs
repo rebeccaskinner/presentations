@@ -110,7 +110,6 @@ runHCat = do
   let pages = paginate termSize finfo contents
   showPages pages
 
-
 groupsOf :: Int -> [a] -> [[a]]
 groupsOf n [] = []
 groupsOf n elems =
@@ -166,30 +165,13 @@ getContinue =
 
 showPages :: [Text.Text] -> IO ()
 showPages [] = return ()
-showPages (page:pages) =
+showPages (page:pages) = do
   clearScreen
-  >> TextIO.putStr page
-  >> getContinue
-  >>= \case
-       Continue -> showPages pages
-       Cancel   -> return ()
-
-getTerminalSizeBind :: IO ScreenDimensions
-getTerminalSizeBind =
-  case System.Info.os of
-    "darwin" -> tputScreenDimensions
-    "linux" -> tputScreenDimensions
-    _other -> pure $ ScreenDimensions 25 80
-  where
-    tputScreenDimensions :: IO ScreenDimensions
-    tputScreenDimensions =
-      Process.readProcess "tput" ["lines"] ""
-      >>= \lines ->
-        Process.readProcess "tput" ["cols"] ""
-        >>= \cols ->
-              let lines' = read $ init lines
-                  cols'  = read $ init cols
-              in return $ ScreenDimensions lines' cols'
+  TextIO.putStr page
+  shouldContinue <- getContinue
+  case shouldContinue of
+    Continue -> showPages pages
+    Cancel   -> return ()
 
 getTerminalSize :: IO ScreenDimensions
 getTerminalSize =
@@ -208,24 +190,3 @@ getTerminalSize =
           { screenRows = read . init $ lines
           , screenColumns = read . init $ cols
           }
-
-createOutputString :: [FilePath] -> String
-createOutputString [] = "you didn't provide any filenames"
-createOutputString names = Printf.printf "The filename is: \"%s\"" (head names)
-
-runWithConfig :: HCatSettings -> IO ()
-runWithConfig cfg = print cfg >> clearScreen
-
-helpText :: String
-helpText =
-  "hcat: show files with status information\n\
-  \usage: hcat [options] file1 [file2...]\n\
-  \Print one or more files to the screen, showing at\n\
-  \most --lines lines of text at a time.\n\n\
-  \Options:\n\
-  \  --help        Show this help text and exit\n\
-  \  --lines=<int> Sets the number of line to show\n\
-  \                if this isn't set, try to read\n\
-  \                HCAT_LINES from the environment.\n\
-  \                If neither --lines or HCAT_LINES\n\
-  \                is set, then default to 20 lines\n"
