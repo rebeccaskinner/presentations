@@ -228,40 +228,360 @@ https://hackage.haskell.org
 - Hot Tip :: In search engines like DuckDuckGo and Kagi you can use
   *!hackage <package>* to search for a package.
 
+** Browse Documentation on Hackage
+
+file:img/hackage-demo.webm
+
 ** Search Libraries with Hoogle
 
-** Local Documentation
-
-** Getting Help From the Haskell Community
+file:img/hoogle-demo.webm
 
 * Starting a New Project
 
+** Starting a New Project
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[file:img/project.png]]
+
 ** Haskell Packaging Overview
 
-** Cabal Projects
+You can write, build, and run a Haskell program without any special build tools:
+
+#+begin_src shell :exports code
+  ghc Hello.hs && ./Hello
+#+end_src
+
+#+beamer: \pause
+
+Usually you want to use a tool like *cabal* to make it easier to
+manage dependencies, build your program, and run tests.
+
+** Picking a Build Tool
+
+There are three popular ways to build Haskell programs:
+
+#+beamer: \pause
+
+- cabal :: The default tool for building packages with GHC.
+- stack :: Another popular tool. It aims to make dependency management easier.
+- nix :: Uses cabal under the hood. Provides reproducibility.
+
+#+beamer: \pause
+
+*cabal* is a good default choice and we'll stick with it in this talk.
+
+** Cabal Basics
+
+- ~cabal init~ :: Start a new project
+- ~cabal build~ :: Compiler your project
+- ~cabal exec~ :: Run your project
+- ~cabal repl~ :: Load your code into an interactive environment
+
+** The Cabal File
+
+#+begin_src haskell-cabal :exports code
+  cabal-version:       2.4
+  name:                hcat
+  version:             0.1.0.0
+
+  library
+    hs-source-dirs:      src
+    exposed-modules:     HCat
+    build-depends:       base, bytestring, text
+                       , process, directory, time
+    default-language:    Haskell2010
+
+  executable hcat
+    hs-source-dirs:      app
+    main-is:             Main.hs
+    build-depends:       base, hcat
+    default-language:    Haskell2010
+#+end_src
 
 ** App, Src, and Test
 
+- Most haskell applications have a very minimal application. Often, the executable is a single file named ~Main.hs~
+- The application logic is typically all in a library that lives in the same project along with the executable
+- Unit tests are in a ~test~ directory and cover the library code
+
 ** Managing Dependencies
+
+Don't worry too much about things like version boundaries when you are
+just getting started. Focus on writing programs using only a few
+popular libraries, and stick with the defaults where you can. You'll
+need to be more careful in the future, but for now it's not worth
+being concerned with.
 
 * Putting the M in MVP
 
 ** Read File, Write File
 
+Haskell can look a lot like other languages you might have seen. Here's a working version of *hcat*:
+
+#+begin_src haskell :exports code
+  getFileNameFrom arguments = do {
+    when (length arguments <= 0) do {
+      fail "empty args";
+    };
+    return (head arguments);
+  }
+
+  main = do {
+    arguments <- getArgs;
+    fileName <- getFileNameFrom arguments;
+    fileContents <- readFile fileName;
+    putStr fileContents;
+    return ();
+  }
+#+end_src
+
+** Read File, Write File
+
+But this is another working version:
+
+#+begin_src haskell :exports code
+  main = getArgs >>= readFile . head >>= putStr
+#+end_src
+
+#+beamer: \pause
+
+Programs you read are more likely to look like this example than the previous one.
+
+** Read File, Write File
+
+The lesson:
+
+#+beamer: \pause
+
+When you are first getting started, don't worry too much about
+idiomatic code. Haskell has a lot of ways to do things, and the
+learning curve is a little steep at first. Focus on getting things
+working even if they aren't the "right way". Refactor as you learn
+more.
+
 ** Zoom, Enhance, Refactor
+
+#+ATTR_LATEX: :height 0.8\textheight
+[[file:img/refactoring.png]]
+
+** Zoom, Enhance, Refactor
+
+Let's give this another shot. How might a reasonable version of our program look?
+
+#+beamer: \pause
+
+#+begin_src haskell
+  module HCat where
+  import System.Environment (getArgs)
+
+  filenameArgument :: IO FilePath
+  filenameArgument = do
+    allArguments <- getArgs
+    case allArguments of
+      [fileName] ->
+        pure fileName
+      _otherwise ->
+        fail "Please provide one file name"
+
+  hcat :: IO ()
+  hcat = do
+    fileName <- filenameArgument
+    fileContents <- readFile fileName
+    putStr fileContents
+#+end_src
+
 
 * That's No Moon: Working With IO
 
 ** A Tale of Two Languages
 
-* Working With Text, and Other Hard Problems
+At first glance, our first hcat implementation seems straightforward,
+but writing your first Haskell program that does substantial IO can be
+tricky.
 
-** A Tale of Three Text Types
+** A Tale of Two Languages
 
-** String
+*** Col left                                                          :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
 
-** ByteString
+**** In this function we're only using *let* and *in*
 
-** Text
+#+begin_src haskell :exports code
+  reverseSentence sentence =
+    let
+      wordsInReverse =
+        reverse (words sentence)
+    in unwords wordsInReverse
+#+end_src
+
+*** Col right                                                         :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+**** But in this function, we're also using *do* and *<-*
+
+#+begin_src haskell :exports code
+  printSentenceBackwards = do
+    sentence <- getLine
+    let
+      reversed =
+        reverseSentence sentence
+    putStrLn reversed
+#+end_src
+
+** A Tale of Two Languages
+
+*** Col left                                                          :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+**** This is a *pure function*
+
+#+begin_src haskell :exports code
+  reverseSentence :: String -> String
+  reverseSentence sentence =
+    let
+      wordsInReverse =
+        reverse (words sentence)
+    in unwords wordsInReverse
+#+end_src
+
+*** Col right                                                         :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+**** This is an *IO Action*
+
+#+begin_src haskell :exports code
+  printSentenceBackwards :: IO ()
+  printSentenceBackwards = do
+    sentence <- getLine
+    let
+      reversed =
+        reverseSentence sentence
+    putStrLn reversed
+#+end_src
+
+** We put code in your code
+
+An *IO Action* is a _program_ that will be executed by the Haskell
+runtime when a user launches the program. All executable Haskell
+programs ultimately work by running a single IO action named *main*.
+
+#+beamer: \pause
+
+\bigskip
+
+Haskell is a pure functional language that we can use to write impure
+effectful programs in the *IO Action* language:
+
+#+beamer: \pause
+
+\bigskip
+
+- Writing IO programs that run pure functional code
+- Creating new IO programs by running one right after another
+- Runing one IO program and passing it's output in as the input to another IO program
+- Writing an IO program that executes many other IO programs as it runs
+
+** How *do* you *do* it?
+
+Haskell's *do notation* gives us special syntax for working with
+things like IO actions. You can think of a *do block* as special
+syntax to _embed a program written in the IO Action language_ directly
+into your pure functional program. You can even _interleave_ pure
+functional Haskell code with code written in the IO Action language.
+
+** How *do* you *do* it?
+
+Code inside of *do* blocks can really look a lot like impure
+procedural programming languages. Let's look at an example from
+_Effective Haskell_:
+
+\bigskip
+
+#+begin_src haskell :exports code
+  editDistance :: Text -> Text -> Int
+  editDistance stringA stringB = runST $ do
+    let
+      aLen = T.length stringA
+      bLen = T.length stringB
+      as = zip [1..] (T.unpack stringA)
+      bs = zip [1..] (T.unpack stringB)
+      lookupIndex x y = (y * (aLen + 1)) + x
+    cache <- MVec.new $ (aLen + 1) * (bLen + 1)
+    for_ [0..aLen] $ \idx -> MVec.write cache (lookupIndex idx 0) idx
+    for_ [0..bLen] $ \idx -> MVec.write cache (lookupIndex 0 idx) idx
+    for_ as $ \(idxA, charA) -> do
+      for_ bs $ \(idxB, charB) -> do
+        let
+          editCost = if charA == charB then 0 else 1
+        insertCost <- (1 +) <$> MVec.read cache (lookupIndex (idxA - 1) idxB)
+        deleteCost <- (1 +) <$> MVec.read cache (lookupIndex idxA (idxB - 1))
+        swapCost   <- (editCost +) <$> MVec.read cache (lookupIndex (idxA - 1) (idxB - 1))
+        MVec.write cache (lookupIndex idxA idxB) $ min swapCost (min insertCost deleteCost)
+    MVec.read cache $ lookupIndex aLen bLen
+#+end_src
+
+** Slings and Arrows
+
+It's important to remember that things “inside” of an IO Action _don't
+really exist yet_ when you are writing pure functional code. They
+won't exist until the IO Action is run. When an IO Action program runs
+and returns a value, you can't use that value in your pure code
+because it hasn't been computed yet.
+
+#+beamer: \pause
+\bigskip
+But.....
+#+beamer: \pause
+\bigskip
+
+IO Action programs are regular values, and you _can_ return them, and
+work with them like any other kind of value.
+
+** Slings and Arrows
+
+#+begin_src haskell :exports code
+aBunchOfPrintStatements :: Int -> [IO ()]
+aBunchOfPrintStatements count =
+  [print x | x <- [0..count]]
+
+printTenTimes :: IO ()
+printTenTimes =
+  for_ (aBunchOfPrintStatements 10) $ \statement -> do
+    putStrLn "running a statement..."
+    statement
+#+end_src
+
+* Putting It All Together
+
+** Putting It All Together
+
+#+ATTR_LATEX: :height 0.5\textheight
+[[file:img/cat.png]]
+
+** Putting It All Together
+
+#+begin_src haskell :exports code
+runHCat :: IO ()
+runHCat = do
+  targetFilePath <- handleArgs
+  contents <- TextIO.readFile targetFilePath
+  termSize <- getTerminalSize
+  hSetBuffering stdout NoBuffering
+  finfo <- fileInfo targetFilePath
+  let pages = paginate termSize finfo contents
+  showPages pages
+#+end_src
 
 * Questions?
