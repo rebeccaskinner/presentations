@@ -10,3 +10,5 @@ TAGS
 *.aux
 *.log
 *.out
+*.pygtex
+.direnv/*
