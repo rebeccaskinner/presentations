@@ -1,0 +1,621 @@
+#+title: Building a Console Application in Haskell
+#+author: Rebecca Skinner
+#+institution: Mercury
+#+date: <2022-12-08 Tue>
+#+BEAMER_FRAME_LEVEL: 2
+#+options: toc:nil H:2 num:t
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [10pt, presentation, colorlinks]
+#+LaTeX_HEADER: \usecolortheme{magpie}
+#+LaTeX_HEADER: \usepackage{minted}
+#+LaTeX_HEADER: \usemintedstyle{monokai}
+#+LaTeX_HEADER: \newminted{haskell}{}
+#+BEAMER_HEADER:\AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
+#+startup: beamer
+
+* Prelude
+
+** Hello, World
+- About Me: Rebecca Skinner
+  - Lead Software Engineer at Mercury
+  - Author of Effective Haskell
+- @cercerilla on Twitter and Cohost
+- https://rebeccaskinner.net
+- https://github.com/rebeccaskinner/
+
+#+ATTR_LATEX: :height 0.3\textheight
+[[file:img/url.png]]
+
+** Effective Haskell
+*** Col left                                                          :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+#+ATTR_LATEX: :height 0.7\textheight
+[[file:img/rshaskell.jpg]]
+
+*** Col right                                                         :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+#+ATTR_LATEX: :height 0.3\textheight :caption {\tiny{https://tinyurl.com/2744kfu7\\ Now in Beta!}}
+[[file:img/effective-haskell-url.png]]
+
+** About This Talk
+
+During this talk we're going to _discover_ how to build basic command
+line tool in Haskell. As we go, you'll:
+
+\bigskip
+
+- Learn how Haskell programs use IO actions to deal with the real world
+- Find out how to do simple terminal and file IO
+- See examples of how to mix IO and pure functional code effectively
+- Follow along with implementing pure functional code to work with text
+
+\bigskip
+
+*Most importantly*: You'll get an intuition for how to think about
+building Haskell programs that can serve as a basis for future
+learning.
+
+** HCat
+
+#+ATTR_LATEX: :height 0.7\textheight
+[[./img/hcat-screen.png]]
+
+* Understanding IO
+
+** A True Color Photo of Side Effects
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/io.jpg]]
+\center{A side effect in its natural environment.}
+
+** The Trouble with IO
+
+Haskell is a *pure functional* language, but most of the things we want our programs to do revolve around *side effects*!
+
+\bigskip
+
+#+beamer: \pause
+- Reading and writing files
+#+beamer: \pause
+- Printing text to the screen
+#+beamer: \pause
+- Handling user input
+
+** Can We Have a Little Bit of IO?
+
+What if we cheat just a little?
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  writeReadFile =
+    let
+      _ = writeFile "example.txt" "Hello, Haskell"
+      fileContents = readFile "example.txt"
+    in print fileContents
+#+end_src
+
+\bigskip
+
+#+beamer: \pause
+- Nothing will hapen until we evaluate ~writeReadFile~
+#+beamer: \pause
+- When we evaluate ~writeReadFile~ we'll get whatever random contents were in ~example.txt~
+#+beamer: \pause
+- We won't ever write *"Hello, Haskell"* to the file, because we're not using result of ~writeFile~!
+
+** Let's Dream of a Better Way
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/dreaming.png]]
+\center{Let's dream up a better way}
+
+** IO, the Lazy Way
+
+If we want to be lazy, we need to work for it by making sure every new
+side effect *must depend on* the previous one.
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/dominos.png]]
+
+** Sometimes Things Are Easy
+
+In some cases, there is a natural dependency between side effects.
+
+#+beamer: \pause
+- Reading a file, then printing the contents
+
+#+beamer: \pause
+More often, there isn't an obvious dependency
+
+#+beamer: \pause
+- Writing a log message before opening a file
+- Writing data to a file, then reading the contents
+- Printing a message to the screen then waiting on user input
+
+** A Pointer To The Real World
+
+We needed to *sequence* our side effects correctly because there's an implicit data dependency we haven't considered: *the state of the real world*.
+
+\bigskip
+#+beamer: \pause
+#+ATTR_LATEX: :height 0.4\textheight
+[[./img/pointing-to-the-real-world.png]]
+\center{\verb|data RealWorld}
+
+** Welcome to the Real World
+
+We can use a reference to the ~RealWorld~ to add a dependency between all of our calls:
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  writeReadFile world0 =
+    let
+      (world1, _) = writeFile world0 "example.txt" "Hello, Haskell"
+      (world2, fileContents) = readFile world1 "example.txt"
+    in print world2 fileContents
+#+end_src
+
+\bigskip
+#+beamer: \pause
+
+But it sucks.
+
+** Typing IO Operations
+
+#+ATTR_LATEX: :height 0.4\textheight
+[[./img/typewriter.JPG]]
+\center{Let's make a type!}
+
+\bigskip
+
+#+begin_src haskell :exports code
+  data SideEffect a =
+    SideEffect { runSideEffects :: RealWorld -> (RealWorld, a) }
+#+end_src
+
+** Side Effects Are Programs
+
+Think of ~SideEffect a~ as a *program* that returns a value of type
+~a~.
+
+\bigskip
+
+- ~SideEffect String~ :: : A program that runs and outputs a ~String~
+- ~SideEffect Int~ :: : A program that runs and outputs an ~Int~
+
+\bigskip
+
+~SideEffect~ programs are not pure functional programs. They rely on, and change, the ~RealWorld~.
+
+** Side Effect Examples
+
+Let's look at some examples of ~SideEffect~ programs. We'll imagine
+some internal helper functions that will do the unsafe low level IO
+operations:
+
+#+begin_src haskell :exports code
+  readFile :: FilePath -> SideEffect String
+  readFile filename = SideEffect $ \realWorld ->
+    let (realWorld', contents) = internalReadFile filename realWorld
+    in (realWorld', contents)
+
+  writeFile :: FilePath -> String -> SideEffect ()
+  writeFile filename contents = SideEffect $ \realWorld ->
+    let realWorld' = internalWriteFile filename contents realWorld
+    in (realWorld', ())
+
+  print :: String -> SideEffect ()
+  print message = SideEffect $ \realWorld ->
+    let realWorld' = internalPrint message realWorld
+    in (realWorld', ())
+#+end_src
+
+** Combining Side Effects
+
+A ~SideEffect~ program can do things that have side effects, like
+reading from and writing to files, but that's pretty limiting. We can
+do a lot more if we can have a ~SideEffect~ program that executes
+other ~SideEffect~ programs and uses the results.
+
+#+begin_src haskell :exports code
+  data SideEffect a =
+    SideEffect { runSideEffects :: RealWorld -> (RealWorld, a) }
+
+  joinSideEffects :: SideEffect (SideEffect a) -> SideEffect a
+  joinSideEffects outerSideEffect = SideEffect $ \world ->
+    let (world', innerSideEffect) = runSideEffects outerSideEffect world
+    in runSideEffects innerSideEffect world'
+#+end_src
+
+** First One, Then The Other
+
+Most of the time, we want to write a ~SideEffect~ program that does
+one side effect *and then* does another one. It turns out that this is
+just another way of saying that we have one ~SideEffect~ program that
+calls the first effect, and uses it's value to call the second one:
+
+#+begin_src haskell :exports code
+  data SideEffect a =
+    SideEffect { runSideEffects :: RealWorld -> (RealWorld, a) }
+
+  sequenceSideEffects :: SideEffect a -> (a -> SideEffect b) -> SideEffect b
+  sequenceSideEffects sideEffect makeNextSideEffect =
+    joinSideEffects $ SideEffect $ \world ->
+      let (world', val) = runSideEffects sideEffect world
+      in (world', makeNextSideEffect val)
+#+end_src
+
+** Write, Read, Print
+
+Let's to to write our program again, using the things we've just built:
+
+#+begin_src haskell :exports code
+  writeReadFile :: SideEffect ()
+  writeReadFile =
+    writeFile "example.txt" "Hello, Haskell"
+    `sequenceSideEffects` (\_ -> readFile "example.txt")
+    `sequenceSideEffects` (\contents -> print contents)
+#+end_src
+
+\bigskip
+
+How does this version compare?
+
+\bigskip
+
+#+beamer: \pause
+- Every side effect depends on its predecessor, so they all happen in the right order
+#+beamer: \pause
+- Our code is focused on the work it needs to do, without having to explicitly pass around references to the real world
+#+beamer: \pause
+- Our code program is still a *pure functional program*. Instead of doing side effects directly, we *generate a program* that would have side effects if it were run. The programs themselves are still pure values.
+
+** That's Not All
+
+\center{Before we get back to HCat}
+
+#+beamer: \pause
+#+ATTR_LATEX: :height 0.5\textheight
+[[./img/apple.png]]
+
+\center{One more thing}
+
+** That's No Side Effect
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/no-side-effects.png]]
+
+** That's No Side Effect
+
+It turns out our imaginary ~SideEffect~ type isn't entirely imaginary.
+
+#+beamer: \pause
+- Instead of *~SideEffect a~* we say *~IO a~*
+#+beamer: \pause
+- Instead of *~sequenceSideEffects~* we say *~>>=~*
+#+beamer: \pause
+- Instead of *~SideEffect~ program* we say *~IO~ action*
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  writeReadFile :: IO ()
+  writeReadFile =
+    writeFile "example.txt" "Hello, Haskell"
+    >>= (\_ -> readFile "example.txt")
+    >>= print
+#+end_src
+
+** To *~do~* List
+
+Writing a long chain of calls to *~>>=~* gets tiresome. Instead we can
+use *~do~ notation*:
+
+#+begin_src haskell :exports code
+  writeReadFile :: IO ()
+  writeReadFile = do
+    writeFile "example.txt" "Hello, Haskell"
+    contents <- readFile "example.txt"
+    print contents
+#+end_src
+
+#+beamer: \pause
+- Each line in a *~do~* block corresponds to *~>>=~*
+#+beamer: \pause
+- The *~<-~* arrow names the output of an IO action
+#+beamer: \pause
+- When we run a Haskell program, the initial state of the real world
+  is used to run an IO action named *~main~*.
+
+* HCat
+
+** Return of the HCat
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/return-of-the-hcat.png]]
+
+** Back To The Code
+
+Now that we understand how to write code that has side effects and
+interacts with the real world, let's put it to practice with an *MVP*:
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  module Main where
+
+  main :: IO ()
+  main = readFile "example.txt" >>= putStrLn
+#+end_src
+
+** The M-est of MVPs
+
+*Success!* we can read a file and print it out to the screen!
+
+\bigskip
+#+beamer: \pause
+...but only a single hard-coded file
+
+\bigskip
+#+beamer: \pause
+...and it's not actually paginated
+
+\bigskip
+#+beamer: \pause
+...or formatted for our terminal window
+
+\bigskip
+#+beamer: \pause
+Let's take one problem at a time
+
+** Getting Into Arguments
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/arguments.png]]
+\center{we need to deal with arguments}
+
+** Getting Into Arguments
+
+We can use *~getArgs~* to get command line argumentsbut we'll need to
+deal with user error.
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  module HCatArgs where
+  import System.Environment
+
+  targetFileName :: IO FilePath
+  targetFileName = do
+    args <- getArgs
+    case args of
+      [filename] ->
+        pure filename
+      _otherwise ->
+        ioError $ userError "please provide a single filename"
+
+  main :: IO ()
+  main = do
+    contents <- readFile =<< targetFileName
+    putStrLn contents
+#+end_src
+
+** Error Handling in IO Actions
+
+Dealing with errors in IO actions can be complicated because there are a lot of options:
+
+\bigskip
+#+beamer: \pause
+
+- Plain IO Errors
+- Using ~Either~ or ~Maybe~ values for failure
+- Custom exceptions
+- Monad Transformers
+
+\bigskip
+#+beamer: \pause
+
+*Opinion*: Getting too fancy too early will cause more problems than it solves. Start with the simplest thing that can possibly work.
+
+** What About Libraries?
+
+Why parse arguments directly instead of using a library?
+
+\bigskip
+#+beamer: \pause
+
+- Handling arguments yourself is good practice while learning
+- Some good libraries use language features you probably haven't learned yet
+
+** Terminal Size
+
+The size of our terminal will determine our page count. We can get the terminal size with the *~tput~* program on *nix systems.
+
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  module HCat where
+  import System.Process
+  data TerminalDimension = TerminalLines | TerminalCols
+  data ScreenDimensions =
+    ScreenDimensions {screenRows :: Int, screenColumns :: Int}
+
+  getTerminalSize :: IO ScreenDimensions
+  getTerminalSize = do
+    termLines <- tput TerminalLines
+    termCols <- tput TerminalCols
+    pure ScreenDimensions
+      { screenRows = termLines
+      , screenColumns = termCols }
+
+  tput :: TerminalDimension -> IO Int
+  tput dimension = do
+    outputData <- readProcess "tput" [cmd] ""
+    pure . read . head . lines $ outputData
+    where
+      cmd = case dimension of
+        TerminalLines -> "lines"
+        TerminalCols -> "cols"
+#+end_src
+
+** Word Wrapping
+Given the size of our terminal, we can wrap the text to fit.
+
+#+beamer: \pause
+\bigskip
+
+#+begin_src haskell :exports code
+  wordWrap :: Int -> String -> [String]
+  wordWrap lineLength lineText =
+    case splitAt lineLength lineText of
+      (fullLine, "") -> [fullLine]
+      (hardwrappedLine, rest) ->
+        let (nextLine, remainder) = softWrap hardwrappedLine
+         in nextLine : wordWrap lineLength (remainder <> rest)
+    where
+      softWrap hardWrapped =
+        let (rest, wrappedText) = break isSpace $ reverse hardWrapped
+         in (reverse wrappedText, reverse rest)
+
+  main :: IO ()
+  main = do
+    contents <- readFile =<< targetFileName
+    termSize <- getTerminalSize
+    let wrapped = wordWrap (screenColumns termSize) contents
+    putStrLn $ unlines wrapped
+#+end_src
+
+* Stepping Back
+
+** Stepping Back
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/architecture.jpg]]
+\center{Let's talk about Architecture}
+
+** A Tale of Two Word Wraps
+
+In our earlier example, we built an IO action to fetch the terminal size, and passed the width into a *pure function* that handled word wrapping. Let's consider the alternative:
+
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  wordWrap :: String -> IO [String]
+  wordWrap lineText = do
+    lineLength <- tput TerminalCols
+    case splitAt lineLength lineText of
+      (fullLine, "") ->
+        pure [fullLine]
+      (hardwrappedLine, rest) -> do
+        let (nextLine, remainder) = softWrap hardwrappedLine
+        wrappedRemainder <- wordWrap (remainder <> rest)
+        pure (nextLine : wrappedRemainder)
+    where
+      softWrap hardWrapped =
+        let (rest, wrappedText) = break isSpace $ reverse hardWrapped
+         in (reverse wrappedText, reverse rest)
+#+end_src
+
+#+beamer: \pause
+This might look *easier* at first. It hides details from the caller
+behind a smaller interface, but now it can't be used from any pure
+functions.
+
+** The Lesson
+
+As much as possible, have IO actions gather data then pass it into
+pure functions for computation.
+
+** Procedural Shell, Functional Core
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/functional-core.png]]
+#+beamer: \center{\tiny{The "procedural shell, functional core" model is an over-simplification of a good guideline}}
+
+** IO Actions are Like Layers
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[file:img/tree.png]]
+#+beamer: \center{\tiny{IO Actions and pure functions more closely resemble a tree}}
+
+* Back to HCat
+
+** Back to HCat
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[file:img/regularly-scheduled-hcat.png]]
+#+beamer: \center{\tiny{Back to our regularly scheduled HCat Presentation}}
+
+** Pagination
+Our pager has one big problem right now: It doesn't *paginate*.
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  paginate :: ScreenDimensions -> String -> [String]
+  paginate dimensions text = pages
+    where
+      rows = screenRows dimensions
+      cols = screenColumns dimensions
+      wrappedLines = concatMap (wordWrap cols) (lines text)
+      pages = map (unlines . padTo rows) $ groupsOf rows wrappedLines
+      padTo lineCount rowsToPad =
+        take lineCount $ rowsToPad <> repeat ""
+      groupsOf n elems
+        | null elems = []
+        | otherwise =
+          let (hd, tl) = splitAt n elems
+          in hd : groupsOf n tl
+#+end_src
+
+** The Event Loop
+
+If we want to show our user a page at a time, we need to do a few things:
+
+\bigskip
+#+beamer: \pause
+
+- Get some user input
+#+beamer: \pause
+- Loop over each page, displaying them
+#+beamer: \pause
+- Exit cleanly if the user wants to quit
+
+** Getting User Input
+
+#+begin_src haskell :exports code
+  data ContinueCancel
+    = Continue
+    | Cancel
+    deriving stock (Eq, Show)
+
+  getContinue :: IO ContinueCancel
+  getContinue = do
+    hSetBuffering stdin NoBuffering
+    hSetEcho stdin False
+    input <- getChar
+    case input of
+      ' ' -> return Continue
+      'q' -> return Cancel
+      _ -> getContinue
+#+end_src
+
+** Handling User Input Compositionally
+
+IO Actions can be composed
+
+* Questions?

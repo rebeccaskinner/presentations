@@ -1,0 +1,22 @@
+cabal-version:       2.4
+name:                hcat
+version:             0.1.0.0
+
+library
+  hs-source-dirs:      src
+  exposed-modules:     HCat
+                     , HCatNoMetadata
+  build-depends:       base
+                     , bytestring
+                     , text
+                     , process
+                     , directory
+                     , time
+  ghc-options: -Wall
+  default-language:    Haskell2010
+
+executable hcat
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  build-depends:       base, hcat
+  default-language:    Haskell2010
