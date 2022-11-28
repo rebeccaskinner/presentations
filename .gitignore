@@ -1,9 +1,12 @@
-*.DS_Store
 *.vrb
+*.toc
+*.nav
+_minted_presentation
+*.hi
+*.snm
+dist-newstyle
+TAGS
+*.o
 *.aux
 *.log
-*.nav
 *.out
-*.pdf
-*.toc
-*.vrb
