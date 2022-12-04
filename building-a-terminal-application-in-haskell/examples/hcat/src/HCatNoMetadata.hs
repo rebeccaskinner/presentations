@@ -7,6 +7,7 @@ import System.Environment
 import System.IO
 import System.Process
 import Control.Monad
+import Data.Foldable
 
 data ScreenDimensions = ScreenDimensions
   { screenRows :: Int
@@ -49,7 +50,6 @@ runHCat :: IO ()
 runHCat = do
   contents <- readFile =<< targetFileName
   termSize <- getTerminalSize
-  hSetBuffering stdout NoBuffering
   showPages $ paginate termSize contents
 
 wordWrap :: Int -> String -> [String]
@@ -67,7 +67,7 @@ wordWrap lineLength lineText =
 paginate :: ScreenDimensions -> String -> [String]
 paginate dimensions text = pages
   where
-    rows = screenRows dimensions
+    rows = screenRows dimensions - 2
     cols = screenColumns dimensions
     wrappedLines = concatMap (wordWrap cols) (lines text)
     pages = map (unlines . padTo rows) $ groupsOf rows wrappedLines
@@ -94,18 +94,102 @@ getContinue = do
     'q' -> return Cancel
     _ -> getContinue
 
-withContinue :: [a] -> (a -> IO b) -> IO ()
-withContinue [] _onItem = pure ()
-withContinue (item:items) onItem = do
-  _ <- onItem item
-  unless (null items) $ do
-    cont <- getContinue
-    case cont of
-      Cancel -> pure ()
-      Continue -> withContinue items onItem
+-- showPages :: [String] -> IO ()
+-- showPages allPages =
+--   for_ allPages $ \page -> do
+--     putStr "\^[[1J\^[[1;1H"
+--     putStr page
+--     cont <- getContinue
+--     -- what now???
+--     pure ()
+
+-- showPages :: [String] -> IO ()
+-- showPages =
+--   showPages' Continue
+--   where
+--     showPages' Cancel _ = pure ()
+--     showPages' Continue [] = pure ()
+--     showPages' Continue (page:pages) = do
+--       displayPage page
+--       cont <- if null pages
+--               then pure Cancel
+--               else getContinue
+--       showPages' cont pages
+--     displayPage page = do
+--       putStr "\^[[1J\^[[1;1H"
+--       putStr page
+
+-- showPages :: [String] -> IO ()
+-- showPages [] = pure ()
+-- showPages (page:pages) = do
+--   putStr "\^[[1J\^[[1;1H"
+--   putStr page
+--   cont <- if null pages
+--           then pure Cancel
+--           else getContinue
+--   when (Continue == cont) $
+--     showPages pages
+
+onContinue :: IO () -> IO ()
+onContinue ioAction = do
+  cont <- getContinue
+  case cont of
+    Cancel -> pure ()
+    Continue -> ioAction
+
+forPages :: (String -> IO ()) -> [String]  -> IO ()
+forPages ioAction pages  =
+  case pages of
+    [] -> pure ()
+    (page:rest) -> do
+      ioAction page
+      onContinue (forPages ioAction rest)
 
 showPages :: [String] -> IO ()
-showPages allPages =
-  withContinue allPages $ \page -> do
-    putStr "\^[[1J\^[[1;1H"
-    putStr page
+showPages = forPages $ \page -> do
+  putStr "\^[[1J\^[[1;1H"
+  putStr page
+
+-- showPages :: [String] -> IO ()
+-- showPages [] = pure ()
+-- showPages (page:pages) = do
+--   putStr "\^[[1J\^[[1;1H"
+--   putStr page
+--   case pages of
+--     [] -> pure ()
+--     _otherwise ->
+--   cont <- if null pages
+--           then pure Cancel
+--           else getContinue
+--   when (Continue == cont) $
+--     showPages pages
+
+-- withContinue :: [String] -> (String -> IO ()) -> IO ()
+-- withContinue [] _ = pure ()
+-- withContinue (page:pages) f = do
+--   f page
+--   unless (null pages) $ do
+--     cont <- getContinue
+--     when (cont == Continue) $
+--       withContinue pages f
+
+-- showPages :: [String] -> IO ()
+-- showPages pages = withContinue pages $ \page -> do
+--   putStr "\^[[1J\^[[1;1H"
+--   putStr page
+
+-- withContinue :: [a] -> (a -> IO b) -> IO ()
+-- withContinue [] _onItem = pure ()
+-- withContinue (item:items) onItem = do
+--   _ <- onItem item
+--   unless (null items) $ do
+--     cont <- getContinue
+--     case cont of
+--       Cancel -> pure ()
+--       Continue -> withContinue items onItem
+
+-- showPages :: [String] -> IO ()
+-- showPages allPages =
+--   withContinue allPages $ \page -> do
+--     putStr "\^[[1J\^[[1;1H"
+--     putStr page

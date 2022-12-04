@@ -1,4 +1,4 @@
-% Created 2022-11-28 Mon 01:54
+% Created 2022-12-03 Sat 22:24
 % Intended LaTeX compiler: pdflatex
 \documentclass[10pt, presentation, colorlinks]{beamer}
 \usepackage[utf8]{inputenc}
@@ -18,7 +18,7 @@
 \newminted{haskell}{}
 \usetheme{default}
 \author{Rebecca Skinner}
-\date{\textit{<2022-12-08 Thu>}}
+\date{2022-12-07}
 \title{Building a Console Application in Haskell}
 \AtBeginSection[]{\begin{frame}<beamer>\frametitle{}\center{\huge{\secname}}\end{frame}}
 \hypersetup{
@@ -33,9 +33,9 @@
 \maketitle
 
 \section{Prelude}
-\label{sec:orgd96844c}
+\label{sec:org77db2c3}
 
-\begin{frame}[label={sec:orgab111da}]{Hello, World}
+\begin{frame}[label={sec:org84d12ad}]{Hello, World}
 \begin{itemize}
 \item About Me: Rebecca Skinner
 \begin{itemize}
@@ -52,7 +52,7 @@
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org9d7a81c}]{Effective Haskell}
+\begin{frame}[label={sec:orgafb926b}]{Effective Haskell}
 \begin{columns}
 \begin{column}[t]{0.45\columnwidth}
 \begin{center}
@@ -70,7 +70,7 @@
 \end{columns}
 \end{frame}
 
-\begin{frame}[label={sec:orge40b3e6}]{About This Talk}
+\begin{frame}[label={sec:orgf8c53fa}]{About This Talk}
 During this talk we're going to \uline{discover} how to build basic command
 line tool in Haskell. As we go, you'll:
 
@@ -90,23 +90,23 @@ building Haskell programs that can serve as a basis for future
 learning.
 \end{frame}
 
-\begin{frame}[label={sec:org6212e2b}]{HCat}
+\begin{frame}[label={sec:org77d8925}]{HCat}
 \begin{center}
 \includegraphics[height=0.7\textheight]{./img/hcat-screen.png}
 \end{center}
 \end{frame}
 
 \section{Understanding IO}
-\label{sec:org427bd23}
+\label{sec:orgc857986}
 
-\begin{frame}[label={sec:orgf8574f8}]{A True Color Photo of Side Effects}
+\begin{frame}[label={sec:org1b11d78}]{A True Color Photo of Side Effects}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/io.jpg}
 \end{center}
 \center{A side effect in its natural environment.}
 \end{frame}
 
-\begin{frame}[label={sec:org489e1aa}]{The Trouble with IO}
+\begin{frame}[label={sec:org9096779}]{The Trouble with IO}
 Haskell is a \alert{pure functional} language, but most of the things we want our programs to do revolve around \alert{side effects}!
 
 \bigskip
@@ -125,7 +125,7 @@ Haskell is a \alert{pure functional} language, but most of the things we want ou
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:org932b0cf},fragile]{Can We Have a Little Bit of IO?}
+\begin{frame}[label={sec:org6280334},fragile]{Can We Have a Little Bit of IO?}
  What if we cheat just a little?
 
 \bigskip
@@ -143,7 +143,7 @@ writeReadFile =
 
 \pause
 \begin{itemize}
-\item Nothing will hapen until we evaluate \texttt{writeReadFile}
+\item Nothing will happen until we evaluate \texttt{writeReadFile}
 \end{itemize}
 \pause
 \begin{itemize}
@@ -155,14 +155,14 @@ writeReadFile =
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orgda50039}]{Let's Dream of a Better Way}
+\begin{frame}[label={sec:org1393aaa}]{Let's Dream of a Better Way}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/dreaming.png}
 \end{center}
 \center{Let's dream up a better way}
 \end{frame}
 
-\begin{frame}[label={sec:orge81d253}]{IO, the Lazy Way}
+\begin{frame}[label={sec:org2258334}]{IO, the Lazy Way}
 If we want to be lazy, we need to work for it by making sure every new
 side effect \alert{must depend on} the previous one.
 
@@ -171,17 +171,20 @@ side effect \alert{must depend on} the previous one.
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org05358c7}]{Sometimes Things Are Easy}
-In some cases, there is a natural dependency between side effects.
+\begin{frame}[label={sec:org2f3f09a}]{Sometimes Things Are Easy}
+In some cases, there is a natural dependency between side effects:
 
+\bigskip
 \pause
 \begin{itemize}
 \item Reading a file, then printing the contents
 \end{itemize}
 
+\bigskip
 \pause
-More often, there isn't an obvious dependency
+More often, there isn't an obvious dependency:
 
+\bigskip
 \pause
 \begin{itemize}
 \item Writing a log message before opening a file
@@ -190,7 +193,7 @@ More often, there isn't an obvious dependency
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orgb40fff3}]{A Pointer To The Real World}
+\begin{frame}[label={sec:orgaaa8417}]{A Pointer To The Real World}
 We needed to \alert{sequence} our side effects correctly because there's an implicit data dependency we haven't considered: \alert{the state of the real world}.
 
 \bigskip
@@ -201,7 +204,7 @@ We needed to \alert{sequence} our side effects correctly because there's an impl
 \center{\verb|data RealWorld}
 \end{frame}
 
-\begin{frame}[label={sec:org464cc12},fragile]{Welcome to the Real World}
+\begin{frame}[label={sec:orgf90afd3},fragile]{Welcome to the Real World}
  We can use a reference to the \texttt{RealWorld} to add a dependency between all of our calls:
 
 \bigskip
@@ -221,21 +224,21 @@ writeReadFile world0 =
 But it sucks.
 \end{frame}
 
-\begin{frame}[label={sec:org4ecf48c},fragile]{Typing IO Operations}
- \begin{center}
+\begin{frame}[label={sec:orgeda50f5}]{Typing IO Operations}
+\begin{center}
 \includegraphics[height=0.4\textheight]{./img/typewriter.JPG}
 \end{center}
 \center{Let's make a type!}
+\end{frame}
 
-\bigskip
-
-\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+\begin{frame}[label={sec:org0b1e226},fragile]{Typing IO Operations}
+ \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
 data SideEffect a =
   SideEffect { runSideEffects :: RealWorld -> (RealWorld, a) }
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org0c9b4ce},fragile]{Side Effects Are Programs}
+\begin{frame}[label={sec:org5389a3c},fragile]{Side Effects Are Programs}
  Think of \texttt{SideEffect a} as a \alert{program} that returns a value of type
 \texttt{a}.
 
@@ -251,7 +254,7 @@ data SideEffect a =
 \texttt{SideEffect} programs are not pure functional programs. They rely on, and change, the \texttt{RealWorld}.
 \end{frame}
 
-\begin{frame}[label={sec:org2125d77},fragile]{Side Effect Examples}
+\begin{frame}[label={sec:org6847513},fragile]{Side Effect Examples}
  Let's look at some examples of \texttt{SideEffect} programs. We'll imagine
 some internal helper functions that will do the unsafe low level IO
 operations:
@@ -274,7 +277,7 @@ print message = SideEffect $ \realWorld ->
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org27a3f19},fragile]{Combining Side Effects}
+\begin{frame}[label={sec:orgff5839f},fragile]{Combining Side Effects}
  A \texttt{SideEffect} program can do things that have side effects, like
 reading from and writing to files, but that's pretty limiting. We can
 do a lot more if we can have a \texttt{SideEffect} program that executes
@@ -291,7 +294,7 @@ joinSideEffects outerSideEffect = SideEffect $ \world ->
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org4f5dcc2},fragile]{First One, Then The Other}
+\begin{frame}[label={sec:org76837b6},fragile]{First One, Then The Other}
  Most of the time, we want to write a \texttt{SideEffect} program that does
 one side effect \alert{and then} does another one. It turns out that this is
 just another way of saying that we have one \texttt{SideEffect} program that
@@ -309,7 +312,7 @@ sequenceSideEffects sideEffect makeNextSideEffect =
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:orge00cbae},fragile]{Write, Read, Print}
+\begin{frame}[label={sec:org84e10b6},fragile]{Write, Read, Print}
  Let's to to write our program again, using the things we've just built:
 
 \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
@@ -340,7 +343,7 @@ How does this version compare?
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:org4f9f04d}]{That's Not All}
+\begin{frame}[label={sec:org870319b}]{That's Not All}
 \center{Before we get back to HCat}
 
 \pause
@@ -351,13 +354,13 @@ How does this version compare?
 \center{One more thing}
 \end{frame}
 
-\begin{frame}[label={sec:orge141229}]{That's No Side Effect}
+\begin{frame}[label={sec:org0f3bde2}]{That's No Side Effect}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/no-side-effects.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org05df999},fragile]{That's No Side Effect}
+\begin{frame}[label={sec:org0be5fe8},fragile]{That's No Side Effect}
  It turns out our imaginary \texttt{SideEffect} type isn't entirely imaginary.
 
 \pause
@@ -383,7 +386,7 @@ writeReadFile =
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org7ad4c6a},fragile]{To \alert{\texttt{do}} List}
+\begin{frame}[label={sec:org68e771e},fragile]{To \alert{\texttt{do}} List}
  Writing a long chain of calls to \alert{\texttt{>>=}} gets tiresome. Instead we can
 use \alert{\texttt{do} notation}:
 
@@ -411,15 +414,15 @@ is used to run an IO action named \alert{\texttt{main}}.
 \end{frame}
 
 \section{HCat}
-\label{sec:org69728c7}
+\label{sec:orgfc16f64}
 
-\begin{frame}[label={sec:org92fcbda}]{Return of the HCat}
+\begin{frame}[label={sec:org501ed10}]{Return of the HCat}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/return-of-the-hcat.png}
 \end{center}
 \end{frame}
 
-\begin{frame}[label={sec:org8d216fe},fragile]{Back To The Code}
+\begin{frame}[label={sec:org7390aa9},fragile]{Back To The Code}
  Now that we understand how to write code that has side effects and
 interacts with the real world, let's put it to practice with an \alert{MVP}:
 
@@ -434,7 +437,7 @@ main = readFile "example.txt" >>= putStrLn
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:orgf76713f}]{The M-est of MVPs}
+\begin{frame}[label={sec:org5332945}]{The M-est of MVPs}
 \alert{Success!} we can read a file and print it out to the screen!
 
 \bigskip
@@ -454,16 +457,16 @@ main = readFile "example.txt" >>= putStrLn
 Let's take one problem at a time
 \end{frame}
 
-\begin{frame}[label={sec:orgd91e754}]{Getting Into Arguments}
+\begin{frame}[label={sec:orgc4d88dc}]{Getting Into Arguments}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/arguments.png}
 \end{center}
 \center{we need to deal with arguments}
 \end{frame}
 
-\begin{frame}[label={sec:org85ad5ed},fragile]{Getting Into Arguments}
- We can use \alert{\texttt{getArgs}} to get command line argumentsbut we'll need to
-deal with user error.
+\begin{frame}[label={sec:org2510d4e},fragile]{Getting Into Arguments}
+ We can use \alert{\texttt{getArgs}} to get command line arguments, but we'll need to
+deal with user errors.
 
 \bigskip
 \pause
@@ -488,7 +491,7 @@ main = do
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org4d7927f},fragile]{Error Handling in IO Actions}
+\begin{frame}[label={sec:org1e3080a},fragile]{Error Handling in IO Actions}
  Dealing with errors in IO actions can be complicated because there are a lot of options:
 
 \bigskip
@@ -507,7 +510,7 @@ main = do
 \alert{Opinion}: Getting too fancy too early will cause more problems than it solves. Start with the simplest thing that can possibly work.
 \end{frame}
 
-\begin{frame}[label={sec:orgd62dc51}]{What About Libraries?}
+\begin{frame}[label={sec:org4aa4dfe}]{What About Libraries?}
 Why parse arguments directly instead of using a library?
 
 \bigskip
@@ -519,7 +522,7 @@ Why parse arguments directly instead of using a library?
 \end{itemize}
 \end{frame}
 
-\begin{frame}[label={sec:orgf4f1935},fragile]{Terminal Size}
+\begin{frame}[label={sec:org2b6da65},fragile]{Terminal Size}
  The size of our terminal will determine our page count. We can get the terminal size with the \alert{\texttt{tput}} program on *nix systems.
 
 \pause
@@ -550,7 +553,7 @@ tput dimension = do
 \end{minted}
 \end{frame}
 
-\begin{frame}[label={sec:org987a0c8},fragile]{Word Wrapping}
+\begin{frame}[label={sec:orgfb181e1},fragile]{Word Wrapping}
  Given the size of our terminal, we can wrap the text to fit.
 
 \pause
@@ -579,16 +582,16 @@ main = do
 \end{frame}
 
 \section{Stepping Back}
-\label{sec:org1188441}
+\label{sec:orgddb9608}
 
-\begin{frame}[label={sec:orgb4d8e9c}]{Stepping Back}
+\begin{frame}[label={sec:orga119089}]{Stepping Back}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/architecture.jpg}
 \end{center}
 \center{Let's talk about Architecture}
 \end{frame}
 
-\begin{frame}[label={sec:org008d2f8},fragile]{A Tale of Two Word Wraps}
+\begin{frame}[label={sec:org69fa52c},fragile]{A Tale of Two Word Wraps}
  In our earlier example, we built an IO action to fetch the terminal size, and passed the width into a \alert{pure function} that handled word wrapping. Let's consider the alternative:
 
 \pause
@@ -616,19 +619,19 @@ behind a smaller interface, but now it can't be used from any pure
 functions.
 \end{frame}
 
-\begin{frame}[label={sec:org3841477}]{The Lesson}
+\begin{frame}[label={sec:orgceb9b28}]{The Lesson}
 As much as possible, have IO actions gather data then pass it into
 pure functions for computation.
 \end{frame}
 
-\begin{frame}[label={sec:org7271f1c}]{Procedural Shell, Functional Core}
+\begin{frame}[label={sec:org8cade50}]{Procedural Shell, Functional Core}
 \begin{center}
 \includegraphics[height=0.6\textheight]{./img/functional-core.png}
 \end{center}
 \center{\tiny{The "procedural shell, functional core" model is an over-simplification of a good guideline}}
 \end{frame}
 
-\begin{frame}[label={sec:org8f1ec63}]{IO Actions are Like Layers}
+\begin{frame}[label={sec:org41f20a5}]{IO Actions are Like Layers}
 \begin{center}
 \includegraphics[height=0.6\textheight]{img/tree.png}
 \end{center}
@@ -636,18 +639,19 @@ pure functions for computation.
 \end{frame}
 
 \section{Back to HCat}
-\label{sec:org94c519c}
+\label{sec:org7ea4465}
 
-\begin{frame}[label={sec:org0ac3282}]{Back to HCat}
+\begin{frame}[label={sec:org0cbfa71}]{Back to HCat}
 \begin{center}
 \includegraphics[height=0.6\textheight]{img/regularly-scheduled-hcat.png}
 \end{center}
 \center{\tiny{Back to our regularly scheduled HCat Presentation}}
 \end{frame}
 
-\begin{frame}[label={sec:org63d6816},fragile]{Pagination}
- Our pager has one big problem right now: It doesn't paginate.
+\begin{frame}[label={sec:org4ad1fc9},fragile]{Pagination}
+ Our pager has one big problem right now: It doesn't \alert{paginate}.
 
+\bigskip
 \pause
 
 \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
@@ -668,6 +672,160 @@ paginate dimensions text = pages
 \end{minted}
 \end{frame}
 
+\begin{frame}[label={sec:orgd0a5b87}]{The Event Loop}
+If we want to show our user a page at a time, we need to do a few things:
+
+\bigskip
+\pause
+
+\begin{itemize}
+\item Get some user input
+\end{itemize}
+\pause
+\begin{itemize}
+\item Loop over each page, displaying them
+\end{itemize}
+\pause
+\begin{itemize}
+\item Exit cleanly if the user wants to quit
+\end{itemize}
+\end{frame}
+
+\begin{frame}[label={sec:org47b54fb},fragile]{Getting User Input}
+ \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+data ContinueCancel
+  = Continue
+  | Cancel
+  deriving stock (Eq, Show)
+
+getContinue :: IO ContinueCancel
+getContinue = do
+  hSetBuffering stdin NoBuffering
+  hSetEcho stdin False
+  input <- getChar
+  case input of
+    ' ' -> return Continue
+    'q' -> return Cancel
+    _ -> getContinue
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:orgc9cbf36},fragile]{Taking User Input for a Loop}
+ IO actions feel like a procedural language. Sometimes it's tempting to
+fall back on familiar patterns. We even have access to things like
+\alert{for} loops that make it easier to think this way.
+
+\bigskip
+\pause
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+showPages :: [String] -> IO ()
+showPages allPages =
+  for_ allPages $ \page -> do
+    putStr "\^[[1J\^[[1;1H"
+    putStr page
+    cont <- getContinue
+    -- ...
+\end{minted}
+
+\bigskip
+\pause
+
+Unfortunately, this can make things more difficult instead of easier.
+\end{frame}
+
+\begin{frame}[label={sec:org2adec6f},fragile]{Recursive IO Actions}
+ You can use recursion in IO actions just like you would for pure
+functions.
+
+\bigskip
+\pause
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+showPages :: [String] -> IO ()
+showPages [] = pure ()
+showPages (page:pages) = do
+  putStr "\^[[1J\^[[1;1H"
+  putStr page
+  cont <- if null pages
+          then pure Cancel
+          else getContinue
+  when (Continue == cont) $
+    showPages pages
+\end{minted}
+
+\bigskip
+\pause
+
+This is a good starting spot for implementing the effectful logic in
+your programs.
+\end{frame}
+
+\begin{frame}[label={sec:org18731fc}]{Continued Action}
+As your programs grow, it's a good idea to think about making your IO
+actions compose. This can make your code a bit more verbose at first,
+but it buys you flexibility later.
+\end{frame}
+
+\begin{frame}[label={sec:org12a6705},fragile]{Continued Action}
+ \alert{\texttt{onContinue}} lets us to do any IO action when the user continues:
+\pause
+
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+onContinue :: IO () -> IO ()
+onContinue ioAction = do
+  cont <- getContinue
+  case cont of
+    Cancel -> pure ()
+    Continue -> ioAction
+\end{minted}
+\pause
+
+\alert{\texttt{forPages}} separates looping application logic with a \alert{continuation}:
+
+\pause
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+forPages :: (String -> IO ()) -> [String]  -> IO ()
+forPages ioAction pages  =
+  case pages of
+    [] -> pure ()
+    (page:rest) -> do
+      ioAction page
+      onContinue (forPages ioAction rest)
+\end{minted}
+\pause
+
+\alert{\texttt{showPages}} composes benefits from the work we've done
+
+\pause
+\begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+showPages :: [String] -> IO ()
+showPages = forPages $ \page -> do
+  putStr "\^[[1J\^[[1;1H"
+  putStr page
+\end{minted}
+\end{frame}
+
+\begin{frame}[label={sec:org5b66db6},fragile]{Putting It All Together}
+ \begin{minted}[frame=lines,fontsize=\scriptsize,linenos=false]{haskell}
+main :: IO ()
+main = do
+  contents <- readFile =<< targetFileName
+  termSize <- getTerminalSize
+  showPages $ paginate termSize contents
+\end{minted}
+\end{frame}
+
 \section{Questions?}
-\label{sec:orge24e16e}
+\label{sec:orgb806dbe}
+
+\begin{frame}[label={sec:orged88120}]{Questions?}
+\center{Want to know more?}
+
+\bigskip
+\begin{center}
+\includegraphics[height=0.5\textheight]{./img/typeform-url.png}
+\end{center}
+\center{\tiny{Follow the QR Code for a chance to win a copy of Effective Haskell.}}
+\end{frame}
 \end{document}

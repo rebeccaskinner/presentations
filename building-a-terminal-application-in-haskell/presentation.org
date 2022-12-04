@@ -1,7 +1,7 @@
 #+title: Building a Console Application in Haskell
 #+author: Rebecca Skinner
 #+institution: Mercury
-#+date: <2022-12-08 Tue>
+#+date: 2022-12-07
 #+BEAMER_FRAME_LEVEL: 2
 #+options: toc:nil H:2 num:t
 #+LaTeX_CLASS: beamer
@@ -107,7 +107,7 @@ What if we cheat just a little?
 \bigskip
 
 #+beamer: \pause
-- Nothing will hapen until we evaluate ~writeReadFile~
+- Nothing will happen until we evaluate ~writeReadFile~
 #+beamer: \pause
 - When we evaluate ~writeReadFile~ we'll get whatever random contents were in ~example.txt~
 #+beamer: \pause
@@ -129,14 +129,17 @@ side effect *must depend on* the previous one.
 
 ** Sometimes Things Are Easy
 
-In some cases, there is a natural dependency between side effects.
+In some cases, there is a natural dependency between side effects:
 
+\bigskip
 #+beamer: \pause
 - Reading a file, then printing the contents
 
+\bigskip
 #+beamer: \pause
-More often, there isn't an obvious dependency
+More often, there isn't an obvious dependency:
 
+\bigskip
 #+beamer: \pause
 - Writing a log message before opening a file
 - Writing data to a file, then reading the contents
@@ -178,7 +181,7 @@ But it sucks.
 [[./img/typewriter.JPG]]
 \center{Let's make a type!}
 
-\bigskip
+** Typing IO Operations
 
 #+begin_src haskell :exports code
   data SideEffect a =
@@ -388,8 +391,8 @@ Let's take one problem at a time
 
 ** Getting Into Arguments
 
-We can use *~getArgs~* to get command line argumentsbut we'll need to
-deal with user error.
+We can use *~getArgs~* to get command line arguments, but we'll need to
+deal with user errors.
 
 \bigskip
 #+beamer: \pause
@@ -614,8 +617,119 @@ If we want to show our user a page at a time, we need to do a few things:
       _ -> getContinue
 #+end_src
 
-** Handling User Input Compositionally
+** Taking User Input for a Loop
 
-IO Actions can be composed
+IO actions feel like a procedural language. Sometimes it's tempting to
+fall back on familiar patterns. We even have access to things like
+*for* loops that make it easier to think this way.
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  showPages :: [String] -> IO ()
+  showPages allPages =
+    for_ allPages $ \page -> do
+      putStr "\^[[1J\^[[1;1H"
+      putStr page
+      cont <- getContinue
+      -- ...
+#+end_src
+
+\bigskip
+#+beamer: \pause
+
+Unfortunately, this can make things more difficult instead of easier.
+
+** Recursive IO Actions
+
+You can use recursion in IO actions just like you would for pure
+functions.
+
+\bigskip
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  showPages :: [String] -> IO ()
+  showPages [] = pure ()
+  showPages (page:pages) = do
+    putStr "\^[[1J\^[[1;1H"
+    putStr page
+    cont <- if null pages
+            then pure Cancel
+            else getContinue
+    when (Continue == cont) $
+      showPages pages
+#+end_src
+
+\bigskip
+#+beamer: \pause
+
+This is a good starting spot for implementing the effectful logic in
+your programs.
+
+** Continued Action
+
+As your programs grow, it's a good idea to think about making your IO
+actions compose. This can make your code a bit more verbose at first,
+but it buys you flexibility later.
+
+** Continued Action
+
+*~onContinue~* lets us to do any IO action when the user continues:
+#+beamer: \pause
+
+#+begin_src haskell :exports code
+  onContinue :: IO () -> IO ()
+  onContinue ioAction = do
+    cont <- getContinue
+    case cont of
+      Cancel -> pure ()
+      Continue -> ioAction
+#+end_src
+#+beamer: \pause
+
+*~forPages~* separates looping application logic with a *continuation*:
+
+#+beamer: \pause
+#+begin_src haskell :exports code
+  forPages :: (String -> IO ()) -> [String]  -> IO ()
+  forPages ioAction pages  =
+    case pages of
+      [] -> pure ()
+      (page:rest) -> do
+        ioAction page
+        onContinue (forPages ioAction rest)
+#+end_src
+#+beamer: \pause
+
+*~showPages~* composes benefits from the work we've done
+
+#+beamer: \pause
+#+begin_src haskell :exports code
+  showPages :: [String] -> IO ()
+  showPages = forPages $ \page -> do
+    putStr "\^[[1J\^[[1;1H"
+    putStr page
+#+end_src
+
+** Putting It All Together
+
+#+begin_src haskell :exports code
+  main :: IO ()
+  main = do
+    contents <- readFile =<< targetFileName
+    termSize <- getTerminalSize
+    showPages $ paginate termSize contents
+#+end_src
 
 * Questions?
+
+** Questions?
+
+\center{Want to know more?}
+
+\bigskip
+#+ATTR_LATEX: :height 0.5\textheight
+[[./img/typeform-url.png]]
+#+beamer: \center{\tiny{Follow the QR Code for a chance to win a copy of Effective Haskell.}}
