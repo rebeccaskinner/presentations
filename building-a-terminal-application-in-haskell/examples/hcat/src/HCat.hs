@@ -1,39 +1,12 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module HCat (runHCat) where
+
 import Data.Char
-import Data.Time.Clock
-import Data.Time.Format
-import System.Directory
 import System.Environment
 import System.IO
 import System.Process
-import Text.Printf
-
-data FileInfo = FileInfo
-  { filePath :: FilePath
-  , fileSize :: Integer
-  , fileMTime :: UTCTime
-  , fileReadable :: Bool
-  , fileWriteable :: Bool
-  , fileExecutable :: Bool
-  } deriving stock (Show)
-
-fileInfo :: FilePath -> IO FileInfo
-fileInfo filePath = do
-  perms <- getPermissions filePath
-  mtime <- getModificationTime filePath
-  size <- getFileSize filePath
-  pure FileInfo
-    { filePath = filePath
-    , fileSize = size
-    , fileMTime = mtime
-    , fileReadable = readable perms
-    , fileWriteable = writable perms
-    , fileExecutable = executable perms
-    }
 
 data ScreenDimensions = ScreenDimensions
   { screenRows :: Int
@@ -44,10 +17,11 @@ getTerminalSize :: IO ScreenDimensions
 getTerminalSize = do
   termLines <- tput TerminalLines
   termCols <- tput TerminalCols
-  pure ScreenDimensions
-    { screenRows = termLines
-    , screenColumns = termCols
-    }
+  pure
+    ScreenDimensions
+      { screenRows = termLines
+      , screenColumns = termCols
+      }
 
 data TerminalDimension
   = TerminalLines
@@ -63,53 +37,6 @@ tput dimension = do
         TerminalLines -> "lines"
         TerminalCols -> "cols"
 
-clearTerm, reverseVideo, resetVideo :: String
-clearTerm =  "\^[[1J\^[[1;1H"
-reverseVideo = "\^[[7m"
-resetVideo = "\^[[0m"
-
-clearScreen :: IO ()
-clearScreen = putStr clearTerm
-
-formatFileInfo :: FileInfo -> Int -> Int -> Int -> String
-formatFileInfo FileInfo{..} maxWidth totalPages currentPage =
-  invertText statusLine
-  where
-    timestamp =
-      formatTime defaultTimeLocale "%F %T" fileMTime
-    permissionString =
-      [ if fileReadable then 'r' else '-'
-      , if fileWriteable then 'w' else '-'
-      , if fileExecutable then 'x' else '-'
-      ]
-    statusLine =
-      truncateStatusLine $
-        printf
-          "%s | permissions: %s | %d bytes | modified: %s | page: %d of %d"
-          filePath
-          permissionString
-          fileSize
-          timestamp
-          currentPage
-          totalPages
-    invertText inputStr =
-      reverseVideo <> inputStr <> resetVideo
-    truncateStatusLine t
-      | maxWidth <= 3 = ""
-      | length t > maxWidth =
-          take (maxWidth - 3) t <> "..."
-      | otherwise = t
-
-
-
-handleArgs :: IO FilePath
-handleArgs = do
-  args <- getArgs
-  case args of
-    [fname] -> pure fname
-    [] -> ioError $ userError "no filename provided"
-    _ -> ioError $ userError "multiple files not supported"
-
 targetFileName :: IO FilePath
 targetFileName = do
   args <- getArgs
@@ -121,18 +48,9 @@ targetFileName = do
 
 runHCat :: IO ()
 runHCat = do
-  targetFilePath <- handleArgs
-  contents <- readFile targetFilePath
+  contents <- readFile =<< targetFileName
   termSize <- getTerminalSize
-  hSetBuffering stdout NoBuffering
-  finfo <- fileInfo targetFilePath
-  showPages $ paginate termSize finfo contents
-
-groupsOf :: Int -> [a] -> [[a]]
-groupsOf _ [] = []
-groupsOf n elems =
-  hd : groupsOf n tl
-  where (hd, tl) = splitAt n elems
+  showPages $ paginate termSize contents
 
 wordWrap :: Int -> String -> [String]
 wordWrap lineLength lineText =
@@ -146,17 +64,20 @@ wordWrap lineLength lineText =
       let (rest, wrappedText) = break isSpace $ reverse hardWrapped
        in (reverse wrappedText, reverse rest)
 
-paginate :: ScreenDimensions -> FileInfo -> String -> [String]
-paginate dimensions finfo text =
-  zipWith (<>) pages statusLines
+paginate :: ScreenDimensions -> String -> [String]
+paginate dimensions text = pages
   where
-    rows = screenRows dimensions - 1
+    rows = screenRows dimensions - 2
     cols = screenColumns dimensions
     wrappedLines = concatMap (wordWrap cols) (lines text)
     pages = map (unlines . padTo rows) $ groupsOf rows wrappedLines
-    pageCount = length pages
-    statusLines = map (formatFileInfo finfo cols pageCount) [1 .. pageCount]
-    padTo lineCount rowsToPad = take lineCount $ rowsToPad <> repeat ""
+    padTo lineCount rowsToPad =
+      take lineCount $ rowsToPad <> repeat ""
+    groupsOf n elems
+      | null elems = []
+      | otherwise =
+          let (hd, tl) = splitAt n elems
+           in hd : groupsOf n tl
 
 data ContinueCancel
   = Continue
@@ -173,26 +94,102 @@ getContinue = do
     'q' -> return Cancel
     _ -> getContinue
 
-whileContinue :: a -> (a -> IO (Maybe a)) -> IO ()
-whileContinue initialValue ioAction = do
-  nextValue <- ioAction initialValue
+-- showPages :: [String] -> IO ()
+-- showPages allPages =
+--   for_ allPages $ \page -> do
+--     putStr "\^[[1J\^[[1;1H"
+--     putStr page
+--     cont <- getContinue
+--     -- what now???
+--     pure ()
+
+-- showPages :: [String] -> IO ()
+-- showPages =
+--   showPages' Continue
+--   where
+--     showPages' Cancel _ = pure ()
+--     showPages' Continue [] = pure ()
+--     showPages' Continue (page:pages) = do
+--       displayPage page
+--       cont <- if null pages
+--               then pure Cancel
+--               else getContinue
+--       showPages' cont pages
+--     displayPage page = do
+--       putStr "\^[[1J\^[[1;1H"
+--       putStr page
+
+-- showPages :: [String] -> IO ()
+-- showPages [] = pure ()
+-- showPages (page:pages) = do
+--   putStr "\^[[1J\^[[1;1H"
+--   putStr page
+--   cont <- if null pages
+--           then pure Cancel
+--           else getContinue
+--   when (Continue == cont) $
+--     showPages pages
+
+onContinue :: IO () -> IO ()
+onContinue ioAction = do
   cont <- getContinue
-  case (cont, nextValue) of
-    (Continue, Just nextValue') ->
-      whileContinue nextValue' ioAction
-    _otherwise -> pure ()
+  case cont of
+    Cancel -> pure ()
+    Continue -> ioAction
+
+forPages :: (String -> IO ()) -> [String] -> IO ()
+forPages ioAction pages =
+  case pages of
+    [] -> pure ()
+    (page : rest) -> do
+      ioAction page
+      onContinue (forPages ioAction rest)
 
 showPages :: [String] -> IO ()
-showPages allPages = do
-  whileContinue allPages nextPage
-  clearScreen
-  where
-    nextPage [] =
-      pure Nothing
-    nextPage (page : pages) = do
-      clearScreen
-      putStr page
-      pure $ nonEmpty pages
-    nonEmpty xs
-      | null xs = Nothing
-      | otherwise = Just xs
+showPages = forPages $ \page -> do
+  putStr "\^[[1J\^[[1;1H"
+  putStr page
+
+-- showPages :: [String] -> IO ()
+-- showPages [] = pure ()
+-- showPages (page:pages) = do
+--   putStr "\^[[1J\^[[1;1H"
+--   putStr page
+--   case pages of
+--     [] -> pure ()
+--     _otherwise ->
+--   cont <- if null pages
+--           then pure Cancel
+--           else getContinue
+--   when (Continue == cont) $
+--     showPages pages
+
+-- withContinue :: [String] -> (String -> IO ()) -> IO ()
+-- withContinue [] _ = pure ()
+-- withContinue (page:pages) f = do
+--   f page
+--   unless (null pages) $ do
+--     cont <- getContinue
+--     when (cont == Continue) $
+--       withContinue pages f
+
+-- showPages :: [String] -> IO ()
+-- showPages pages = withContinue pages $ \page -> do
+--   putStr "\^[[1J\^[[1;1H"
+--   putStr page
+
+-- withContinue :: [a] -> (a -> IO b) -> IO ()
+-- withContinue [] _onItem = pure ()
+-- withContinue (item:items) onItem = do
+--   _ <- onItem item
+--   unless (null items) $ do
+--     cont <- getContinue
+--     case cont of
+--       Cancel -> pure ()
+--       Continue -> withContinue items onItem
+
+-- showPages :: [String] -> IO ()
+-- showPages allPages =
+--   withContinue allPages $ \page -> do
+--     putStr "\^[[1J\^[[1;1H"
+--     putStr page

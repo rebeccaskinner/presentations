@@ -33,7 +33,7 @@
    :BEAMER_opt: [t]
    :END:
 
-#+ATTR_LATEX: :height 0.7\textheight
+#+ATTR_LATEX: :height \textwidth
 [[file:img/rshaskell.jpg]]
 
 *** Col right                                                         :BMCOL:
@@ -42,13 +42,13 @@
    :BEAMER_opt: [t]
    :END:
 
-#+ATTR_LATEX: :height 0.3\textheight :caption {\tiny{https://tinyurl.com/2744kfu7\\ Now in Beta!}}
+#+ATTR_LATEX: :height \textwidth :caption {\tiny{https://tinyurl.com/2744kfu7\\ Now in Beta!}}
 [[file:img/effective-haskell-url.png]]
 
 ** About This Talk
 
-During this talk we're going to _discover_ how to build basic command
-line tool in Haskell. As we go, you'll:
+During this talk we'll build basic command line tool in Haskell. As we
+go, you'll:
 
 \bigskip
 
@@ -65,16 +65,74 @@ learning.
 
 ** HCat
 
-#+ATTR_LATEX: :height 0.7\textheight
+*** Col left                                                          :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+  *HCat: A Haskell Pager*
+  \bigskip
+
+  - Get a file name from the command line
+  - Print the contents of the file to the screen one page at a time
+  - After showing a page of text, wait for user input
+  - Format each page so it fits on the screen
+  - Allow the user to quit at any time
+
+*** Col right                                                         :BMCOL:
+   :PROPERTIES:
+   :BEAMER_col: 0.45
+   :BEAMER_opt: [t]
+   :END:
+
+#+ATTR_LATEX: :height \textwidth
 [[./img/hcat-screen.png]]
 
+* Starting a New Project
+
+** Building HCat
+
+[[./img/building-hcat.png]]
+
+** Setting Up Your Development Environment
+
+#+beamer: \pause
+- Installation :: Use *~ghcup~* to install Haskell.
+#+beamer: \pause
+- Build Tooling :: Use *~cabal~* to create one project per application you are building
+#+beamer: \pause
+- Editor :: If you already use *~emacs~* or *~vim~* keep using them, otherwise *~vscode~*
+#+beamer: \pause
+- REPL :: *~ghci~* should be your best friend when you're learning Haskell.
+#+beamer: \pause
+- Docs :: Learn *~hoogle~* early, and use it often
+#+beamer: \pause
+- IDE Tooling :: *~HLS~* with *~vscode~* will give you the most IDE-like experience
+#+beamer: \pause
+- Testing :: Test manually with *~ghci~* or use *~hspec~* but only test pure functions.
+#+beamer: \pause
+- Linting :: Use *~hlint~*, but feel free to ignore anything you don't understand
+
+** Creating A New Project
+
+It's best to create a new project for each application. Avoid globally installed dependencies.
+#+beamer: \pause
+\bigskip
+#+begin_src shell :exports code
+  user@host$ cabal init --interactive
+#+end_src
+#+beamer: \pause
+As a rule of thumb, each project should define:
+\bigskip
+- One library, named after the project. This is where most of your code will live
+- One (or, occasionally, more than one) executable. These usually have very little code
+- A test suite
+- Optionally, benchmarks
+
+** Dependencies
+
 * Understanding IO
-
-** A True Color Photo of Side Effects
-
-#+ATTR_LATEX: :height 0.6\textheight
-[[./img/io.jpg]]
-\center{A side effect in its natural environment.}
 
 ** The Trouble with IO
 
@@ -88,6 +146,12 @@ Haskell is a *pure functional* language, but most of the things we want our prog
 - Printing text to the screen
 #+beamer: \pause
 - Handling user input
+
+** A True Color Photo of Side Effects
+
+#+ATTR_LATEX: :height 0.6\textheight
+[[./img/io.jpg]]
+\center{A side effect in its natural environment.}
 
 ** Can We Have a Little Bit of IO?
 
@@ -416,7 +480,7 @@ deal with user errors.
     putStrLn contents
 #+end_src
 
-** Error Handling in IO Actions
+** I Am Error
 
 Dealing with errors in IO actions can be complicated because there are a lot of options:
 
@@ -501,9 +565,9 @@ Given the size of our terminal, we can wrap the text to fit.
     putStrLn $ unlines wrapped
 #+end_src
 
-* Stepping Back
+* Architecture
 
-** Stepping Back
+** A Lesson On Building Things
 
 #+ATTR_LATEX: :height 0.6\textheight
 [[./img/architecture.jpg]]
@@ -511,8 +575,7 @@ Given the size of our terminal, we can wrap the text to fit.
 
 ** A Tale of Two Word Wraps
 
-In our earlier example, we built an IO action to fetch the terminal size, and passed the width into a *pure function* that handled word wrapping. Let's consider the alternative:
-
+We only need the terminal width to word wrap. Maybe we should combine them?
 #+beamer: \pause
 
 #+begin_src haskell :exports code
@@ -532,10 +595,28 @@ In our earlier example, we built an IO action to fetch the terminal size, and pa
          in (reverse wrappedText, reverse rest)
 #+end_src
 
+** A Tale of Two Word Wraps
+
+Coming from impure languages, mixing IO and pure code feels natural:
+
 #+beamer: \pause
-This might look *easier* at first. It hides details from the caller
-behind a smaller interface, but now it can't be used from any pure
-functions.
+- Hides implementation details about getting the terminal width
+#+beamer: \pause
+- Provides a simpler and more automated API
+#+beamer: \pause
+- Doesn't create “extra” functions
+
+\bigskip
+#+beamer: \pause
+Unfortunately...
+
+\bigskip
+#+beamer: \pause
+- It can only be called by other IO actions
+#+beamer: \pause
+- We don't know what it might do. Perhaps it makes a network request to a word wrap server?
+#+beamer: \pause
+- We'll have a harder time testing it
 
 ** The Lesson
 
@@ -548,7 +629,7 @@ pure functions for computation.
 [[./img/functional-core.png]]
 #+beamer: \center{\tiny{The "procedural shell, functional core" model is an over-simplification of a good guideline}}
 
-** IO Actions are Like Layers
+** Happy Little Trees
 
 #+ATTR_LATEX: :height 0.6\textheight
 [[file:img/tree.png]]

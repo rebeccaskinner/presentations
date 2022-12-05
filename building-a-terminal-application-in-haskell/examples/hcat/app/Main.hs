@@ -1,5 +1,5 @@
 module Main where
-import HCatNoMetadata
+import HCat
 
 main :: IO ()
 main = runHCat
