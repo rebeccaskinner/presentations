@@ -1,0 +1,6 @@
+*.vrb
+*.toc
+*.nav
+_minted_presentation
+*.hi
+*/*.hi

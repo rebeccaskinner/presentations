@@ -8,7 +8,6 @@ library
   build-depends:       base
                      , directory
                      , process
-                     , time
   ghc-options: -Wall
   default-language:    Haskell2010
 

@@ -132,6 +132,65 @@ As a rule of thumb, each project should define:
 
 ** Dependencies
 
+You can browse available packages on *~hackage~*. To add a new dependency to your project, add it to your cabal file.
+
+\bigskip
+
+#+begin_src yaml :exports code
+library
+  hs-source-dirs:      src
+  exposed-modules:     HCat
+  build-depends:       base, directory, process
+  ghc-options:         -Wall
+  default-language:    Haskell2010
+#+end_src
+
+** Executables and Libraries
+
+It's common to have a very minimal executable:
+
+#+begin_src haskell :exports code
+  module Main where
+  import HCat (runHCat)
+
+  main :: IO ()
+  main = runHCat
+#+end_src
+
+#+beamer: \pause
+\bigskip
+
+Plus a library is where most code is implemented:
+
+#+begin_src haskell :exports code
+  module HCat (runHCat) where
+
+  runHCat :: IO ()
+  runHCat = print "stub"
+#+end_src
+
+#+beamer: \pause
+\bigskip
+
+Why?
+#+beamer: \pause
+- Testability
+- Easy Refactoring
+- Low overhead to add additional executables
+
+** Writing Our First Version
+
+Let's start with an MVP. We'll make a program like *echo* that:
+
+\bigskip
+- reads the contents of a file
+- then prints the contents to the screen
+\bigskip
+
+#+beamer: \pause
+There's just one problem: Haskell is a *pure* functional language. Doesn't that mean *no side effects*?
+
+
 * Understanding IO
 
 ** The Trouble with IO
@@ -423,7 +482,7 @@ interacts with the real world, let's put it to practice with an *MVP*:
 #+begin_src haskell :exports code
   module Main where
 
-  main :: IO ()
+  runHCat :: IO ()
   main = readFile "example.txt" >>= putStrLn
 #+end_src
 
@@ -462,7 +521,7 @@ deal with user errors.
 #+beamer: \pause
 
 #+begin_src haskell :exports code
-  module HCatArgs where
+  module HCat where
   import System.Environment
 
   targetFileName :: IO FilePath
@@ -474,8 +533,8 @@ deal with user errors.
       _otherwise ->
         ioError $ userError "please provide a single filename"
 
-  main :: IO ()
-  main = do
+  runHCat :: IO ()
+  runHCat = do
     contents <- readFile =<< targetFileName
     putStrLn contents
 #+end_src
@@ -557,8 +616,8 @@ Given the size of our terminal, we can wrap the text to fit.
         let (rest, wrappedText) = break isSpace $ reverse hardWrapped
          in (reverse wrappedText, reverse rest)
 
-  main :: IO ()
-  main = do
+  runHCat :: IO ()
+  runHCat = do
     contents <- readFile =<< targetFileName
     termSize <- getTerminalSize
     let wrapped = wordWrap (screenColumns termSize) contents
@@ -797,8 +856,8 @@ but it buys you flexibility later.
 ** Putting It All Together
 
 #+begin_src haskell :exports code
-  main :: IO ()
-  main = do
+  runHCat :: IO ()
+  runHCat = do
     contents <- readFile =<< targetFileName
     termSize <- getTerminalSize
     showPages $ paginate termSize contents
